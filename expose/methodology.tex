@@ -1,0 +1,52 @@
+\section{Methodik}
+
+Voraussetzung für eine erfolgreiche formale Verifikation sind in jedem Fall solide Kenntnisse über die Grundlagen temporaler Logik und der Modellprüfung.
+Daher steht zu Beginn ein umfassendes Studium der einschlägigen Literatur.
+Anschließend soll (soweit möglich) ein systematischer Vergleich existierender Verifikationsprogramme für Sicherheitsprotokolle aufgestellt werden, um eine fundierte Entscheidung für die zu verwendende Modellierungssprache treffen zu können.
+Basis dafür bilden praktische Gesichtspunkte zur Wahl eines geeigneten Formalismus, welche unter anderem von Seshia et al. \cite{seshia2018model} beschrieben werden.
+Nähere Informationen über die bestehenden Verifikationsprogramme werden den jeweiligen Dokumentationen sowie verwandten Arbeiten auf diesem Gebiet, einige davon exemplarisch benannt in Abschnitt~\ref{related}, entnommen.
+
+Daraufhin schließt sich die Formalisierung des 5G Inter-Operator-Signalisierungsprotokolls an.
+Von besonderer Bedeutung ist dabei die korrekte Repräsentation der laut Spezifikation geforderten Sicherheitsziele und des Angreifermodells.
+Letzteres ist in den Dokumenten der \gls{3gpp} nicht explizit beschrieben, daher sollen Informationen darüber im Rahmen von Experteninterviews zusammengetragen werden.
+Eventuell getroffene Annahmen über den korrekten Ablauf des Protokolls, welche ggf. nötig sind um die Vollständigkeit des Modells zu gewährleisten, werden dabei explizit als solche gekennzeichnet.
+Das erstellte Modell wird mittels des zuvor gewählten Programms gegen die Spezifikation auf Korrektheit geprüft.
+Sollten sich durch die computergestützte Verifikation bis dato unbehandelte Fehlerszenarien identifizieren lassen, so wird eine Ursachenanalyse durchgeführt.
+Diese ist unerlässlich, um abschließend möglicher Gegenmaßnahmen auf Spezifikations- oder Implementationsebene aufzuzeigen.
+Dieser letzte Schritt ist in gewissem Maße abhängig von Erfahrungswerten des Autors aus der Mobilfunkstandardisierung, da die in der \gls{3gpp} definierten Protokolle nicht immer bis ins letzte Detail beschrieben werden und mitunter ein gewisses Sicherheitsniveau der individuellen Implementierung vorausgesetzt wird. 
+
+Nachfolgend ist ein erster Gliederungsentwurf der Master-Thesis, basierend auf dem oben beschriebenen Vorgehen, dargestellt:
+
+\begin{enumerate}[label=\arabic*]
+    \item Einleitung
+    \begin{enumerate}[label=1.\arabic*]
+        \item Problemstellung und Erkenntnisinteresse
+        \item Zielsetzung und Abgrenzung
+        \item Methodik
+    \end{enumerate}
+    \item Theoretische Grundlagen
+    \begin{enumerate}[label=2.\arabic*]
+        \item Funktionsweise des 5G Inter-Operator-Protokolls
+        \begin{enumerate}[label=2.1.\arabic*]
+            \item Sicherheitsziele
+            \item Angreifermodell
+        \end{enumerate}
+        \item Formale Verifikation von Sicherheitsprotokollen
+        \begin{enumerate}[label=2.2.\arabic*]
+            \item Grundlagen der formalen Modellprüfung
+            \item Vergleich existierender Formalismen \& Werkzeuge 
+        \end{enumerate}
+    \end{enumerate}
+    \item Formale Verifikation
+    \begin{enumerate}[label=3.\arabic*]
+        \item Transposition der 3GPP-Spezifikation
+        \item Verifikation erwarteter Sicherheitsziele
+        \item Fehler- und Ursachenanalyse
+        \item Identifikation möglicher Verbesserungen
+    \end{enumerate}
+    \item Abschließende Betrachtungen
+    \begin{enumerate}[label=4.\arabic*]
+        \item Fazit
+        \item Ausblick
+    \end{enumerate}
+\end{enumerate}

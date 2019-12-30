@@ -1,0 +1,32 @@
+\section{Problemstellung und Erkenntnisinteresse}
+
+Das \gls{3gpp} erarbeitet aktuell in Release 16 seiner Spezifikation die zweite offiziellen Phase des Mobilfunkstandards der fünften Generation, kurz 5G.
+Bereits im vorangegangenen Release begonnen, finalisiert dies eine tiefgreifende Neugestaltung der Komponenten des 5G Kernnetzes (engl. \gls{5gc}) und der darin verwendeten Kommunikationsprotokolle.
+Basierte die Signalisierung in \gls{lte} und früheren Generationen noch auf spezialisierten Protokollen der Telekommunikationsbranche, wie z.B. \gls{sctp} und DIAMETER, werden künftig verstärkt weit verbreitete Technologien des TCP/IP-Stacks verwendet.
+So kommunizieren \gls{5gc} Netzwerkfunktionen auf Applikationsebene etwa mittels \glslink{http}{Hypertext Transfer Protocol (HTTP/2)}\glsunset{http} Nachrichten, welche Nutzdaten im Serialisierungsformat \gls{json} transportieren.
+
+Von der eingangs beschriebenen Veränderung im Protokollstack des \gls{5gc} ist auch die Schnittstelle zwischen verschiedenen Mobilfunknetzbetreibern betroffen.
+Diese ist technische Voraussetzung dafür, dass Kunden eines \gls{plmn} auch dann Dienste in Anspruch nehmen können, wenn eine Verbindung zum Netz des Heimatnetzbetreibers nicht möglich ist (bspw. im Ausland) und stattdessen ein alternatives Netzwerk genutzt wird, besser bekannt unter dem Begriff ``Roaming''.
+Wie im gesamten Mobilfunknetz, wird in der Kommunikation der involvierten \glspl{plmn} zwischen der Übertragung von Nutzdaten (engl. \gls{up} Traffic) und Signalisierungsdaten (engl. \gls{cp} Traffic) unterschieden.
+Erstere beschreiben den Verkehr, welcher vom \gls{ue} des Nutzers tatsächlich empfängt bzw. versendet wird.
+Letztere hingegen sind für die Steuerung des Nutzdatenverkehrs verantwortlich.
+Diese Arbeit fokussiert sich allein auf den Inter-Operator-Signalisierungsverkehr.
+
+Die Inter-Operator-Schnittstelle für die Übertragung von Signalisierungsdaten ist speziellen Anforderungen an den Schutz der transportierten Daten unterworfen.
+Da eine Verbindung zwischen zwei Mobilfunknetzbetreibern nicht immer auf direktem Wege möglich ist, exisitieren sogenannte \gls{ipx}-Anbieter, welche sowohl globale Konnektivität als auch Mehrwertdienste auf Basis der transportierten Daten anbieten.
+Dies erlaubt kleineren Netzbetreibern kostspielige Dienste, wie bspw. Missbrauchserkennung und -prävention, extern einzukaufen.
+Auch wenn es das Bestreben der Netzbetreiber ist, so viele Informationen wie möglich auf dem Roaming-Interface zu schützen, ist es den  \gls{ipx}-Anbietern für solche Zusatzleistungen nötig, bestimmte Inhalte einsehen oder gar modifizieren zu können.
+Die \gls{3gpp} Security Working Group definiert daher in Release 15 das zum ersten Mal die sogenannte \gls{als}, ein neues Sicherheitsprotokoll, welches es zum einen erlaubt den nötigen Schutzbedarf, d.h. Integritätsschutz und  ggf. zusätzlich Verschlüsselung, für jedes übertragene Attribut individuell zu spezifizieren. Zum anderen sieht es die Möglichkeit für autorisierte Modifikationen der Nachrichten in Transit vor.
+Grundlage dafür bilden \gls{json}-Objekte, welche mittels der Operationen des \gls{jose} Frameworks \cite{JWS, JWE} signiert und verschlüsselt sowie durch \gls{json}-Patches, definiert in RFC 6902 \cite{JsonPatch}, um Änderungen von \gls{ipx}-Anbietern erweitert werden können.
+Eine ausführliche Beschreibung des \gls{als}-Protokolls findet sich in der \gls{ts} 33.501~\cite{TS33501} und \gls{ts} 29.573~\cite{TS29573}.
+
+Auch wenn das \gls{als}-Protokoll weitestgehend auf etablierten Technologien aufbaut, so ist es keineswegs trivial aus diesen Einzelkomponenten ein sicheres Protokoll zu definieren.
+Protokolldesign gilt gemeinhin als eine sehr komplexe Aufgabe, bei der selbst geeignete Vorkenntnisse und entsprechende Sorgfalt während der Designphase keine Fehlerfreiheit garantieren.
+Prominentes Negativ-Beispiel ist das Needham-Schroeder Protokoll \cite{needham1978using}, welches auf Basis einer initialen Prüfung zunächst als sicher galt und in dem mittels eines verbesserten Ansatzes 17 Jahre später dennoch ein Fehler nachgewiesen werden konnte \cite{lowe1996breaking}.
+Eine Möglichkeit die Korrektheit eines Protokolls nachzuweisen, welche auch bei erneuter Verifikation von Needham-Schroeder zum Einsatz kam, ist formale Verifikation.
+Im Gegensatz zu anderen statischen Testverfahren, wie bspw. der Quellcode Review, können formale Methoden bereits auf die reine Spezifikation angewendet werden, um bestimmte Sicherheitsziele zu überprüfen.
+Im Zusammenspiel mit automatisierten Werkzeugen können so Fehler aufgedeckt werden, die bei ``manueller'' Analyse evtl. verborgen bleiben würden.
+Formale, computergestützte Methoden zur Korrektheitsprüfung sind daher als eine essenzielles Werkzeug bei der Definition neuer Protokolle zu verstehen, welches deren Sicherheitseigenschaften entscheidend positiv beeinflussen kann.
+Da aber eine solche Verifikation, insbesondere die korrekte Formalisierung des Protokolls ausgehend von der textuellen Repräsentation, sehr aufwendig sein kann, ist dieses Vorgehen üblicherweise nicht Teil der \gls{3gpp} Spezifikationsarbeit.
+
+%Neue Erkenntnisse, gewonnen aus der anzufertigenden Master Thesis, stellen daher ggf. eine sinnvolle Ergänzung zur regulären Arbeit der \gls{3gpp} dar und können unmittelbar wieder in die definierten Protokolle einfließen.

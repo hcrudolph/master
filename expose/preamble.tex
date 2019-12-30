@@ -1,0 +1,33 @@
+\usepackage[paper=a4paper,left=25mm,right=25mm,top=25mm,bottom=25mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage{csquotes}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\graphicspath{{./figures/}}
+\usepackage[toc,acronym,nonumberlist,nopostdot,nogroupskip]{glossaries}
+\usepackage[
+    backend=biber,
+    sorting=none,
+    style=numeric-comp,
+    citestyle=numeric-comp]{biblatex}
+\addbibresource{literatur.bib}
+\usepackage{tocbibind}
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+
+\renewcommand*\contentsname{Inhalt}
+\renewcommand*\listfigurename{Abbildungen}
+\renewcommand{\appendixname}{Anhang}
+\renewcommand{\figurename}{Abbildung}
+\renewcommand{\arraystretch}{1.5}
+
+\makeglossaries

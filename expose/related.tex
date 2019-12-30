@@ -1,0 +1,39 @@
+\section{Stand der Forschung}
+\label{related}
+
+Die Idee, Korrektheit von Software mithilfe mathematischer Logik zu überprüfen, ist keinesfalls neu.
+So formulierte C. A. R. Hoare bereits im Jahr 1969 eine Methode, Schlussfolgerungen über den Effekt eines Programms aus seinem Quellcode zu ziehen \cite{hoare1969axiomatic}.
+In den vergangenen 50 Jahren sind auf diesem Feld entscheidende Fortschritte gemacht wurden und aufgrund der immensen Komplexität wachsender Softwaresysteme, ist formale Verifikation bis heute von großer Relevanz.
+Statt auf \textit{Hoare Logik}, welche direkt auf dem zu untersuchenden Programmcode aufsetzt und daher nur schlecht skaliert, basieren moderne Ansätze zur formalen Verifikation meist auf temporaler Logik, erstmals von Pnueli \cite{pnueli1977temporal} auf das Gebiet der Informatik übertragen.
+Hierbei handelt es sich um eine Anwendung der Modallogik, bei der bestimmte Eigenschaften von Programmen entlang verschiedener Zustände, meist in Form von Kripkestrukturen, beschrieben und verifiziert werden. 
+Letztendlich waren es Clark und Emerson~\cite{clarke1981design}, welche den populären Begriff Modellprüfung (engl. model checking) als algorithmische Prüfung eines Programms gegen seine Spezifikation in temporaler Logik prägten.
+
+Eine erste Anwendung auf den Bereich der Sicherheitsprotokolle gelang Dolev und Yao \cite{dolev1983security}.
+In dem von ihnen beschriebenen Modell, auch bekannt als \textit{Dolev-Yao Modell}, wird das Protokoll als Automat bestehend aus einer beliebigen Anzahl ehrlicher Teilnehmer sowie einem ``allgegenwärtigen'' Angreifer modelliert.
+Letzterer hat Zugriff auf die Nachrichten sämtlicher Kanäle zwischen den Kommunikationspartnern, kann diese mitlesen, abfangen und neue Nachrichten basierend auf den so gewonnenen Informationen generieren.
+In einem solchen symbolischen Modell werden die involvierten kryptografischen Operationen als perfekt angenommen, d.h. ein Klartext kann stets nur mittels des korrekten Schlüssels aus dem Chiffretext gewonnen werden. 
+Da diese stark abstrahierte Sicht auf die kryptografischen Aspekte eines Protokolls nur eine idealisierte Annahme ist, existieren zusätzlich auch detailliertere, berechnende Modelle, in denen der Angreifer als probabilistische Turingmaschine modelliert wird.
+Sowohl diese beiden Ansätze miteinander zu verbinden als auch individuellere Angreifermodelle als Teil eines solchen Formalismus zu beschreiben sind noch immer aktive Felder der Forschung. (vgl.~\cite{basin2018model})
+
+Sowohl für die symbolische als auch für die berechnende Herangehensweise existieren mehrere automatisierte Programme zur Unterstützung formaler Protokollverifikation.
+Beispielhaft seien Scyther~\cite{cremers2008scyther}, Cryptoverif~\cite{blanchet2007cryptoverif}, Proverif~\cite{blanchet2010proverif} und der Tamarin Prover~\cite{meier2013tamarin} genannt.
+Diese sind in der Lage, die Zustandsübergänge des Modells vollumfänglich zu verifizieren, übernehmen jedoch nicht die Erstellung des Modells selbst.
+Solche Programme wurden unter anderem bereits zur Überprüfung bekannter Sicherheitsprotokolle, wie \gls{tls}1.3 \cite{cremers2017comprehensive}, DNP3 \cite{cremers2017secure}, Kerberos 5 \cite{blanchet2008computationally}, Signal \cite{kobessi2017automated}, und SSH \cite{cade2013computationally}, verwendet.
+Auch von der \gls{3gpp} spezifizierte Technologien wurden bereits betrachtet.
+So beschreiben Basin et al. \cite{basin2018formal} eine Verifikation des 5G \gls{aka} Protokolls. 
+Das neu definierte Inter-Operator-Signalisierungsprotokoll wurde hingegen bisher nicht auf diese Weise untersucht.
+
+Auch wenn die formale Modellprüfung eine sinnvolle Ergänzung während der Definition von Sicherheitsprotokollen darstellen kann, so ist der Einsatz dieser Methodik nicht frei von Problemen.
+Eines davon ist der Umstand, dass mit zunehmender Anzahl von Variablen die diskreten Zustände und Zustandsübergänge exponentiell wachsen.
+Dieses auch als ``state-space explosion'' bekannte Problem kann dazu führen, dass die computergestützte Verifikation aufgrund begrenzter Rechenressourcen nicht terminiert.
+Diesem Problem kann mittels verschiedener Optimierungsansätze entgegengewirkt werden, als da wären allgemeine Abstraktionstechniken, beschrieben von Holzmann \cite{holzmann1998designing}, oder alternativ \textit{partial-order reduction}, bei der lediglich eine Teilmenge des Zustandsgraphen betrachtet wird, der jedoch die selben Eigenschaften aufweist, wie das komplette Modell \cite{peled1993all}.
+Zusätzlich zu technischen Limitierungen bei der computergestützten Überprüfung bringt die formale Verifikation auch weitere Herausforderungen mit sich, die dieser Methodik inhärent sind.
+Die folgende Auswahl basiert auf den Ausführungen von Seshia et al. \cite{seshia2018model}:
+
+\begin{enumerate}[label=$\bullet$]
+    \item Die Wahl einer geeigneten Modellierungssprache ist nicht immer systematisch, anhand objektiver Gesichtspunkte zu treffen und basiert daher mitunter auf persönlicher Präferenz, bestehenden Modellen des betrachteten Systems, etc. 
+    \item Wurde das System erfolgreich in die gewählte Modellierungssprache transponiert, ist eine Aussage über seine Vollständigkeit nur schwer zu treffen. 
+    Diese Problematik ist im Fall von \gls{3gpp}-Protokollen besonders relevant, da verschiedene Aspekte der Systembeschreibung von unterschiedlichen Gruppen erarbeitet werden und die Spezifikation über mehrere Dokumente verteilt ist. 
+    %Um die Vollständigkeit des Modells sicherzustellen, müssen daher ggf. Annahmen über nicht explizit benannte Systemeigenschaften getroffen werden.
+    \item Bei der Interpretation der Ergebnisse des Verifikationsprogramms sind identifizierte Fehler kritisch zu hinterfragen. Denn die Ursache eines Problems kann sowohl in der Spezifikation oder aber im erstellten Modell bzw. den getroffenen Annahmen liegen.
+\end{enumerate}

@@ -1,0 +1,22 @@
+\section{Zielsetzung und Abgrenzung}
+
+Im Rahmen dieser Master-Thesis soll das 5G Inter-Operator-Signalsierungsprotokoll, dessen zentraler Bestandteil \gls{als} darstellt, mittels formaler Verifikation überprüft werden.
+Dazu zählt in einem ersten Schritt die Untersuchung inwiefern sich bestehende Modelle für die Formalisierung der spezifizierten Funktionalität eignen.
+Daraufhin folgt, in Vorbereitung der Anwendung des gewählten Verifikationsprogramms, das Überführen der textuellen Beschreibung in eine entsprechende formale Repräsentation.
+Bereits während dieser Transposition können Spezifikationslücken bzw. Unklarheiten in den \gls{3gpp}-Dokumenten identifiziert werden.
+Ziel der sich anschließenden programmgestützten Analyse ist sowohl das Verifizieren von Korrektheitsbeweisen geforderter Sicherheitsziele als auch das Erkennen potenzieller Fehlerszenarien und Ableiten entsprechender Korrekturen, um diese zu verhindern.
+Die konkreten Forschungsfragen lassen sich daher wie folgt formulieren:
+
+\begin{enumerate}[label=(\arabic*)]
+    \item Lässt sich das 5G Inter-Operator-Signalisierungsprotokoll mit bestehenden Methoden zur formalen Verifikation vollumfänglich beschreiben?
+    
+    \item Inwiefern lassen sich auf Basis der aufgestellten formalen Repräsentation Unklarheiten bzw. Fehler in der Protokollspezifikation identifizieren?
+    
+    \item Welche möglichen Korrekturen auf Spezifikations- oder Implementationsebene wären zu definieren, um potenzielle Fehler aus (2) zu verhindern?
+\end{enumerate}
+
+Die Verifikation beschränkt sich dabei ausschließlich auf die in \gls{ts} 33.501~\cite{TS33501} und \gls{ts} 29.573~\cite{TS29573} neu definierte Kommunikation.
+Teilprotokolle, die extern beschrieben und mitunter selbst schon mittels formaler Methoden überprüft wurden, wie z.B. \gls{tls}, werden dabei nicht genauer betrachtet und abstrahiert als sichere Kanäle behandelt.
+Des Weiteren ist explizit die Anwendung einer bereits beschriebenen Modellierungssprache bzw. eines existierenden Verifikationsprogramms vorgesehen.
+Falls die zur Verfügung stehenden Ressourcen, näher beschrieben in Abschnitt \ref{related}, nicht ausreichen, um das 5G Inter-Operator-Signalisierungsprotokoll hinreichend zu beschreiben, soll detailliert werden woran die Formalisierung scheitert und wie bestehende Programme ggf. zu erweitern wären.
+Es soll hingegen kein komplett neues Modellierungsverfahren zur formalen Überprüfung erarbeitet werden.
