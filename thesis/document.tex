@@ -1,0 +1,108 @@
+\documentclass[a4paper,12pt,twoside]{report}
+
+\input{preamble.tex}
+
+\begin{document}
+
+%--- Title ---%
+\import{}{title.tex}
+\pagestyle{empty}
+\clearpage
+
+%--- TOC ---%
+\phantomsection
+\pagenumbering{arabic}
+\pagestyle{plain}
+\setcounter{page}{3}
+\setcounter{tocdepth}{2}
+\addcontentsline{toc}{chapter}{Table of Contents}
+\tableofcontents
+
+\clearpage
+
+%--- Figures ---%
+\listoffigures
+
+%--- Tables ---%
+\listoftables
+
+%--- Glossary ---%
+\printglossary
+
+%--- Acronyms ---%
+\printglossary[type=\acronymtype,title=Acronyms]
+
+%--- Main contents ---%
+\chapter{Introduction}
+\label{chap:intro}
+
+\section{Problem statement}
+\label{sec:problem}
+\import{sections/}{problem.tex}
+
+\section{Goal}
+\label{sec:goal}
+\import{sections/}{goal.tex}
+
+\section{Methodology}
+\label{sec:method}
+\import{sections/}{method.tex}
+
+\clearpage
+
+\chapter{Theoretical Foundations}
+\label{chap:theory}
+
+\section{The 5G Inter-operator protocol}
+\label{sec:method}
+\import{sections/}{method.tex}
+
+\section{Formal Verification of security protocols}
+\label{sec:method}
+\import{sections/}{formal.tex}
+
+\clearpage
+
+\chapter{Formal verification}
+\label{chap:intro}
+
+\section{Model transposition}
+\label{sec:problem}
+\import{sections/}{model.tex}
+
+\section{Lemma verification}
+\label{sec:goal}
+\import{sections/}{verification.tex}
+
+\section{Critical Analysis}
+\label{sec:method}
+\import{sections/}{analysis.tex}
+
+\section{Recommendations}
+\label{sec:method}
+\import{sections/}{recommendations.tex}
+
+\clearpage
+
+\chapter{Closing remarks}
+\label{chap:intro}
+
+\section{Conclusion}
+\label{sec:problem}
+\import{sections/}{conclusion.tex}
+
+\section{Outlook}
+\label{sec:goal}
+\import{sections/}{outlook.tex}
+
+\clearpage
+
+\printbibliography[title={Literatur},heading=bibintoc,nottype=online]
+
+\printbibliography[title={Online Ressourcen},heading=bibintoc,type=online]
+
+\clearpage
+
+\appendices
+
+\end{document}
