@@ -1,0 +1,17 @@
+This thesis aims to investigate security properties of the 5G inter-operator signaling protocol \gls{prins} using formal verification.
+Given the compexity of secure protocol design and the fact that \gls{3gpp} commonly refrains from designing their own ones, it is considered beneficial to analyse \gls{prins} in detail.
+Since model checking allows verification based on an abstract specification, or rather a formal model thereof, this work is independent from any particular implementation.
+Consequently, prooving or disprooving properties of the model to be created should result in recommendations to improve the underlying specification.
+In summary, the objective is to answer the following three questions:
+
+\begin{enumerate}[label=(\arabic*)]
+    \item Is it possible to comprehensively describe the 5G inter-operator signaling protocol with the methods of formal verification?
+
+    \item Does modeling \gls{prins} in a formal grammar reveal any inconsistencies that need to be addressed by the specification?
+
+    \item Based on the model created as part of this work, can existing formal verification tools proof or disproof particular security requirements of the \gls{prins} protocol?
+\end{enumerate}
+
+As the protocol to be verified is comprised of several different technologies, some of them already well tested, there are certain aspects that are considered out of scope of this formal verification efforts.
+This includes \gls{tls}, which has been verified previously and is therefore considered secure (source), \gls{jose} which builds on ...
+Furthermore, this this thesis is limited to the application of existing tools for formal verification, rather than extending them or even developing a new one.
