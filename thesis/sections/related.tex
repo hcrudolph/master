@@ -1,26 +1,30 @@
 The idea of proving correctness of concurrent systems, such as network protocols, based on a formal representation exists for several decades already.
-\cite{basin2018model} provide an extensive description of the historical developments of model checking security protocols, streching back to the 1980s.
-Based on their work, this section provides a brief overview of some foundational theories and key contributions in this active field of reasearch.
-Additionally, recent work directly related to the application of formal verification to mobile network security is highlighted.
+\cite{basin2018model} provide an extensive historical account of model checking security protocols, streching back to the 1980s.
+This section initially outlines a brief overview of foundational theories and key contributions in this active field of reasearch.
+Subsequently, recent work directly related to the application of formal verification to mobile network security is discussed.
+Lastly, model cheking software commonly used in recent years are hightlighted, which serves a basis for choosing a particular tool in section \ref{sec:formal}.
 
-The term ,,model checking'' as it is used today goes back to \cite{clarke1981design}, who are the first to propose the computer-aided verification of finite-state systems expressed in \gls{gls:ptl}.
-In contrast to previous efforts, they model the system flow graph as finite structure and describe ,,an efficient algorithm [...] to decide whether a given finite structure is a model of a particular formula''.
+The term ,,model checking'' as it is used today goes back to Clarke and Emerson, who are the first to propose the computer-aided verification of finite-state systems expressed in \gls{gls:ptl}.
+In contrast to previous efforts, they model the system flow graph as a finite structure and describe ,,an efficient algorithm [...] to decide whether a given finite structure is a model of a particular formula'' (\cite{clarke1981design}, 2).
 Even though this particular work is used to reason about a single concurrent program, the authors already hint to the possible extension of their approach to ,,network communication protocols''.
-\cite{dolev1983security} where the first ones to apply this technique to security protocols.
+\cite{dolev1983security} consitutes another landmark paper in terms of formally verifying security protocols.
+Their contribution is to model a protocol ,,as a machine consisting of an arbitrary number of honest agents executing the protocol, in which all messages sent are interceptedby the adversary [...], all messages received are sent by the adversary'' (\cite{basin2018model}, 6).
+A foundational concept for many model checkers to this day, it is shown in section \ref{sec:n32} how this assumption is an excellent fit for the use case of inter-operator signaling.
 
-things to cover
-symbolic/computational approach
-protocol model/network model
+The Dolev-Yao model further represents all messages in abstract mathematical terms and assumes the underlying cryptography to be perfect -- an approach also known as formal verification in the symbolic model or simply \textit{symbolic model checking}.
+This stands in contrast to \textit{computational model checking} in which ,,messages are bitstrings, and the adversary is a probabilistic polynomial-time Turing machine'' (\cite{blanchet2008computationally}, 1).
+Although successfully used for verifying security properties of several popular security protocols (see~\cite{BlanchetJaggardScedrovTsayAsiaCCS08}, \cite{CadeBlanchetJoWUA13}, \cite{LippBlanchetBhargavanEuroSP19}), one of the basic assumptions of the thesis is perfect cryptography (see section~\ref{sec:goal}).
+Therefore, it is only mentioned for informational purposes and shall not be pursued further.
+
+In recent years, \gls{3gpp} specifications clearly capture the interest of the research community.
+This does not just apply to the recently finalized 5G standard and related protocols, but also to earlier generations (see~\cite{alt2016cryptographic}, \cite{lee2014anonymity}).
+However, these works mostly focus on the \gls{aka} protocol.
+
+\cite{basin2018formal}, \cite{dehnel2018security}, \cite{borgaonkar2019new}, \cite{lanzenberger2017formal}
+
+\cite{o2017mobile}
 
 tools
-Cremers - The Scyther Tool: Verification, falsification, and analysis of security protocols
-Meier - The TAMARIN prover for the symbolic analysis of security protocols
-Blanchet - Modeling and verifying security protocols with the applied pi calculus and ProVerif
-
-5g papers
-Basin - A formal analysis of 5G authentication
-Cremers - A comprehensive symbolic analysis of TLS 1.3
-Cremers - Authentication vulnerability in the most recent 5G AKA drafts
-Borgaonkar - New Privacy Threat on 3G, 4G, and Upcoming 5G AKA Protocols
-O’Hanlon - Mobile Subscriber WiFi Privacy
-Lanzenberger - Formal Analysis of 5G Protocols
+\cite{cremers2008scyther} \cite{scyther}
+\cite{meier2013tamarin} \cite{tamarin}
+\cite{blanchet2016modeling} \cite{proverif}
