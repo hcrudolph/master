@@ -1,17 +1,16 @@
 The idea of proving correctness of concurrent systems, such as network protocols, based on a formal representation exists for several decades already.
-Basin, Cremers, and Meadows (2015) provide an extensive description of the historical developments of model checking security protocols, streching back to the 1980s.
+\cite{basin2018model} provide an extensive description of the historical developments of model checking security protocols, streching back to the 1980s.
 Based on their work, this section provides a brief overview of some foundational theories and key contributions in this active field of reasearch.
 Additionally, recent work directly related to the application of formal verification to mobile network security is highlighted.
 
-The term 'model checking' goes back to EM Clarke and EA Emerson (1981/85), who are the first to propose computer-aided verification of finite-state systems expressed in temporal logic...
+The term ,,model checking'' as it is used today goes back to \cite{clarke1981design}, who are the first to propose the computer-aided verification of finite-state systems expressed in \gls{gls:ptl}.
+In contrast to previous efforts, they model the system flow graph as finite structure and describe ,,an efficient algorithm [...] to decide whether a given finite structure is a model of a particular formula''.
+Even though this particular work is used to reason about a single concurrent program, the authors already hint to the possible extension of their approach to ,,network communication protocols''.
+\cite{dolev1983security} where the first ones to apply this technique to security protocols.
 
 things to cover
 symbolic/computational approach
 protocol model/network model
-
-key papers
-EM Clarke and EA Emerson - Design and synthesis of synchronization skeletons using branching time temporal logic
-Dolev Yao - On the security of public key protocols
 
 tools
 Cremers - The Scyther Tool: Verification, falsification, and analysis of security protocols
