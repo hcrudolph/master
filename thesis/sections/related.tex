@@ -1,8 +1,9 @@
 The idea of proving correctness of concurrent systems, such as network protocols, based on a formal representation exists for several decades already.
 \cite{basin2018model} provide an extensive historical account of model checking security protocols, streching back to the 1980s.
-This section initially outlines a brief overview of foundational theories and key contributions in this active field of reasearch.
-Subsequently, recent work directly related to the application of formal verification to mobile network security is discussed.
-Lastly, model cheking software commonly used in recent years are hightlighted, which serves a basis for choosing a particular tool in section \ref{sec:formal}.
+The remainder of this section outlines a brief overview of foundational theories and key contributions in this active field of reasearch.
+Subsequently, previous work directly related to the application of formal verification to mobile network security is discussed.
+As part of this, model checking software commonly used in recent years are hightlighted, which serves a basis for choosing a particular tool in section \ref{sec:formal}.
+Lastly, research on inter-operator signaling protocols of previous mobile generations and their security vulnerabilities is cited in order to emphasize this particular subject's relevancy.
 
 The term ,,model checking'' as it is used today goes back to Clarke and Emerson, who are the first to propose the computer-aided verification of finite-state systems expressed in \gls{gls:ptl}.
 In contrast to previous efforts, they model the system flow graph as a finite structure and describe ,,an efficient algorithm [...] to decide whether a given finite structure is a model of a particular formula'' (\cite{clarke1981design}, 2).
@@ -16,15 +17,30 @@ This stands in contrast to \textit{computational model checking} in which ,,mess
 Although successfully used for verifying security properties of several popular security protocols (see~\cite{BlanchetJaggardScedrovTsayAsiaCCS08}, \cite{CadeBlanchetJoWUA13}, \cite{LippBlanchetBhargavanEuroSP19}), one of the basic assumptions of the thesis is perfect cryptography (see section~\ref{sec:goal}).
 Therefore, it is only mentioned for informational purposes and shall not be pursued further.
 
-In recent years, \gls{3gpp} specifications clearly capture the interest of the research community.
-This does not just apply to the recently finalized 5G standard and related protocols, but also to earlier generations (see~\cite{alt2016cryptographic}, \cite{lee2014anonymity}).
-However, these works mostly focus on the \gls{aka} protocol.
+In recent years, \gls{3gpp} networks and protocols clearly capture the interest of the model checking research community.
+This does not only apply to the recently finalized 5G specification, but also to earlier generations, such as 3G/\gls{umts} (see~\cite{alt2016cryptographic} and 4G/\gls{lte} \cite{lee2014anonymity}).
+However, these works mostly focus on the \gls{aka} protocol used for mutual authentication between subscriber and mobile network.
+Similar efforts have been made for the slightly modified 5G-\gls{aka} algorithm.
+\cite{dehnel2018security} analyze an draft version of the 5G security specification and discover a potentially critical race-condition.
+By replaying an overheard encrypted subscription identifier shortly after a genuine user authenticates with the network, an attacker may be able to induce a session mis-binding in the communication between two 5G core network elements, leading to the delivery of the genuine subscriber's Authentication Vector to the attacker.
+\cite{basin2018formal} provide a comprehensive analysis that highlights a number flaws uncovered using formal methods and suggesting possible improvements.
+Specifically, they point out a lack of explicit specification of intended security properties, confidentiality requirements that are too weak, redundancies in the messages exchanged between network and subscriber, the use of a sequence number for replay protection, and a flawed key confirmation procedure.
+\cite{borgaonkar2019new} demonstrate a proof of concept and formal verification for an attack that utilizes authentication challenges obtained on a victim's behalf to infer at least 10 bits of the sequence number used in 5G \gls{aka}.
 
-\cite{basin2018formal}, \cite{dehnel2018security}, \cite{borgaonkar2019new}, \cite{lanzenberger2017formal}
+The tool used to create formal proofs for all of the 5G security protocols above is the \textsc{Tamarin} prover (\cite{meier2013tamarin}, \cite{tamarin}).
+A successor to another popular model checking tool, Scyther (\cite{cremers2008scyther} \cite{scyther}), it is now being used for a large part of formal verification research.
+The tool \textsc{Proverif} (see \cite{blanchet2016modeling}, \cite{proverif}) takes a slightly different approch to symbolic model checking by describing protocols in the applied pi calculus (\cite{ryan2011applied}) rather than multiset rewriting systems employed by \textsc{Tamarin}.
+An in-depth comparison of model checking tools is provided in section \ref{sec:formal}.
 
-\cite{o2017mobile}
+\cite{engel2008locating}
+\cite{engel2014locate}
+\cite{oliveira2014world}
+\cite{puzankov2014how}
 
-tools
-\cite{cremers2008scyther} \cite{scyther}
-\cite{meier2013tamarin} \cite{tamarin}
-\cite{blanchet2016modeling} \cite{proverif}
+\cite{rao2015unblock}
+\cite{rao2016privacy}
+\cite{rao2016where}
+\cite{holtmanns2016user}
+\cite{holtmanns2017sms}
+
+Since the 5G specification has just recently been finalized ... \cite{enisa2018signal}
