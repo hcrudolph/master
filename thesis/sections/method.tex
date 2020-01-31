@@ -1,5 +1,14 @@
-As part of this work, the \gls{3gpp} specification is examined in detail to understand the exact protocol flow and security requirements.
-Based on this assessment, a comparison between existing formal verification tools is performed determine the one that best covers the properties of the protocol under test.
-The protocol is transformed into a model suitable to be verified by the chosen tool.
-Since \gls{3gpp} documents are not written in a strictly formal manner, but rather in prose, the protocol specification may turn out not be mathematically complete.
-In this case, explicit assumptions shall be made in to be able to complete the computer-aided verification.
+This section describes the course of action employed to answer the previously defined research questions.
+As such, it also outlines the high-level structure of the remainder of this thesis.
+
+Initially, section \ref{sec:n32} examines the relevant \gls{3gpp} specifications in detail to understand the involved parties, security requirements, and exact message sequence of the \gls{prins} protocol.
+This serves as the basis for transposing the specification into a formal model later on.
+A comparison between popular model checking tools is performed in section \ref{sec:formal}, in order to determine the one that best covers the properties of the protocol under test.
+Aside from the security requirements to be verified and a particular tool's feature set --which on their own may not conclusively answer the question what tool is suited best for this analysis-- additional aspects, such as degree of automation, are also considered.
+Section \ref{sec:model} describes the model of \gls{prins} suitable to be verified by the chosen tool.
+Since \gls{3gpp} documents are not written in a strictly formal manner, but rather in prose, the protocol specification may prove not to be complete.
+In these cases, explicit assumptions shall be made to be able to complete a computer-aided verification.
+
+Depending on the verification, section \ref{sec:analysis} discusses the issues encountered during execution of the model checker as well as its final result.
+Section \ref{sec:implications} puts the result of the model checker and outlines the practical security implications on the \gls{prins} protocol.
+Where required, recommendations for improving the protocol's specificatiom are provided.
