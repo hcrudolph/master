@@ -1,14 +1,14 @@
-This section describes the methods employed in order to answer the previously defined research questions.
-As such, it also outlines the high-level structure of the remainder of this thesis.
-
-Initially, section \ref{sec:n32} examines the relevant \gls{3gpp} specifications in detail to understand all involved parties, security requirements, as well as message contents and sequences of the \gls{prins} protocol.
-This serves as the basis for transposing the specification into a formal model later on.
-Subsequently, a comparison between popular model checking tools is performed in section \ref{sec:formal}, in order to determine the one that best covers the properties of the protocol under test.
+Initially, section \ref{sec:n32} examines the relevant \gls{3gpp} specifications in detail to understand all involved parties, desired security properties, as well as message contents and sequences of \gls{prins}.
+Since the protocol features some very distinct requirements, the underlying trust model is discussed in detail.
+This first step serves as the basis for transposing the specification into a formal model later on.
+Secondly, \ref{sec:formal} goes on to describe the theoretical background of model checking for the purposes of verifying security protocols.
+By clarifying the mathematical foundations, this aids the understanding of exactly what kind of potential flaws are detectable in this way.
+Subsequently, a comparison between popular model checkers is performed in section \ref{sec:formal}, in order to determine the one that best covers the properties of the protocol under test.
 Aside from the security requirements to be verified and a particular tool's feature set --which on their own may not conclusively answer this question-- additional aspects, such as the degree of automation, are also considered.
-The choice to utilize a certain software also determines the model that is created in a next step.
-Therefore, section \ref{sec:model} provides a detailed account of the process of modelling \gls{prins} in a way that is suitable to be verified by the chosen tool.
-Since \gls{3gpp} documents are not written in a strictly formal manner, but rather in prose, the protocol specification may prove not to be perfectly complete -- a point of critique \cite{basin2018model} highlight with respect to the 5G \gls{aka} protocol.
-In such cases, explicit assumptions shall be made to be able to complete a computer-aided verification.
+The choice of software further determines the model created in the next step.
+Hence, section \ref{sec:model} provides a detailed account of the process of modeling \gls{prins} in a way that is suitable to be verified by the chosen tool.
+Since \gls{3gpp} documents are not written in a strictly formal manner but rather in prose, the protocol specification may prove not to be perfectly complete -- a point of critique \cite{basin2018model} highlight with respect to the 5G \gls{aka} protocol.
+In such cases, explicit assumptions shall be made to be able to complete the computer-aided verification.
 
 Afterwards, section \ref{sec:analysis} discusses the issues encountered during execution of the model checker as well as the information obtained as a result.
 Section \ref{sec:implications} puts these findings into context and outlines the practical security implications on the \gls{prins} protocol.
