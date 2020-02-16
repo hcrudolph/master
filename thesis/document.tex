@@ -30,11 +30,17 @@
 \printglossary
 
 %--- Acronyms ---%
-\printglossary[type=\acronymtype,title=Acronyms]
+\printglossary[type=\acronymtype,title=Abbreviations]
 
 %--- Main contents ---%
 \chapter{Introduction}
 \label{chap:intro}
+
+This thesis is about verifying security properties of the network protocol used for inter-operator communication in 5G systems.
+Section \ref{sec:problem} establishes the motivation to research this particular problem.
+Section \ref{sec:goal} outlines the research questions in scope and general working assumptions.
+Section \ref{sec:related} provides an overview of related work on formal verification of security protocols and mobile network protocols in general.
+Section \ref{sec:outline} describes the approach taken to answer the research questions and the overall structure of this thesis.
 
 \section{Context and Problem Statement}
 \label{sec:problem}
@@ -48,20 +54,20 @@
 \label{sec:related}
 \import{sections/}{related.tex}
 
-\section{Methodology}
-\label{sec:method}
+\section{Outline}
+\label{sec:outline}
 \import{sections/}{method.tex}
 
 \clearpage
 
-\chapter{Theoretical Foundations}
+\chapter{Theoretical Background}
 \label{chap:theory}
 
-\section{The 5G Inter-operator protocol}
+\section{5G Signaling and the PRINS Protocol}
 \label{sec:n32}
 \import{sections/}{n32.tex}
 
-\section{Formal Verification of security protocols}
+\section{Formal Verification}
 \label{sec:formal}
 \import{sections/}{formal.tex}
 
@@ -88,10 +94,10 @@
 \label{chap:intro}
 
 \section{Conclusion}
-\label{sec:problem}
+\label{sec:conclusion}
 \import{sections/}{conclusion.tex}
 
-\section{Outlook}
+\section{Future Work}
 \label{sec:outlook}
 \import{sections/}{outlook.tex}
 
