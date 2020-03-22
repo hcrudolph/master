@@ -1,4 +1,99 @@
-\subsection{General}
+\subsection{Symbolic Model Checking and First-Order Logic}
+
+This section serves as an introduction to symbolic model checking of security protocols and some of the tools that may be used for this task.
+Key theoretical concepts are explained to an extent that allows the reader to comprehend the formal model of the PRINS protocol and its verification described in chapter 3.
+
+%Literature:
+%\begin{enumerate}
+%    \item \cite{baier2008principles}
+%    \item \cite{kuhtz2011weak}
+%\end{enumerate}
+
+At its core, symbolic model checking describes the verification of a given system represented by a model of system states – a security protocol is essentially a distributed, concurrent system – against a temporal logic formula.
+The model can be, for example, a Finite-State Machine (see \cite{alur1998model}), or a Binary Decision Diagram (see \cite{burch1992symbolic}), that captures the number of reachable states and transitions between them.
+System states are modeled in an abstract manner by symbols that represent information available to the participants at a given point in time.
+State transitions describe how the systems moves from one state into another, the precondition for it happening and the result of the transition.
+The temporal logic formula details the intended system requirements in a mathematical way.
+The act of model checking is the exploration of all system states, verifying whether or not the formula holds true for all possible scenarios.
+An issue is discovered if the provided model does not accurately match the formula – hence the term 'model checking'.
+In practice, there exists a number of optimizations to make the task of exploring all system states more efficient than a brute-force search (see \cite{etessami2000optimizing}).
+If these operations are performed by a computer, it is considered automatic model checking.
+The nature of this approach to proving a system's correctness also determines the properties that can effectively be verified.
+Given the desired properties are formalized in logic formulas, it is potential logical flaws in the system design that are examined.
+Most model checkers, including the ones that are considered in this thesis, build on some subset of \gls{fol}, which shall be briefly introduced hereafter.
+
+%Literature:
+%\begin{enumerate}
+%    \item \cite{schoning2008logic}
+%\end{enumerate}
+
+First-Order Logic (also referred to as predicate logic) extends classical, propositional logic by the notion of predicates and quantifiers.
+Whereas the latter is solely concerned with logical statements and connectives, first-order logic is inherently connected to a domain of discourse or universe and the semantics associated with it.
+For example, propositional logic is only able to express binary relations using atomic formulas (or symbols), logical connectives (or functions), and formulas that combine symbols and functions according to the logic's particular grammar:
+
+\begin{equation*}
+    \begin{gathered}
+        \textit{"If it is sunny, it is not raining."}\\
+        P \rightarrow \lnot Q
+    \end{gathered}
+\end{equation*}
+
+A First-Order Logic on the other hand is comprised quantified of symbols, functions, as well as propositions (or relations) between these elements.
+Functions and relations are not necessarily binary but can take any number of parameters greater than zero.
+
+\begin{equation*}
+    \begin{gathered}
+        \textit{"All humans have mothers and John is human. Therefore, John has a mother."}\\
+        (\forall x)(Hx \rightarrow Mx) \wedge (Hj) \rightarrow (Mj)
+    \end{gathered}
+\end{equation*}
+\begin{equation*}
+    \text{where }
+    Mx: x \text{ has a mother; }
+    Hx: x \text{ is human; }
+    j: \text{constant 'John'}
+\end{equation*}
+
+Or
+
+\begin{equation*}
+    \begin{gathered}
+        \textit{"There exists x such that x is John's mother and x is female."}\\
+        (\exists x)(Mxj \wedge Fx)
+    \end{gathered}
+\end{equation*}
+\begin{equation*}
+    \text{where }
+    Mxy: x \text{ is the mother of y; }
+    Fx: x \text{ is female; }
+    j: \text{ constant 'John'}
+\end{equation*}
+
+\gls{fol} is defined relative to a signature, i.e. a set of symbols not inherent to classical logic, by syntax and semantics.
+The syntax determines the allowed well-formed formulas, whereas the semantics associates meaning to these formulas.
+This thesis follows the formal definition of \cite{schoning2008logic}, the key points of which are summarized below:
+
 \subsection{Tamarin}
+\subsubsection{Terminology}
+
+Multiset Rewriting System
+
+Rules
+
+Facts
+
+Terms
+
+Dependency Graphs
+
+\subsubsection{Featureset \& Limitations}
+
 \subsection{ProVerif}
-\subsection{Maude}
+
+\subsubsection{Terminology}
+
+Advanced $\pi$-Calculus
+
+Horn Clauses \& Queries on them
+
+\subsubsection{Featureset \& Limitations}
