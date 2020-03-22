@@ -1,9 +1,9 @@
-Initially, section \ref{sec:n32} examines the relevant \gls{3gpp} specifications in detail to understand all involved parties, desired security properties, as well as message contents and sequences of \gls{prins}.
-Since the protocol features some very distinct requirements, the underlying trust model is discussed in detail.
+Initially, section \ref{sec:n32} examines the relevant \gls{3gpp} specifications in detail to establish a firm understanding of all protocol components and messages flows, involved participants, and desired security properties of \gls{prins}.
+Since the protocol features some very distinct requirements, the assumed trust model is specifically mentioned.
 This first step serves as the basis for transposing the specification into a formal model later on.
-Secondly, \ref{sec:formal} goes on to describe the theoretical background of model checking for the purposes of verifying security protocols.
-By clarifying the mathematical foundations, this aids the understanding of exactly what kind of potential flaws are detectable in this way.
-Subsequently, a comparison between popular model checkers is performed in section \ref{sec:formal}, in order to determine the one that best covers the properties of the protocol under test.
+Secondly, \ref{sec:formal} goes on to describe some of the theoretical preliminaries of symbolic model checking for the purposes of verifying security protocols.
+It is described what kind of security properties can be verified using this approach and what the limitations are.
+Subsequently, the two popular model checking tools \textsc{Tamarin Prover} and \textsc{ProVerif} , in order to determine the one that best covers the properties of the protocol under test.
 Aside from the security requirements to be verified and a particular tool's feature set --which on their own may not conclusively answer this question-- additional aspects, such as the degree of automation, are also considered.
 The choice of software further determines the model created in the next step.
 Hence, section \ref{sec:model} provides a detailed account of the process of modeling \gls{prins} in a way that is suitable to be verified by the chosen tool.
