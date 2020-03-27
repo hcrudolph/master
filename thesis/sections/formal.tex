@@ -18,9 +18,8 @@ The act of model checking is the exploration of all system states, verifying whe
 An issue is discovered if the provided model does not accurately match the formula – hence the term 'model checking'.
 In practice, there exists a number of optimizations to make the task of exploring all system states more efficient than a brute-force search (see \cite{etessami2000optimizing}).
 If these operations are performed by a computer, it is considered automatic model checking.
-The nature of this approach to proving a system's correctness also determines the properties that can effectively be verified.
-Given the desired properties are formalized in logic formulas, it is potential logical flaws in the system design that are examined.
 Most model checkers, including the ones that are considered in this thesis, build on some subset of \gls{fol}, which shall be briefly introduced hereafter.
+These fundamental concepts are key to understand what kind of system properties are in scope of the following analysis.
 
 %Literature:
 %\begin{enumerate}
@@ -69,22 +68,184 @@ Or
     j: \text{ constant 'John'}
 \end{equation*}
 
-\gls{fol} is defined relative to a signature, i.e. a set of symbols not inherent to classical logic, by syntax and semantics.
-The syntax determines the allowed well-formed formulas, whereas the semantics associates meaning to these formulas.
-This thesis follows the formal definition of \cite{schoning2008logic}, the key points of which are summarized below:
+\gls{fol} is defined relative to a \textit{signature}, i.e. a set of symbols not inherent to classical logic, by a particular syntax and semantics.
+The syntax determines the set of well-formed formulas, whereas the semantics associates meaning to these formulas.
+This thesis follows the formal definition of Schöning (c.f. \cite{schoning2008logic}, pp. 41-47), the key points of which are summarized below.
+
+The \gls{fol} syntax is comprised of variables, predicates, functions and quantifiers.
+A \textit{variable} is of the form $x_i$ where $i= 1, 2, 3, \ldots$.
+A \textit{predicate symbol} is of the form $P_i^k$ and a \textit{function symbol} of the form $f_i^k$ where $i = 1, 2, 3 , \ldots$ and
+$k = 0, 1, 2, \ldots$, where $i$ is the index and $k$ is the arity.
+A function symbol of arity 0 is also called a \textit{constant}.
+A \textit{term} is defined as follows:
+
+\begin{enumerate}
+    \item Each variable is a term.
+    \item If $f$ is a function symbol with arity $k$, and if $t_1, \ldots, t_k$ are terms, then $f(t_l, \ldots, t_k)$ is a term.
+\end{enumerate}
+
+\noindent
+Next, \textit{formulas} are defined inductively as follows.
+
+\begin{enumerate}
+    \item If $P$ is a predicate symbol with arity $k$, and if $t_1, \ldots ,t_k$ are terms, then $P(t_1 , \ldots, t_k )$ is a formula.
+    \item For each formula $F, \lnot F$ is a formula.
+    \item For all formulas $F$ and $G$, $(F \wedge G)$ and $(F \vee G)$ are formulas.
+    \item If $x$ is a variable and $F$ is a formula, then $\exists xF$ and $\forall xF$ are formulas.
+\end{enumerate}
+
+Formulas built according to rule 1 are called \textit{atomic formulas}.
+If $F$ is a formula, and $F$ occurs as part of the the formula $G$, then $F$ is called a \textit{subformula} of $G$.
+All occurrences of a variable in a formula are distinguished into bound and free occurrences.
+An occurrence of the variable $x$ in the formula $F$ is bound if $x$ occurs within a subformula of $F$ of the form $\exists xG$ or $\forall xG$.
+A formula without occurrence of a free variable is called a \textit{closed formula} or \textit{sentence}.
+The symbol $\exists$ is called the \textit{existential quantifier}.
+It denotes its argument holds true sometimes (read: ,,There exists $x, \ldots$'').
+The symbol $\forall$ is called the \textit{universal quantifier}.
+It denotes its argument holds true everytime (read: ,,For all $x, \ldots$'').
+
+\gls{fol} is defined in relation to a domain of discourse that gives it meaning.
+A \textit{structure} is a pair $A = (U_A, I_A)$ where $U_A$ is an arbitrary, non-empty set called the \textit{universe}.
+$I_A$ is a mapping that maps
+
+\begin{enumerate}
+    \item each $k$-ary predicate symbol $P$ to a $k$-ary predicate on $U_A$ (if $I_A$ is defined on $P$).
+    \item each $k$-ary function symbol $f$ to a $k$-ary function on $U_A$ (if $I_A$ is defined on $f$).
+    \item each variable $x$ to an element of $U_A$ (if $I_A$ is defined on $x$).
+\end{enumerate}
+
+Let $F$ be a formula and $A = (U_A, I_A)$ be a structure. 
+$A$ is called suitable for $F$ if $I_A$ is defined for all predicate symbols, function symbols, and for all variables that occur free in $F$.
+
+Let $F$ be a formula and let $A = (U_A, I_A)$ be a suitable structure for $F$.
+For each term $t$ occurring in $F$, its \textit{value} under the structure $A$ is denoted as $A(t)$ and defined inductively as follows.
+
+\begin{enumerate}
+    \item If $t$ is a variable $(i.e., t = x)$, then we let $A(t) = x^A$.
+    \item If $t$ has the form $t = f(t_1, \ldots, t_k)$ where $t_1, \ldots, t_k$ are terms and $f$ is a function symbol of arity $k$, then we let $A(t) = f^A(A(t_1),\ldots , A(t_k))$.
+\end{enumerate}
+
+\begin{enumerate}
+    \item If $F$ has the form $F = P( t_1, \ldots, t_k)$ where $t_1, \ldots, t_k$ are terms and $P$ is a predicate symbol of arity $k$, then 
+    \begin{equation*}
+        A(F) = 
+            \left\{
+            \begin{array}{ll}
+                  1,& \text{if } (A(t_1), \ldots, A(t_k)) \in P^A \\
+                  0,& \text{otherwise}
+            \end{array} 
+            \right.
+    \end{equation*}
+
+    \item If $F$ has the form $F= \lnot G$, then
+    \begin{equation*}
+        A(F) = 
+            \left\{
+            \begin{array}{ll}
+                  1,& \text{if } A(G) = 0\\
+                  0,& \text{otherwise}
+            \end{array}
+            \right.
+    \end{equation*}
+
+    \item If $F$ has the form $F = (G \wedge H)$, then
+    \begin{equation*}
+        A(F) = 
+            \left\{
+            \begin{array}{ll}
+                  1,& \text{if } A(G) = 1 \text{ and } A(H) = 1\\
+                  0,& \text{otherwise}
+            \end{array} 
+            \right.
+    \end{equation*}
+
+    \item If $F$ has the form $F = (G \vee H)$, then
+    \begin{equation*}
+        A(F) = 
+            \left\{
+            \begin{array}{ll}
+                  1,& \text{if } A(G) = 1 \text{ or } A(H) = 1\\
+                  0,& \text{otherwise}
+            \end{array} 
+            \right.
+    \end{equation*}
+
+    \item If $F$ has the form $F = \forall xG$, then
+    \begin{equation*}
+        A(F) = 
+            \left\{
+            \begin{array}{ll}
+                  1,& \text{if for all } u \in U_A, A_{[x/u]}(G) = 1\\
+                  0,& \text{otherwise}
+            \end{array} 
+            \right.
+    \end{equation*}
+\end{enumerate}
+
+If for a formula $F$ and a suitable structure $A$ the term $A(F) = 1$ holds true, then this is denoted by $A \models F$ (read $A$ \textit{models} $F$).
+If every suitable structure for $F$ is a model for $F$, then this is denoted by $\models F$ (read $F$ is \textit{valid}).
+If there is at least one model for the formula $F$ then $F$ is called \textit{satisfiable}, and otherwise \textit{unsatisfiable}.
+
+Translating this definition into the particular example at hand, first the \gls{prins} protocol is to be transposed into formal a structure $A$ (,,the model'').
+Secondly, a formula $F$ has to be defined for each of the desired security properties in order to be able to validate it against $A$.
+If a model checker is able to prove that $F$ is valid for $A$, the related property is considerd successfully verified.
+Given the nature of this approach to proving a system's correctness, model checking is only able to assess a particular set of properties.
+That is, only logical correctness can effectively be verified.
+
+\subsubsection{Safety Properties}
+
+Safety properties, particularly in the context of security protocols, can informally be described as the absence of something bad happening.
+A trivial example is secrecy: No unauthorized party is supposed to have access to sensitive data in the clear.
+These properties are specified over a particular order of states (or \textit{traces}) the modeled system is going through and may be broken by a finite run that leads to an undesired state.
+Such cases, in which the reachability of a certain bad state falsifies the property are called \textit{invariants}.
+Checking for this particular type of flaw is simply a matter of verifying whether a given furmula holds for all reachable states.
+More formally, invariants can be defined as follows (c.f. \cite{baier2008principles}, p. 107).
+
+A property $P_{inv}$ over $A$ is an invariant if there is a first-order logic formula $F$ over $A$ such that
+
+\begin{equation*}
+    P_{inv} = \{ A_0, A_1, A_2, \ldots \in (A)^\omega | \forall j \geq 0. A_j \models F \}
+\end{equation*}
+
+\noindent
+$F$ is called an invariant condition (or state condition) of $P_{inv}$.
+
+In addition to invariants, there exist safety properties that are more involved than just the absence of certain undesired states.
+Instead, these may impose requirements on parts of the system's execution trace itself.
+Consider, for example, an arbitrary security protocol that would allow sending data prior to performing the cryptogrtaphic operations that ensure integrity or confidentiality.
+Even though this trivial case would likely already be discoverd during modeling phase, it examplifies that the order of subsequent states is relevant.
+That is, these type properties is not about guaranteeing the reachability of ,,bad'' states, but ,,bad'' path fragments in the execution trace.
+Such safety properties are a generalization of invariantes and are fullfilled if there is no execution trace contains a finite prefix that violates the premise.
+They can be defiend as follows (c.f. \cite{baier2008principles}, p. 112).
+
+A property $P_{safe}$ over $A$ is called a safety property if for all words $\sigma \in (2^{AP})^{\omega} \in P_{safe}$ there exists a finite prefix $\widehat{\sigma}$ of $\sigma$ such that
+
+\begin{equation*}
+    P_{safe} \cap \{ \sigma' \in (2^{AP})^{\omega} | \widehat{\sigma} \text{ is a finite prefix of } \sigma' \} = \emptyset
+\end{equation*}
+
+\noindent
+Any such finite word $\widehat{\sigma}$ is called a bad prefix for $P_{safe}$. 
+
+\subsubsection{Liveliness Properties}
+
+Complementary to the abovementioned characteristics are properties that demand something good eventually always happening.
+Unlike safety properties, they do not impose requirements on finite traces of the system, but put conditions on the infinite behaviour.
+
+\subsubsection{Indistinguishability}
+
+The above definitions for both safety and liveliness are closely linked to the concept of traces.
+There is yet another type of properties that is not defined over individual traces, but the information an attacker is able to obtain by observing two independent system runs.
+This is commonly termed \textit{indistinguishability} or \textit{observational equivalence}.
 
 \subsection{Tamarin}
 \subsubsection{Terminology}
 
-Multiset Rewriting System
-
-Rules
-
-Facts
-
-Terms
-
-Dependency Graphs
+\begin{enumerate}
+    \item Multiset Rewriting System
+    \item Rules, Facts, Terms
+    \item Dependency Graphs
+\end{enumerate}
 
 \subsubsection{Featureset \& Limitations}
 
@@ -92,8 +253,10 @@ Dependency Graphs
 
 \subsubsection{Terminology}
 
-Advanced $\pi$-Calculus
-
-Horn Clauses \& Queries on them
+\begin{enumerate}
+    \item Advanced $\pi$-Calculus
+    \item Horn Clauses
+    \item Horn Logic Queries
+\end{enumerate}
 
 \subsubsection{Featureset \& Limitations}
