@@ -9,7 +9,7 @@ The term ,,model checking'' as it is used today goes back to Clarke and Emerson,
 In contrast to previous efforts, they model the system flow graph as a finite structure and describe ,,an efficient algorithm [...] to decide whether a given finite structure is a model of a particular formula'' (\cite{clarke1981design}, 2).
 Even though this particular work is used to reason about a single concurrent program, the authors already hint to the possible extension of their approach to ,,network communication protocols''.
 \cite{dolev1983security} consitutes another landmark paper in terms of formally verifying security protocols.
-Their contribution is to model a protocol ,,as a machine consisting of an arbitrary number of honest agents executing the protocol, in which all messages sent are interceptedby the adversary [...], all messages received are sent by the adversary'' (\cite{basin2018model}, 6).
+Their contribution is to model a protocol ,,as a machine consisting of an arbitrary number of honest agents executing the protocol, in which all messages sent are intercepted by the adversary [...], all messages received are sent by the adversary'' (\cite{basin2018model}, 6).
 A foundational concept for many model checkers to this day, it is shown in section \ref{sec:n32} how this assumption is an excellent fit for the use case of inter-operator signaling.
 
 The Dolev-Yao model further represents all messages in abstract mathematical terms and assumes the underlying cryptography to be perfect -- an approach also known as formal verification in the symbolic model or simply \textit{symbolic model checking}.

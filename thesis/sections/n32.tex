@@ -19,7 +19,8 @@ A single \gls{plmn} can simultaneously be connected to multiple \gls{ipx} provid
     \item Both \glspl{plmn} are connected to two distinct \gls{ipx} providers that are each allowed to access message contents and are connected via additional \gls{ipx} providers that are not expected to access message contents.
 \end{enumerate}
 
-This constellation, in which different external parties are expected to perform changes that cannot be validated or traced with the existing security protocols is one of the motivating factors for the definition of \gls{prins}.
+Intuitively, one can see that this overlaps with the premises of the Dolev-Yao model: All signaling messages are intercepted by an \gls{ipx} provider (the potential adversary) and all messages received are sent by such an entity.
+This constellation, in which different external parties are expected to perform cetain changes that cannot be validated or traced with the existing security protocols is one of the motivating factors for the definition of \gls{prins}.
 
 \subsection{5G Core Network Signaling}
 
