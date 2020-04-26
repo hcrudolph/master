@@ -29,10 +29,20 @@
 \usepackage{listings}
 \usepackage{enumitem}
 \usepackage{setspace}
+\usepackage{awesomebox}
 \usepackage[titles]{tocloft}
 
 \graphicspath {{figures/}}
 \hyphenation{}
+
+\setlength{\aweboxvskip}{3mm}
+\newcommand{\sgoal}[1]{
+    \awesomebox[RoyalBlue]{2pt}{\faUnlock*}{RoyalBlue}{#1}
+}
+
+\newcommand{\asgoal}[1]{
+    \awesomebox[Gray]{2pt}{\faUnlock*}{Gray}{#1}
+}
 
 % count footnotes globally
 \usepackage{chngcntr}
