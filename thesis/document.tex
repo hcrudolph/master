@@ -7,15 +7,18 @@
 %--- Title ---%
 \import{}{title.tex}
 \pagestyle{empty}
-\clearpage
+\blankpage
+
+%--- Abstract ---%
+\input{abstract.tex}
+\blankpage
 
 %--- TOC ---%
 \phantomsection
 \pagenumbering{arabic}
 \pagestyle{plain}
-\setcounter{page}{3}
+\setcounter{page}{5}
 \setcounter{tocdepth}{2}
-\addcontentsline{toc}{chapter}{Table of Contents}
 \tableofcontents
 
 \clearpage
@@ -63,22 +66,41 @@ Section \ref{sec:outline} describes the approach taken to answer the research qu
 \chapter{Theoretical Preliminaries}
 \label{chap:theory}
 
-\section{Formal Verification}
-\label{sec:formal}
-\import{sections/}{formal.tex}
+Section \ref{sec:n32} initially describes design rationale and functional requirements on \gls{prins}.
+Subsequently, the individual protocol components and message flows are outlined.
+Specific focus is put on security requirements to be verified later on.
+Section \ref{sec:formal} serves as an introduction to symbolic model checking of security protocols and compares two tools that can be used for this purpose.
+Key concepts are explained to an extent that allows the reader to understand the formal model of the \gls{prins} protocol and its verification described in chapter \ref{chap:verification}.
 
 \section{5G Signaling and the PRINS Protocol}
 \label{sec:n32}
 \import{sections/}{n32.tex}
 
+\section{Formal Verification}
+\label{sec:formal}
+\import{sections/}{formal.tex}
+
+\section{Summary}
+\label{sec:summary}
+\import{sections/}{summary.tex}
+
 \clearpage
 
-\chapter{Verification of the PRINS Protocol}
-\label{chap:formal}
+\chapter{Modeling the PRINS Protocol}
+\label{chap:modeling}
 
 \section{Model transposition}
 \label{sec:model}
 \import{sections/}{model.tex}
+
+\section{Modeling Issues}
+\label{sec:issues}
+\import{sections/}{issues.tex}
+
+\clearpage
+
+\chapter{Verifying of the PRINS Protocol}
+\label{chap:verification}
 
 \section{Critical Analysis}
 \label{sec:analysis}
@@ -91,7 +113,7 @@ Section \ref{sec:outline} describes the approach taken to answer the research qu
 \clearpage
 
 \chapter{Closing Remarks}
-\label{chap:intro}
+\label{chap:closing}
 
 \section{Conclusion}
 \label{sec:conclusion}
