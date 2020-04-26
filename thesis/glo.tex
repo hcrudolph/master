@@ -1,20 +1,8 @@
-\newglossaryentry{gls:ptl}
-{
-    name={Propositional Temporal Logic},
-    description={see: \gls{gls:ltl}}
-}
-
 \newglossaryentry{gls:ltl}
 {
     name={Linear-time Temporal Logic},
     description={describes a system of rules and modalities referring to time that allows one to ,,describe and reason about how the truth values of assertions vary
 with time'' (\cite{emerson1990temporal}, 1). Such system is linear in that every point in time has a defined successor.}
-}
-
-\newglossaryentry{gls:csec}
-{
-    name={Concrete Security},
-    description={.}
 }
 
 \newglossaryentry{gls:2g}
@@ -32,29 +20,35 @@ with time'' (\cite{emerson1990temporal}, 1). Such system is linear in that every
 \newglossaryentry{gls:4g}
 {
     name={4G},
-    description={also known as Long Term Evolution (LTE), is the term commonly used to describe 3GPP Releases 8 through 14. It is the first global standard for purely packet-switched public mobile network.}
+    description={also known as Long Term Evolution (LTE), is the term commonly used to describe 3GPP Releases 8 through 14. It is the first global standard for purely packet-switched mobile network.}
+}
+
+\newglossaryentry{gls:5g}
+{
+    name={5G},
+    description={is the term commonly used to describe 3GPP Releases 15 and beyond. An evolutionary change on top of 4G, it features a greater functional decoupling within the core network and an updated protocol stack.}
 }
 
 \newglossaryentry{gls:cn}
 {
     name={Core Network},
-    description={describes the part of a mobile network that fulfills central functionalities, such as subscriber authentication, mobility, etc. It is complementary to the Radio Access Network.}
+    description={describes the part of a mobile network that host central functionalities, such as subscriber authentication, and mobility management. It is complementary to the \gls{gls:ran}.}
 }
 
 \newglossaryentry{gls:ran}
 {
     name={Radio Access Network},
-    description={describes the part of a mobile network that transmit/receives radio signals to/from mobile handsets. It is complementary to the \gls{gls:cn}. In 5G, the RAN is comprised of base stations called gNB.}
+    description={describes the part of a mobile network that transmit/receives radio signals to/from mobile handsets. It is complementary to the \gls{gls:cn}. In 5G, the RAN is comprised of multiple base stations called gNodeB (gNB).}
 }
 
 \newglossaryentry{gls:cp}
 {
     name={Control Plane},
-    description={(also: Signaling Plane) describes protocol messages containing information used to manage the flow of user data.}
+    description={(also: Signaling Plane) describes protocol messages used to control the mobile network itself, incl. subscriber authentication, message routing, and session management.}
 }
 
 \newglossaryentry{gls:up}
 {
     name={User Plane},
-    description={describes protocol messages containing information that is directly created or consumed by the user.}
+    description={describes protocol messages that are directly created or consumed by the user/user equipment and are only transported by the mobile network.}
 }
