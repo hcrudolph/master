@@ -1,15 +1,31 @@
-Initially, section \ref{sec:n32} examines the relevant \gls{3gpp} specifications in detail to establish a firm understanding of all protocol components and messages flows, involved participants, and desired security properties of \gls{prins}.
-Since the protocol features some very distinct requirements, the assumed trust model is specifically mentioned.
+Chapter~\ref{chap:theory} outlines the theoretical preliminaries implied throughout the remainder of this thesis.
+Initially, section~\ref{sec:n32} examines the relevant \gls{3gpp} specifications in detail to establish a firm understanding of all protocol components, messages flows, involved participants, and desired security properties of \gls{prins}.
+Particular focus is put on the trust model assumed by the \gls{3gpp} specification.
 This first step serves as the basis for transposing the specification into a formal model later on.
-Secondly, \ref{sec:formal} goes on to describe some of the theoretical preliminaries of symbolic model checking for the purposes of verifying security protocols.
-It is described what kind of security properties can be verified using this approach and what the limitations are.
-Subsequently, the two popular model checking tools \textsc{Tamarin Prover} and \textsc{ProVerif} , in order to determine the one that best covers the properties of the protocol under test.
-Aside from the security requirements to be verified and a particular tool's feature set --which on their own may not conclusively answer this question-- additional aspects, such as the degree of automation, are also considered.
-The choice of software further determines the model created in the next step.
-Hence, section \ref{sec:model} provides a detailed account of the process of modeling \gls{prins} in a way that is suitable to be verified by the chosen tool.
-Since \gls{3gpp} documents are not written in a strictly formal manner but rather in prose, the protocol specification may prove not to be perfectly complete -- a point of critique \cite{basin2018model} highlight with respect to the 5G \gls{aka} protocol.
-In such cases, explicit assumptions shall be made to be able to complete the computer-aided verification.
+Secondly, section~\ref{sec:formal} goes on to describe important theoretical preliminaries of symbolic model checking for the purposes of verifying security protocols.
+As part of this, a brief introduction to first-order logic is provided, which serves as the fundamental theory to system verification using formal methods in general.
+It is further described what kind of security properties can be verified with this apporach and what known limitations exist.
+Subsequently, two popular tools for automated model checking of security protocols, \textsc{Tamarin} prover and \textsc{ProVerif}, are surveyed.
+In order to determine the software capable of addressing the requirements of the protocol under test in an optimal way, a comparison is performed in terms of supported security properties and cryptographic primitives.
+Aside from the pure security requirements to be verified and a particular tool's feature set --which on their own may not conclusively answer this question-- additional aspects such as the degree of automation and ease of use are also considered, some of which are inevitably subjective.
+The decision to use a particular software tool also determines the model that needs to be created in the following step.
+While there are attempts to bridge the gap between the aforementioned tools by translating one type of formal model into the other (see \cite{kremer2016automated}), this thesis intentionally focussed on \textsc{Tamarin} and \textsc{ProVerif} in there pure form, without relying on third-party extensions.
 
-Afterwards, section \ref{sec:analysis} discusses the issues encountered during execution of the model checker as well as the information obtained as a result.
-Section \ref{sec:implications} puts these findings into context and outlines the practical security implications on the \gls{prins} protocol.
+Chapter~\ref{chap:modeling} contains a comprehensive description of the verification process.
+Section~\ref{sec:model} provides a detailed account of modeling \gls{prins} in a way that is suitable to be verified by the chosen tool.
+During this process, the objective is to answer research question~(1) conclusively.
+Since \gls{3gpp} documents are not written in a strictly formal manner but rather in prose, the protocol specification may prove not to be perfectly complete -- a point of critique \cite{basin2018model} highlight with respect to the 5G \gls{aka} protocol.
+In these cases, explicit assumptions about the intended protocol behavior or requirement shall be made to allow for the completion of the computer-aided verification.
+Any such findings or the absence thereof help answering research question~(2), which is to be addressed by concerete suggestions for improvement of the \gls{3gpp} documents, if necessary.
+
+Chapter~\ref{chap:verification} discusses the process of computer-aided verification, the obtained results and their security implications.
+Section~\ref{sec:analysis} analyses the issues encountered during execution of the model checking tool as well as the information obtained as a result.
+Two kinds of findings are expected at this stage:
+Firstly, potential problems while running the software aid the validation of the model created previously.
+For example, if the tool does not terminate this may be an indication for the protocol being too loosely defined and more detailed modeling may be required.
+Secondly, if an actual flaw in the model is discovered it should be possible to explicitly point out the root cause.
+Since symbolic model checkers by design are able to provide a counter example to a property under test in the form of a particular trace that violates it.
+Section~\ref{sec:implications} puts these findings into context and outlines the practical security implications on the \gls{prins} protocol.
 Where required, recommendations for improving the protocol's specificatiom are provided.
+
+Lastly, chapter~\ref{chap:closing} draws a final conclusion of the formal verification of \gls{prins}, summarizes the contributions of this thesis, and provides suggestions for potential future work based on the findings of this thesis.
