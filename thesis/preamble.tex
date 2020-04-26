@@ -5,6 +5,7 @@
 \usepackage[justification=centering]{caption}
 \usepackage{graphicx}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{array}
 \usepackage{colortbl}
 \usepackage{rotating}
@@ -30,10 +31,33 @@
 \usepackage{enumitem}
 \usepackage{setspace}
 \usepackage{awesomebox}
+\usepackage{afterpage}
+\usepackage{soul}
 \usepackage[titles]{tocloft}
 
 \graphicspath {{figures/}}
 \hyphenation{}
+
+% custom commands
+
+\newcommand{\blankpage}{
+        \null
+        \thispagestyle{empty}
+        \addtocounter{page}{-1}
+        \newpage
+    }
+
+\newcommand{\ltracerule}{
+    \mathrel{\ooalign{\hss\cr\kern-.1ex$-$\hss\cr\kern1.2ex\hbox{[}}}
+}
+
+\newcommand{\rtracerule}{
+    \mathrel{\ooalign{\hss\cr\kern0ex]\hss\cr\kern.2ex\hbox{$\rightarrow$}}}
+}
+
+\newcommand{\tracerule}[1]{
+    \mathrel{\ooalign{\hss\cr\kern-.1ex$-$\hss\cr\kern1.2ex\hbox{[}}}{#1}\mathrel{\ooalign{\hss\cr\kern-.2ex]\hss\cr\kern0ex\hbox{$\rightarrow$}}}
+}
 
 \setlength{\aweboxvskip}{3mm}
 \newcommand{\sgoal}[1]{
@@ -43,6 +67,9 @@
 \newcommand{\asgoal}[1]{
     \awesomebox[Gray]{2pt}{\faUnlock*}{Gray}{#1}
 }
+
+\renewcommand{\baselinestretch}{1.15}
+
 
 % count footnotes globally
 \usepackage{chngcntr}
