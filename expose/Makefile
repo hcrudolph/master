@@ -1,20 +1,20 @@
 CC=pdflatex
 ACC=makeglossaries
 BCC=biber
-SOURCES=main
+SOURCES=document
 TEX_SOURCES=$(SOURCES:=.tex)
 
 all: pdf1 bib pdf2
 
 nobib: pdf1 glo pdf2
 
-pdf1 pdf2 pdf3: main.tex
+pdf1 pdf2 pdf3: document.tex
 	$(CC) $(TEX_SOURCES)
 
-bib: main.tex
+bib: document.tex
 	$(BCC) $(SOURCES)
 
-glo: main.tex
+glo: document.tex
 	$(ACC) $(SOURCES)
 
 clean:
