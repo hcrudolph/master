@@ -1,13 +1,5 @@
 \subsection{Symbolic Model Checking and First-Order Logic}
-
-This section serves as an introduction to symbolic model checking of security protocols and some of the tools that may be used for this task.
-Key theoretical concepts are explained to an extent that allows the reader to comprehend the formal model of the PRINS protocol and its verification described in chapter 3.
-
-%Literature:
-%\begin{enumerate}
-%    \item \cite{baier2008principles}
-%    \item \cite{kuhtz2011weak}
-%\end{enumerate}
+\label{ssec:symbolic}
 
 At its core, symbolic model checking describes the verification of a given system represented by a model of system states – a security protocol is essentially a distributed, concurrent system – against a temporal logic formula.
 The model can be, for example, a Finite-State Machine (see \cite{alur1998model}), or a Binary Decision Diagram (see \cite{burch1992symbolic}), that captures the number of reachable states and transitions between them.
@@ -114,8 +106,8 @@ $I_A$ is a mapping that maps
     \item each variable $x$ to an element of $U_A$ (if $I_A$ is defined on $x$).
 \end{enumerate}
 
-Let $F$ be a formula and $A = (U_A, I_A)$ be a structure. 
-$A$ is called suitable for $F$ if $I_A$ is defined for all predicate symbols, function symbols, and for all variables that occur free in $F$.
+Let $F$ be a formula and $A = (U_A, I_A)$ be a structure.
+$A$ is called \textit{suitable} for $F$ if $I_A$ is defined for all predicate symbols, function symbols, and for all variables that occur free in $F$.
 
 Let $F$ be a formula and let $A = (U_A, I_A)$ be a suitable structure for $F$.
 For each term $t$ occurring in $F$, its \textit{value} under the structure $A$ is denoted as $A(t)$ and defined inductively as follows.
@@ -126,20 +118,20 @@ For each term $t$ occurring in $F$, its \textit{value} under the structure $A$ i
 \end{enumerate}
 
 \begin{enumerate}
-    \item If $F$ has the form $F = P( t_1, \ldots, t_k)$ where $t_1, \ldots, t_k$ are terms and $P$ is a predicate symbol of arity $k$, then 
+    \item If $F$ has the form $F = P( t_1, \ldots, t_k)$ where $t_1, \ldots, t_k$ are terms and $P$ is a predicate symbol of arity $k$, then
     \begin{equation*}
-        A(F) = 
+        A(F) =
             \left\{
             \begin{array}{ll}
                   1,& \text{if } (A(t_1), \ldots, A(t_k)) \in P^A \\
                   0,& \text{otherwise}
-            \end{array} 
+            \end{array}
             \right.
     \end{equation*}
 
     \item If $F$ has the form $F= \lnot G$, then
     \begin{equation*}
-        A(F) = 
+        A(F) =
             \left\{
             \begin{array}{ll}
                   1,& \text{if } A(G) = 0\\
@@ -150,39 +142,39 @@ For each term $t$ occurring in $F$, its \textit{value} under the structure $A$ i
 
     \item If $F$ has the form $F = (G \wedge H)$, then
     \begin{equation*}
-        A(F) = 
+        A(F) =
             \left\{
             \begin{array}{ll}
                   1,& \text{if } A(G) = 1 \text{ and } A(H) = 1\\
                   0,& \text{otherwise}
-            \end{array} 
+            \end{array}
             \right.
     \end{equation*}
 
     \item If $F$ has the form $F = (G \vee H)$, then
     \begin{equation*}
-        A(F) = 
+        A(F) =
             \left\{
             \begin{array}{ll}
                   1,& \text{if } A(G) = 1 \text{ or } A(H) = 1\\
                   0,& \text{otherwise}
-            \end{array} 
+            \end{array}
             \right.
     \end{equation*}
 
     \item If $F$ has the form $F = \forall xG$, then
     \begin{equation*}
-        A(F) = 
+        A(F) =
             \left\{
             \begin{array}{ll}
                   1,& \text{if for all } u \in U_A, A_{[x/u]}(G) = 1\\
                   0,& \text{otherwise}
-            \end{array} 
+            \end{array}
             \right.
     \end{equation*}
 \end{enumerate}
 
-If for a formula $F$ and a suitable structure $A$ the term $A(F) = 1$ holds true, then this is denoted by $A \models F$ (read $A$ \textit{models} $F$).
+If for a formula $F$ and a suitable structure $A$ the term $A(F) = 1$ holds, then this is denoted by $A \models F$ (read $A$ \textit{models} $F$).
 If every suitable structure for $F$ is a model for $F$, then this is denoted by $\models F$ (read $F$ is \textit{valid}).
 If there is at least one model for the formula $F$ then $F$ is called \textit{satisfiable}, and otherwise \textit{unsatisfiable}.
 
@@ -218,45 +210,253 @@ That is, these type properties is not about guaranteeing the reachability of ,,b
 Such safety properties are a generalization of invariantes and are fullfilled if there is no execution trace contains a finite prefix that violates the premise.
 They can be defiend as follows (c.f. \cite{baier2008principles}, p. 112).
 
-A property $P_{safe}$ over $A$ is called a safety property if for all words $\sigma \in (2^{AP})^{\omega} \in P_{safe}$ there exists a finite prefix $\widehat{\sigma}$ of $\sigma$ such that
+A property $P_{safe}$ over $A$ is called a safety property if for all words $\sigma \in (2^{A})^{\omega} \in P_{safe}$ there exists a finite prefix $\widehat{\sigma}$ of $\sigma$ such that
 
 \begin{equation*}
-    P_{safe} \cap \{ \sigma' \in (2^{AP})^{\omega} | \widehat{\sigma} \text{ is a finite prefix of } \sigma' \} = \emptyset
+    P_{safe} \cap \{ \sigma' \in (2^{A})^{\omega} | \widehat{\sigma} \text{ is a finite prefix of } \sigma' \} = \emptyset
 \end{equation*}
 
 \noindent
-Any such finite word $\widehat{\sigma}$ is called a bad prefix for $P_{safe}$. 
+Any such finite word $\widehat{\sigma}$ is called a bad prefix for $P_{safe}$.
+
+Some of the relevant features of security protocols that can be expressed using safety properties include confidentiality, integrity, and authentication.
 
 \subsubsection{Liveliness Properties}
 
 Complementary to the abovementioned characteristics are properties that demand something good eventually always happening.
 Unlike safety properties, they do not impose requirements on finite traces of the system, but put conditions on the infinite behaviour.
+A formal definition can be given as follows (c.f. \cite{baier2008principles}, p. 121).
+
+Property $P_{live}$ over $A$ is a liveness property whenever $pref(P_{live}) = (2^{A})\star$.
+Thus, a liveness property (over $A$) is a property $P$ such that each finite word can be extended to an infinite word that satisfies $P$.
+Stated differently, $P$ is a liveness property if and only if for all finite words $w \in (2^{A})\star$ there exists an infinite word $\sigma \in (2^{A})^\omega$ satisfying $w \sigma \in P $.
+
+Concrete examples for liveness properties are recovery, revocation, and the timeliness of certain actions.
 
 \subsubsection{Indistinguishability}
 
-The above definitions for both safety and liveliness are closely linked to the concept of traces.
-There is yet another type of properties that is not defined over individual traces, but the information an attacker is able to obtain by observing two independent system runs.
-This is commonly termed \textit{indistinguishability} or \textit{observational equivalence}.
+The above definitions for both safety and liveliness are closely linked to the concept of traces, i.e. individual system runs that satisfy or violate certain conditions.
+There exisits yet another type of properties that is not defined over individual traces, but the information an attacker is able to obtain by observing multiple instances of the system.
+This is commonly referred to as \textit{indistinguishability} or \textit{observational equivalence}.
+The formal definition is given below (c.f. \cite{baier2008principles}, pp. 589-590).
+
+Let $TS_1$ and $TS_2$ be two transition systems over $A$ with state spaces $S_1$ and $S_2$ , respectively.
+A binary relation $R \subseteq S_1 \times S_2$ is an
+observational bisimulation for ($TS_1$ , $TS_2$) if and only if the following conditions are satisfied:
+
+\begin{enumerate}[label=(\Alph*)]
+    \item Every initial state of $TS_1$ is related to an initial state of $TS_2$, and vice versa. That is
+    \begin{equation*}
+        \forall s_1 \in I_1 \exists s_2 \in I_2. (s_1, s_2) \in R \text{ and } \forall s_2 \in I_2 \exists s_1 \in I_1. (s_1, s_2) \in R
+    \end{equation*}
+    \item For all $(s_1, s_2) \in R$ the following conditions (1), (2) and (3) hold:
+    \begin{enumerate}[label=(\arabic*)]
+        \item If $(s_1, s_2) \in R$ then $L_1 (s_1) = L_2 (s_2)$
+        \item If $(s_1, s_2) \in R$ and $s'_1 \in Post(s_1)$ then there exists a path fragment $u_0 u_1 \ldots u_n$ such that $n \geq 0$ and $u_0 = s_2, (s'_1, u_n) \in R$ and, for some $m \leq n, L_2(u_0) = L_2(u_1) = \ldots = L_2(u_m)$ and $L_2(u_{m+1}) = L_2(u_{m+2}) = \ldots = L_2(u_n)$.
+        \item If $(s_1, s_2) \in R$ and $s'_2 \in Post(s_1)$ then there exists a path fragment $u_0 u_1 \ldots u_n$ such that $n \geq 0$ and $u_0 = s_2, (u_n, s'_2) \in R$ and, for some $m \leq n, L_1(u_0) = L_1(u_1) = \ldots = L_1 (u_m )$
+and $L_1(u_{m+1}) = L_1(u_{m+2}) = \ldots = L_1 (u_n)$.
+    \end{enumerate}
+\end{enumerate}
+
+\noindent
+$TS_1$ and $TS_2$ are called observational equivalent, denoted $TS_1 \approx_{obs} TS_2$, if there exists an observational bisimulation for $(TS_1, TS_2)$.
 
 \subsection{Tamarin}
+
+The \textsc{Tamarin} prover is a tool for automated formal verification in the symbol model.
+Initially developed by Meier and Schmidt at ETH Zürich (see \cite{schmidt2012formal}, \cite{meier2013advancing}), its primary domain of application is the analysis of security protocols.
+\textsc{Tamarin} enjoys notable popularity since its creation, with some of the protocols verified using the tool cited on its official website (c.f. \cite{tamarin}), such as TLS 1.3 (\cite{cremers2017comprehensive}), CoAP and MQTT (\cite{kim2017automated}), and 5G AKA (\cite{basin2018formal}).
+
+The security protocol under test is specified in \textsc{Tamarin}'s custom syntax and internally represented as \glspl{mrs}.
+Security properties to be verified are written as two-sorted first-order logic formulas, i.e. formulas considering terms of two types: protocol messages and timepoints.
+It features built-in support for the aforementioned Dolev-Yao adversaries, but has also been extended to incorporate stronger attackers such as the \gls{eck} model (see \cite{lamacchia2007stronger}).
+In the following, an overview of the \textsc{Tamarin} prover's key concepts is provided as well as a survey of its current feature set and limitations.
+
 \subsubsection{Terminology}
 
-\begin{enumerate}
-    \item Multiset Rewriting System
-    \item Rules, Facts, Terms
-    \item Dependency Graphs
+\textbf{State} is modeled as a multiset, i.e. a set of sets, of facts.
+Facts are built of terms over a fact signature $\Sigma_{Fact}$ and have the form $F(t_1, \ldots, t_k)$.
+They can either be linear or persistent.
+As Meier explains (\cite{meier2013advancing}, p. 76): ,,Linear facts model resources that can only be consumed once, whereas persistent facts model inexhaustible resources that can be consumed arbitrarily often.''
+The finite multiset of all facts represents the system state, including the adversary knowledge.
+
+\textbf{Rules} are used to describe transitions between system states.
+Multiset rewriting rules are of the form $l \tracerule{a} r$, where a multiset of facts $l$ is replaced by a multiset of facts $r$ using an action $a$.
+Such rule is applicable to a given state $S$ if it contains the same linear and persistent facts as $S$.
+In order to transition into a successor state $S'$, all linear facts are removed and facts generated by action $a$ are added.
+
+\noindent
+A protocol \textit{execution} is defined by an alternating sequence of states and rules. The initial state $S_0$ is always the empty multiset.
+
+\begin{equation}\label{eq:execution}
+    e = [S_0, (l_1 \tracerule{a_1} r_1), S_1, \ldots, S_{k-1}, (l_k \tracerule{a_k} r_k), S_k]
+\end{equation}
+
+\noindent
+Based on above definition, the \textit{trace} of a protocol execution is described by the sequence of actions to get from the initial to the final state.
+
+\begin{equation}
+    trace(e) = [set(a_1), \ldots, set(a_k)]
+\end{equation}
+
+\noindent
+This is key for describing certain safety properties on the basis of traces, as shown in the previous section.
+
+\textbf{Adversaries} are implicitly modelled within the multiset rewriting system of the protocol itself.
+In order to do so, \textsc{Tamarin} uses a few special fact symbols reserved for particular use cases.
+
+\begin{enumerate}[label=--]
+    \item $Fr(x)$ denotes a fresh name $x$ that is unique and unguessable. This capability is required for the concept of random values or nonces, which are a common component of security protocols.
+    \item $K(x)$ denotes the adversary's knowledge of $x$, i.e. $x$ is revealed.
+    \item $Out(x)$ denotes sending a message $x$ via the public Dolev-Yao channel. Recall that once this is done, the adversary can read, modify, or block any contained information.
+    \item $In(x)$ denotes receiving a message $x$ via the public channel and thus, by the adversary.
 \end{enumerate}
+
+\noindent
+Based on these unary fact symbols, \textsc{Tamarin} defines a set of message deduction rules (c.f. \cite{meier2013advancing}, p. 78).
+These allow the adversary send and receive messages on the public channel, learn about freshly generated names and public constants, and apply arbitrary functions on the messages observed.
+
+\begin{equation*}
+    MD = \left\{
+        \begin{aligned}
+            Out(x) &\ltracerule\rtracerule  K(x) \\
+            K(x) &\tracerule{K(x)} In(x) \\
+            Fr(x) &\ltracerule\rtracerule K(x) \\
+            [] &\ltracerule\rtracerule K(x:pub) \\
+            (K(x_1), \ldots, K(x_k)) &\ltracerule\rtracerule K(f(x_1, \ldots, x_k) | f \in \Sigma^k)
+        \end{aligned}
+    \right\}
+\end{equation*}
+
+\subsubsection{Security properties} 
+Tamarin describe security properties using two-sorted first-order logic formulas over \textit{trace atoms}.
+A trace atom is one of the following: false $\perp$, a term equality $t_1 \approx t_2$, a timepoint ordering $i \lessdot j$, a timepoint equality $i \doteq j$, or an action $f @ i$ for a fact $f$ at timepoint $i$.
+A trace formula $\varphi$, which formalizes a property under test, is compared to protocol trace instances and their associated values.
+As described in subsection \ref{ssec:symbolic}, trace properties are then verified by proving that the trace formula $\varphi$ is valid or satisfiable for all or some traces of the multiset rewriting system.
+The reader is reffered to Meier's thesis for a detailed account of the semantics of \textsc{Tamarin}'s trace formulas, traces $tr$, their valuation $\theta$ and the satisfaction relation $(tr, \theta) \models \varphi$ between them (\cite{meier2013advancing}, p. 81).
+
+In addition to trace properties, \textsc{Tamarin} is also able to prove observational equivalence using the \textit{diff}$[\cdot,\cdot]$ operator introduced by \cite{basin2015automated}.
+Two multiset rewriting systems are compared that exhibit the same rules, but vary in their instanciation.
+More precisely, it is the dependency graphs of the two systems that are compared for equivalence.
+Dependency graphs are an alternative representation for protocol executions to a sequence $e$ defined in formula \ref{eq:execution}.
+They consist of nodes denoting rule instances of a given trace, connected by edges denoting their input and output requirements.
+A more detailed description of these data structures is provided in the following subsection.
+
+%For an equational theory $E$, the satisfaction relation $(tr, \theta) \models_E %\varphi$ between traces $tr$, valuations $\theta$, and trace formulas $\varphi$ %is defined as follows.
+%
+%\begin{equation*}
+%    \begin{array}{ll}
+%    (tr, \theta) \models_E \perp            & \text{never}\\
+%    (tr, \theta) \models_E f@i              & \text{iff } \theta(i) \in idx(tr) %\text{ and } f \theta \in_E tr_{\theta(i)}\\
+%    (tr, \theta) \models_E i \lessdot j     & \text{iff } \theta(i) < \theta(j)\\
+%    (tr, \theta) \models_E i \doteq j       & \text{iff } \theta(i) = \theta(j)\\
+%    (tr, \theta) \models_E i \approx j      & \text{iff } t_1\theta =_E %t_2\theta\\
+%    (tr, \theta) \models_E \lnot \varphi       & \text{iff not } (tr, \theta) %\models_E \varphi\\
+%    (tr, \theta) \models_E \varphi \wedge \psi & \text{iff } (tr, \theta) %\models_E \varphi \text{ and } (tr, \theta) \models_E \psi\\
+%    (tr, \theta) \models_E \exists x:s.\varphi &\text{iff there is } u \in D_s %\text{ such that } (tr, \theta[x \rightarrow u]) \models_E \varphi
+%    \end{array}
+%\end{equation*}
+
+\subsubsection{Prove Strategy}
+
+\hl{todo}
 
 \subsubsection{Featureset \& Limitations}
 
+\hl{todo:}
+\begin{enumerate}
+    \item sym encryption
+    \item asym encryption
+    \item hashes
+    \item AEAD
+    \item observational equivalence
+\end{enumerate}
+
 \subsection{ProVerif}
+
+\textsc{ProVerif} is another example for a popular tool for symbolic model checking.
+Chiefly developed by Bruno Blanchet at INRIA Paris, it is one of the most mature model checking tools in existence, being actively maintained for almost 20 years.
+Like \textsc{Tamarin}, it has successfully been used to analyse a wide range of security protocols over the years.
+Examples cited on its official website include (c.f. \cite{proverif}) the Signal protocol (\cite{kobeissi2017automated}), the ARINC823 avionic protocols (\cite{blanchet2017symbolic}), and the FOO, Lee, JCJ, and Belenios e-voting protocols (\cite{hirschi2019improving}).
+
+Compared to the \textsc{Tamarin} prover, \textsc{ProVerif} tackles the problem of verifying security protocols distinctly different.
+Protocols are specified in the applied pi calculus (see \cite{abadi2017applied}), a variant of the pi calculus originally proposed by Milner (\cite{milner1999communicating}), a process algebra that is used to formally describe the behavior of security protocols.
+It extends the latter by components such as fresh variables and functions that model cryptographic primitives, to make it more suitable for this particular purpose.
 
 \subsubsection{Terminology}
 
+The \textbf{applied pi calculus} and process algebras in general are a formal method for describing the behavior of concurrent systems.
+As Baeten et al. point out: ,,A process algebra can be defined as any mathematical structure satisfying the axioms given for the basic operators'' (\cite{baeten2007process}, p. 1).
+The term ,,process'' is to be understood as an abstract element of this model.
+The fact that it is an ,,algebra'' signals that algebraic rules apply.
+Accordingly, calculations on processes can be performed using the defined operators in a given algebra.
+In the applied pi calculus used in \textsc{ProVerif}, operators are refered to as expressions.
+Expressions perform computations on terms, representing data or messages that are exchanged between processes.
+Processes are build from terms and expressions.
+Processes are used to model protocol participants, the Dolev-Yao adversary, as well as the protocol under test itself.
+
+\textbf{Terms} are built up from names, variables and constructors.
+While names represent atomic data, variables are a placeholder for other terms and can be replaced by such.
+Constructors on the other hand are functions with a certain arity used to build terms.
+All three kinds of terms are defined with a type.
+The default types defiend by \textsc{ProVerif} are \texttt{channel}, \texttt{boolean}, and \texttt{bitstring}, but the tool also supports custom types.
+
+\lstset{
+    mathescape,
+    emph={D,M,N,P,Q,T,x,y,z,a,b,c,h,k,s,f},
+    emphstyle=\itshape
+}
+\begin{figure}[h!]
+    \centering
+    \begin{lstlisting}
+        M,N ::=                     term
+            x,y,z                       variable
+            a,b,c,k,s                   name
+            f($M_1,\ldots,M_n$)                         constructor application
+    \end{lstlisting}
+    \caption{Term grammar}
+    \label{fig:pv-terms}
+\end{figure}
+
+\textbf{Expressions} are \ldots \hl{todo}
+
+\begin{figure}[h!]
+    \centering
+    \begin{lstlisting}
+        D ::=                       expression
+            M                           term
+            h($D_1,\ldots,D_n$)                         function application
+            fail                        failure
+    \end{lstlisting}
+    \caption{Expression grammar}
+    \label{fig:pv-expressions}
+\end{figure}
+
+\textbf{Processes} are \ldots \hl{todo}
+
+\begin{figure}[h!]
+    \centering
+    \begin{lstlisting}
+        P,Q ::=                     process
+            0                           nil
+            out(N,M);P                  output
+            in(N,x:T);P                 input
+            P|Q                         parallel composition
+            !P                          replication
+            new a:T;P                   restriction
+            let x:T=D in P else Q       expression evaluation
+            if M then P else Q          conditional
+    \end{lstlisting}
+    \caption{Process grammar}
+    \label{fig:pv-processes}
+\end{figure}
+
+\hl{todo:}
 \begin{enumerate}
-    \item Advanced $\pi$-Calculus
     \item Horn Clauses
     \item Horn Logic Queries
 \end{enumerate}
 
 \subsubsection{Featureset \& Limitations}
+
+\hl{todo}
