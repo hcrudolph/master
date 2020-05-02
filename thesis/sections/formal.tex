@@ -306,10 +306,10 @@ This is key for describing certain safety properties on the basis of traces, as 
 In order to do so, \textsc{Tamarin} uses a few special fact symbols reserved for particular use cases.
 
 \begin{enumerate}[label=--]
-    \item $Fr(x)$ denotes a fresh name $x$ that is unique and unguessable. This capability is required for the concept of random values or nonces, which are a common component of security protocols.
-    \item $K(x)$ denotes the adversary's knowledge of $x$, i.e. $x$ is revealed.
-    \item $Out(x)$ denotes sending a message $x$ via the public Dolev-Yao channel. Recall that once this is done, the adversary can read, modify, or block any contained information.
-    \item $In(x)$ denotes receiving a message $x$ via the public channel and thus, by the adversary.
+    \item \textsf{Fr(x)} denotes a fresh name $x$ that is unique and unguessable. This capability is required for the concept of random values or nonces, which are a common component of security protocols.
+    \item \textsf{K(x)} denotes the adversary's knowledge of $x$, i.e. $x$ is revealed.
+    \item \textsf{Out(x)} denotes sending a message $x$ via the public Dolev-Yao channel. Recall that once this is done, the adversary can read, modify, or block any contained information.
+    \item \textsf{In(x)} denotes receiving a message $x$ via the public channel and thus, by the adversary.
 \end{enumerate}
 
 \noindent
@@ -317,59 +317,115 @@ Based on these unary fact symbols, \textsc{Tamarin} defines a set of message ded
 These allow the adversary send and receive messages on the public channel, learn about freshly generated names and public constants, and apply arbitrary functions on the messages observed.
 
 \begin{equation*}
-    MD = \left\{
+    \textsf{MD} = \left\{
         \begin{aligned}
-            Out(x) &\ltracerule\rtracerule  K(x) \\
-            K(x) &\tracerule{K(x)} In(x) \\
-            Fr(x) &\ltracerule\rtracerule K(x) \\
-            [] &\ltracerule\rtracerule K(x:pub) \\
-            (K(x_1), \ldots, K(x_k)) &\ltracerule\rtracerule K(f(x_1, \ldots, x_k) | f \in \Sigma^k)
+            \textsf{Out(x)} &\ltracerule\rtracerule \textsf{K(x)}\\
+            \textsf{K(x)} &\tracerule{\textsf{K(x)}} \textsf{In(x)}\\
+            \textsf{Fr(x)} &\ltracerule\rtracerule \textsf{K(x)}\\
+            [] &\ltracerule\rtracerule \textsf{K(x:pub)}\\
+            \textsf{(K(}x_1\textsf{)}, \ldots, \textsf{K(}x_k\textsf{))} &\ltracerule\rtracerule \textsf{K(}f(x_1, \ldots, x_k) | f \in \Sigma^k\textsf{)}
         \end{aligned}
     \right\}
 \end{equation*}
 
 \subsubsection{Security properties} 
-Tamarin describe security properties using two-sorted first-order logic formulas over \textit{trace atoms}.
-A trace atom is one of the following: false $\perp$, a term equality $t_1 \approx t_2$, a timepoint ordering $i \lessdot j$, a timepoint equality $i \doteq j$, or an action $f @ i$ for a fact $f$ at timepoint $i$.
-A trace formula $\varphi$, which formalizes a property under test, is compared to protocol trace instances and their associated values.
-As described in subsection \ref{ssec:symbolic}, trace properties are then verified by proving that the trace formula $\varphi$ is valid or satisfiable for all or some traces of the multiset rewriting system.
-The reader is reffered to Meier's thesis for a detailed account of the semantics of \textsc{Tamarin}'s trace formulas, traces $tr$, their valuation $\theta$ and the satisfaction relation $(tr, \theta) \models \varphi$ between them (\cite{meier2013advancing}, p. 81).
 
-In addition to trace properties, \textsc{Tamarin} is also able to prove observational equivalence using the \textit{diff}$[\cdot,\cdot]$ operator introduced by \cite{basin2015automated}.
-Two multiset rewriting systems are compared that exhibit the same rules, but vary in their instanciation.
-More precisely, it is the dependency graphs of the two systems that are compared for equivalence.
-Dependency graphs are an alternative representation for protocol executions to a sequence $e$ defined in formula \ref{eq:execution}.
-They consist of nodes denoting rule instances of a given trace, connected by edges denoting their input and output requirements.
-A more detailed description of these data structures is provided in the following subsection.
+In \textsc{Tamarin} security properties are denoted using two-sorted first-order logic formulas over message terms and timepoints (c.f. \cite{meier2013advancing}).
+These so-called lemmas allow for the specification of various trace properties as well as some forms of observational equivalence.
+While there are a number of system properties that can be expressed using trace properties, secrecy and authentication are the most common use case as far as security protocols are concerned.
+Secrecy can be expressed using the following lemma, stating that for any secret action $x$ at timepoint $i$, there exsists no timepoint $j$ at which the adversary has knowledge about $x$.
+The very last line is added to ensure satisfiability of the lemma in the face of potential compromise of an honest participant's key.
+Beyond this simple assumption, \textsc{Tamarin} further provides support for perfect forward secrecy.
 
-%For an equational theory $E$, the satisfaction relation $(tr, \theta) \models_E %\varphi$ between traces $tr$, valuations $\theta$, and trace formulas $\varphi$ %is defined as follows.
-%
-%\begin{equation*}
-%    \begin{array}{ll}
-%    (tr, \theta) \models_E \perp            & \text{never}\\
-%    (tr, \theta) \models_E f@i              & \text{iff } \theta(i) \in idx(tr) %\text{ and } f \theta \in_E tr_{\theta(i)}\\
-%    (tr, \theta) \models_E i \lessdot j     & \text{iff } \theta(i) < \theta(j)\\
-%    (tr, \theta) \models_E i \doteq j       & \text{iff } \theta(i) = \theta(j)\\
-%    (tr, \theta) \models_E i \approx j      & \text{iff } t_1\theta =_E %t_2\theta\\
-%    (tr, \theta) \models_E \lnot \varphi       & \text{iff not } (tr, \theta) %\models_E \varphi\\
-%    (tr, \theta) \models_E \varphi \wedge \psi & \text{iff } (tr, \theta) %\models_E \varphi \text{ and } (tr, \theta) \models_E \psi\\
-%    (tr, \theta) \models_E \exists x:s.\varphi &\text{iff there is } u \in D_s %\text{ such that } (tr, \theta[x \rightarrow u]) \models_E \varphi
-%    \end{array}
-%\end{equation*}
+\lstset{
+    basicstyle=\small\sffamily,
+    keywordstyle=\bfseries,
+    frame=tb,
+    morekeywords={lemma, All, Ex, Reveal, Honest, Create, Running, Secret},
+}
+\begin{lstlisting}
+lemma secrecy:
+    "All x #i.
+        Secret(x) @i ==>
+        not (Ex #j. K(x) @j)
+            | (Ex B #r. Reveal(B) @r & Honest(B) @i)"
+\end{lstlisting}
 
-\subsubsection{Prove Strategy}
+Trace properties are also used to specify authentication between protocol participants.
+As \cite{lowe1997hierarchy} shows, there are several ways to define authentication that vary greatly in stictness.
+\textsc{Tamarin} offers support for the following four types of authentication.
+\textbf{Aliveness} merely mandates that if participant $a$ completes a protocol run at timepoint $i$, there exists a participant $b$ that has previously run the protocol.
+Intuitively, this is a rather weak premise that is not useful for the \gls{prins} protocol.
 
-\hl{todo}
+\begin{lstlisting}
+lemma aliveness:
+    "All a b t #i.
+        Commit(a,b,t) @i
+        ==>  (Ex id #j. Create(b,id) @j)
+            | (Ex C #r. Reveal(C) @r & Honest(C) @i)"
+\end{lstlisting}
+
+\textbf{Weak agreement} expresses that if participant $a$ completes a protocol run at timepoint $i$, there exists a participant $b$ that has previously run the protocol with $a$.
+
+
+\begin{lstlisting}
+lemma weak_agreement:
+    "All a b t1 #i. 
+        Commit(a,b,t1) @i
+        ==> (Ex t2 #j. Running(b,a,t2) @j)
+            | (Ex C #r. Reveal(C) @r & Honest(C) @i)"
+\end{lstlisting}
+
+\textbf{Non-injective agreement} describes that if participant $a$ completes a protocol run at timepoint $i$, there exists a participant $b$ that has previously run the protocol with $a$ and both participants agreed on a message term $t$.
+
+\begin{lstlisting}
+lemma noninjective_agreement:
+    "All a b t #i. 
+        Commit(a,b,t) @i
+        ==> (Ex #j. Running(b,a,t) @j)
+            | (Ex C #r. Reveal(C) @r & Honest(C) @i)"
+\end{lstlisting}
+
+\textbf{Injective agreement} specifies that if participant $a$ completes a protocol run at timepoint $i$, there exists a participant $b$ that has previously run the protocol with $a$ and both participants agreed on a message term $t$.
+Furthermore, there exisits an injective mapping between the number of protocol executions by $a$ and $b$.
+That is, both participants execute the protocol together each time, not more and not less often.
+
+\begin{lstlisting}
+lemma injective_agreement:
+    "All A B t #i. 
+        Commit(A,B,t) @i
+        ==> (Ex #j. Running(B,A,t) @j
+        & j < i
+        & not (Ex A2 B2 #i2. Commit(A2,B2,t) @i2 & not (#i2 = #i)))
+            | (Ex C #r. Reveal(C) @r & Honest(C) @i)"
+\end{lstlisting}
+
+In addition to trace properties, \textsc{Tamarin} is also able to prove observational equivalence using the \textsf{\textbf{diff}} operator introduced by \cite{basin2015automated}.
+The underlying idea is to check whether two multiset rewriting system exhibit identical rules but vary only by their instanciation, i.e. by the valuation of their variables.
+If it would be possible to apply different rules in one of the systems that are not available in the other, the adversary would be able to distinguish the two.
+This type of check is particularly revelent for proving privacy properties, for example in e-voting protocols.
 
 \subsubsection{Featureset \& Limitations}
 
-\hl{todo:}
+security properties:
+\begin{enumerate}
+    \item reachability (secrecy)
+    \item trace properties (authentication)
+    \begin{enumerate}
+        \item aliveness
+        \item weak agreement
+        \item non-injective agreement
+        \item injective agreement
+    \end{enumerate}
+    \item observational equivalence
+\end{enumerate}
+
+cryptographic primitives:
 \begin{enumerate}
     \item sym encryption
     \item asym encryption
     \item hashes
-    \item AEAD
-    \item observational equivalence
+    \item signatures
 \end{enumerate}
 
 \subsection{ProVerif}
@@ -397,7 +453,7 @@ Processes are used to model protocol participants, the Dolev-Yao adversary, as w
 
 \textbf{Terms} are built up from names, variables and constructors.
 While names represent atomic data, variables are a placeholder for other terms and can be replaced by such.
-Constructors on the other hand are functions with a certain arity used to build terms.
+Constructors are functions with a certain arity used to build terms.
 All three kinds of terms are defined with a type.
 The default types defiend by \textsc{ProVerif} are \texttt{channel}, \texttt{boolean}, and \texttt{bitstring}, but the tool also supports custom types.
 
@@ -414,25 +470,30 @@ The default types defiend by \textsc{ProVerif} are \texttt{channel}, \texttt{boo
             a,b,c,k,s                   name
             f($M_1,\ldots,M_n$)                         constructor application
     \end{lstlisting}
-    \caption{Term grammar}
+    \caption{Proverif term grammar, according to \cite{blanchet2016modeling}, p. 13}
     \label{fig:pv-terms}
 \end{figure}
 
-\textbf{Expressions} are \ldots \hl{todo}
+\textbf{}{Expressions} evaluate so-called \textit{may-fail} terms.
+That is, their evaluation yields a result that is either a term $M$ or the special constant $fail$, representing a failed computation.
+This laguage feature allows for the modeling of complex data types as well as cryptographic primitives, such as encryption which constructs a ciphertext from atomic terms (key and plaintext) and decryption which resolves a \textit{may-fail} term (ciphertext) into the original plaintext, unless it fails.
 
 \begin{figure}[h!]
     \centering
     \begin{lstlisting}
         D ::=                       expression
             M                           term
-            h($D_1,\ldots,D_n$)                         function application
+            f($D_1,\ldots,D_n$)                         constructor application
+            g($D_1,\ldots,D_n$)                         destructor application
             fail                        failure
     \end{lstlisting}
-    \caption{Expression grammar}
+    \caption{Proverif expression grammar, according to \cite{blanchet2016modeling}, p. 13}
     \label{fig:pv-expressions}
 \end{figure}
 
-\textbf{Processes} are \ldots \hl{todo}
+\textbf{Processes} in \textsc{ProVerif} largely coincide with processes in the original pi calculs (c.f. \cite{blanchet2016modeling}, p. 18).
+They allow for the description of sending and receiving messages, parallel execution, creation of new names, evaluation of expressions, and conditionals.
+When verifying security protocols, one process usually represents one protocol participant, incl. the adversary.
 
 \begin{figure}[h!]
     \centering
@@ -447,16 +508,111 @@ The default types defiend by \textsc{ProVerif} are \texttt{channel}, \texttt{boo
             let x:T=D in P else Q       expression evaluation
             if M then P else Q          conditional
     \end{lstlisting}
-    \caption{Process grammar}
+    \caption{Proverif process grammar, according to \cite{blanchet2016modeling}, p. 13}
     \label{fig:pv-processes}
 \end{figure}
 
-\hl{todo:}
-\begin{enumerate}
-    \item Horn Clauses
-    \item Horn Logic Queries
+Internally, \textsc{ProVerif} translates the applied pi calculus representation of a protocol into a set of \textbf{Horn clauses}.
+Horn clauses are a Turing-complete subset of first-order logic commonly used in logic programming and theorem proving.
+As stated in \ref{ssec:symbolic}, an atomic formula in predicate logic has the shape $P(t_1, \ldots, t_n)$.
+A \textit{literal} $L$ is either an atomic formula or the negation of one.
+A \textit{clause} is a disjunction of literals, for example:
+
+\begin{equation}
+    L_1 \vee L_2 \vee L_3 \vee \ldots \vee L_n
+\end{equation}
+
+\noindent
+A \textit{Horn clause} is a clause containing at most one positive literal, for example:
+A Horn clause without any negative literals or variables is called a \textit{fact}.
+Rather than in disjunctive form, these clauses are used to describe logical implication:
+
+\begin{equation}
+    \label{eq:implication}
+    \lnot L_1 \vee \lnot L_2 \vee L_3 \Leftrightarrow  \underbrace{L_3}_\text{query} \leftarrow \underbrace{L_1 \wedge L_2}_\text{hypothesis}
+\end{equation}
+
+In logic programming and theorem proving, the latter is also called \textit{goal clause}.
+Proving $L_3$ is equivalent to finding a solution to the right-hand side of the equation, i.e. its \textit{hypothesis}.
+Alternatively, refuting it is a matter of finding a counterexample to the query.
+In its internal representation \textsc{ProVerif} effectively uses three types of Horn clauses (c.f. \cite{blanchet2013automatic}, p. 13):
+
+\begin{enumerate}[label=--]
+    \item Clauses describing the computation abilities of the adversary, i.e. application of constructors, destructors and generation of fresh names
+    \item Facts decribing the initial knowledge of the attacker, such as public keys
+    \item A multiset of clauses describing the protocol, containing one set for each message
 \end{enumerate}
+
+\subsubsection{Security Properties}
+
+Security properties in \textsc{ProVerif} are specified using queries of a similar form as those introduced in equation \ref{eq:implication}.
+That way, the tool is capable of proving basic reachability properties, correspondence assertions, and observational equivalence.
+The first category allows for the verification of secrecy by checking whether the fact a given message $M$ is exposed to the adversary is reachable under any circumstances.
+This can be denoted in two ways (c.f. \cite{blanchet2020proverif}, p. 55):
+
+\lstset{
+    basicstyle=\small\sffamily,
+    keywordstyle=\bfseries,
+    frame=tb,
+    morekeywords={query, attacker, secret, event},
+    escapechar=\&
+}
+\begin{lstlisting}
+    query attacker(M) &\lstcomment{// adversary cannot compute M}&
+    query secret x &\lstcomment{// adversary cannot compute bound variable x}&
+\end{lstlisting}
+
+Correspondence assertions on the other hand are the basis for verifying authentication properties.
+As described in the previous section, authentication can be defined in several different ways.
+\textsc{ProVerif}'s user manual describes the verification of two of them (\cite{blanchet2020proverif}, pp. 19-20).
+The keyword \textsf{\textbf{event}} can be used to annotate special points in a protocol that can then be checked for correspondence, as shown in the below code fragment.
+Effectively, this is the equivalent of proving the aforementioned aliveness property, i.e. for every event \textsf{receivedByA} there exists at least one event \textsf{sentByB}.
+The injective agreement requirement is expresses in the same way, just with the keyword \textsf{\textbf{inj-event}}.
+
+\begin{lstlisting}
+    event receivedByA(M); event sentByB(M);
+    query receivedByA(M) ==> sentByB(M)
+\end{lstlisting}
+
+\noindent
+\textsc{ProVerif} goes beyond these basic correspondence assertions, allowing for the use of conjunctions (\textsf{\&\&}), disjunctions (\textsf{\textbar\textbar}), and nesting in the specification of hypotheses.
+Nested hypotheses are equivalent to a chain of logical dependencies of the form (c.f. \cite{blanchet2020proverif}, p. 54):
+
+\begin{lstlisting}
+    event A; event B; event C;
+    A(x) ==> B(x) ==> C(x) || D(x) &\lstcomment{// A is preceded by B is preceded by C or D}&
+\end{lstlisting}
+
+Observational equivalence can take multiple forms, some of which can be verified by \textsc{ProVerif} (c.f. \cite{blanchet2020proverif}, pp. 55-62).
+Firstly, it is able to prove strong secrecy, i.e. the indistinguishability of a change in secrets for the adversary, with the \textsf{\textbf{noninterf}} keyword.
+Secondly, resistence against offline guessing attacks can be verified with the \textsf{\textbf{weaksecret}} keyword by checking whether the adversary is able to distinguish correct from incorrect guesses of a secret when interacting with the protocol.
+Thirdly, observational equivalence of two processes instances implemented based on biprocess simulation similar to \textsc{Tamarin}, using the \textsf{\textbf{choice}} keyword.
+Lastly, \textsc{ProVerif} will also attempt to verify observational equivalence of two processes that also differ in their structure.
+However, merging different processes into a single biprocess requires at least a similar structure and does not always succeed.
 
 \subsubsection{Featureset \& Limitations}
 
-\hl{todo}
+Ssecurity properties:
+\begin{enumerate}
+    \item reachability (secrecy)
+    \item correspondence (authentication)
+    \begin{enumerate}
+        \item weak agreement
+        \item injective agreement
+    \end{enumerate}
+    \item observational equivalence
+    \begin{enumerate}
+        \item strong secrecy
+        \item offline guessing
+        \item process instances
+        \item processes
+    \end{enumerate}
+\end{enumerate}
+
+cryptographic primitives:
+\begin{enumerate}
+    \item sym encryption
+    \item asym encryption
+    \item hashes
+    \item signatures
+\end{enumerate}
