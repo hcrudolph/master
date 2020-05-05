@@ -367,6 +367,7 @@ lemma aliveness:
 \end{lstlisting}
 
 \textbf{Weak agreement} specifies that if participant $a$ completes a protocol run at timepoint $i$, there exists a participant $b$ that has previously run the protocol with $a$.
+While this is closer to the intuitive definition of authentication, this does not accurately model the \gls{prins} requirement either, as both participants further need to agree a secret session key amongst each other.
 
 \begin{lstlisting}
 lemma weak_agreement:
@@ -377,6 +378,9 @@ lemma weak_agreement:
 \end{lstlisting}
 
 \textbf{Non-injective agreement} mandates that if participant $a$ completes a protocol run at timepoint $i$, there exists a participant $b$ that has previously run the protocol with $a$ and both participants agreed on a message term $t$.
+Note that this does not guarantee both participants completing a protocol run the same number of times.
+That is, participant $a$ could run the protocol three times with participant $b$, while for its part, the latter only recognizes one full protocol execution.
+Since this does not align with \gls{3gpp}'s specification either, an even stricter form of authentication is required.
 
 \begin{lstlisting}
 lemma noninjective_agreement:
@@ -582,7 +586,7 @@ However, merging different processes into a single biprocess requires at least a
 \subsubsection{Featureset \& Limitations}
 
 \textsc{ProVerif} supports the verification of secrecy, authentication and privacy properties, similar to \textsc{Tamarin}.
-Unlike \textsc{Tamarin}, queries for weak agreement and non-injective agreement are not built-in and are not explicitly pointed out in the user manual.
+However unlike it, queries for weak agreement and non-injective agreement are not built-in and are not explicitly pointed out in the user manual.
 However, the tool offers more options for checking various types of observational equivalence.
 Whereas \textsc{Tamarin} only features this kind of analysis for a full protocol execution, \textsc{ProVerif}'s \textbf{choice}, \textbf{noninf}, and \textbf{weaksecret} constructs allow for more granular checks. 
 The cryptographic primitives supported out of the box are symmetric and asymmetric encryption, probabilistic encryption, hashes, signatures, diffie-hellman groups,
