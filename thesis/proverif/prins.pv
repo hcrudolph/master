@@ -1,0 +1,74 @@
+(* Type definitions *)
+
+type key.
+type mac.
+type rand.
+type skey.
+type pkey.
+type sskey.
+type spkey.
+
+(* Free names *)
+
+free n32f: channel.
+free n32c: channel [private].
+free ss_sepp_key_a: sskey.
+free sp_sepp_key_a: spkey.
+free ss_sepp_key_b: sskey.
+free sp_sepp_key_b: spkey.
+free ipx_sskey_a: sskey.
+free ipx_spkey_a: spkey.
+free ipx_sskey_b: sskey.
+free ipx_spkey_b: spkey.
+free n32fkey: key.
+free ipx_a_info: bitstring.
+free ipx_b_info: bitstring.
+free n32f_precontext_id_a: bitstring.
+free n32f_precontext_id_a: bitstring.
+free n32f_context_id: bitstring.
+free datatype_encryption_policy_a: bitstring.
+free datatype_encryption_policy_b: bitstring.
+free modification_policy_a: bitstring.
+free modification_policy_b: bitstring.
+
+(* Constructor & destructor definitions *)
+
+(* MAC *)
+fun mac(bitstring, key): mac
+reduc forall m: bitstring, k: key; verify_mac(mac(m, k), m, k) = true.
+
+(* Symmetric encryption *)
+fun senc(bitstring, key): bitstring.
+reduc forall m: bitstring, k: key; sdec(senc(m, k), k) = m.
+
+(* Asymmetric encryption *)
+fun pk(skey): pkey.
+fun aenc(bitstring, pkey): bitstring.
+reduc forall m: bitstring, k: skey; adec(aenc(m, pk(k)), k) = m.
+
+(* Signatures *)
+fun spk(sskey): spkey.
+fun sign(bitstring, sskey): bitstring.
+reduc forall m: bitstring, k: sskey; getmess(sign(m, k)) = m.
+reduc forall m: bitstring, k: sskey; checksign(sign(m, k), spk(k)) = m.
+
+(* AEAD encryption *)
+fun aead_encrypt(bitstring, key, mac): bitstring.
+reduc forall m: bitstring, k: key, r: bitstring; aead_decrypt(aead_encrypt(m, k, r), k, r) = x.
+reduc forall k: key, n: mac, p: bitstring, ad: bitstring;
+    AEAD_Encrypt(k, n, p, ad) = (aead_encrypt(p, k, n), mac((n, ad, aead_encrypt(p, k, n)), k)).
+reduc forall k: key, n: mac, p: bitstring, ad: bitstring;
+    AEAD_Decrypt(k, n, (aead_encrypt(p, k, n), mac((n, ad, aead_encrypt(p, k, n)), k)), ad) = p.
+
+
+(* SEPP A Process *)
+
+Let seppA()=
+
+(* SEPP B Process *)
+
+Let seppB()=
+
+(* Main (IPX) Process *)
+
+Let ipxA()=
