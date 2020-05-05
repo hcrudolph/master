@@ -262,6 +262,7 @@ and $L_1(u_{m+1}) = L_1(u_{m+2}) = \ldots = L_1 (u_n)$.
 $TS_1$ and $TS_2$ are called observational equivalent, denoted $TS_1 \approx_{obs} TS_2$, if there exists an observational bisimulation for $(TS_1, TS_2)$.
 
 \subsection{Tamarin}
+\label{ssec:tamarin}
 
 The \textsc{Tamarin} prover is a tool for automated formal verification in the symbol model.
 Initially developed by Meier and Schmidt at ETH Zürich (see \cite{schmidt2012formal}, \cite{meier2013advancing}), its primary domain of application is the analysis of security protocols.
@@ -332,10 +333,10 @@ These allow the adversary send and receive messages on the public channel, learn
 
 In \textsc{Tamarin} security properties are denoted using two-sorted first-order logic formulas over message terms and timepoints (c.f. \cite{meier2013advancing}).
 These so-called lemmas allow for the specification of various trace properties as well as some forms of observational equivalence.
-While there are a number of system properties that can be expressed using trace properties, secrecy and authentication are the most common use case as far as security protocols are concerned.
-Secrecy can be expressed using the following lemma, stating that for any secret action $x$ at timepoint $i$, there exsists no timepoint $j$ at which the adversary has knowledge about $x$.
-The very last line is added to ensure satisfiability of the lemma in the face of potential compromise of an honest participant's key.
-Beyond this simple assumption, \textsc{Tamarin} further provides support for perfect forward secrecy.
+As shown in section \ref{sec:formal}, one of the most common use case of trace properties as far as security protocols are concerned is specifying secrecy (recall that invariants are simply a special form of trace properties).
+Secrecy in \textsc{Tamarin} can be expressed using the following lemma, stating that for any secret action $x$ at timepoint $i$, there exsists no timepoint $j$ at which the adversary has knowledge about $x$.
+The very last line is added to ensure satisfiability of the lemma in the face of a potential key compromise of an honest participant $B$ at timepoint $r$.
+Beyond this basic secrecy property, the tool further offers support for perfect forward secrecy. (see \cite{tamarin2019manual}, pp. 71-72)
 
 \lstset{
     basicstyle=\small\sffamily,
@@ -353,9 +354,9 @@ lemma secrecy:
 
 Trace properties are also used to specify authentication between protocol participants.
 As \cite{lowe1997hierarchy} shows, there are several ways to define authentication that vary greatly in stictness.
-\textsc{Tamarin} offers support for the following four types of authentication.
-\textbf{Aliveness} merely mandates that if participant $a$ completes a protocol run at timepoint $i$, there exists a participant $b$ that has previously run the protocol.
-Intuitively, this is a rather weak premise that is not useful for the \gls{prins} protocol.
+With the exception of \textbf{Recentness}, \textsc{Tamarin} can model the following four types of authentication (see \cite{tamarin2019manual}, pp. 74-75).
+\textbf{Aliveness} mandates that if participant $a$ completes a protocol run at timepoint $i$, there exists a participant $b$ that has previously run the protocol.
+Intuitively, this is a rather weak premise that is not useful for varifying the \gls{prins} protocol.
 
 \begin{lstlisting}
 lemma aliveness:
@@ -365,8 +366,7 @@ lemma aliveness:
             | (Ex C #r. Reveal(C) @r & Honest(C) @i)"
 \end{lstlisting}
 
-\textbf{Weak agreement} expresses that if participant $a$ completes a protocol run at timepoint $i$, there exists a participant $b$ that has previously run the protocol with $a$.
-
+\textbf{Weak agreement} specifies that if participant $a$ completes a protocol run at timepoint $i$, there exists a participant $b$ that has previously run the protocol with $a$.
 
 \begin{lstlisting}
 lemma weak_agreement:
@@ -376,7 +376,7 @@ lemma weak_agreement:
             | (Ex C #r. Reveal(C) @r & Honest(C) @i)"
 \end{lstlisting}
 
-\textbf{Non-injective agreement} describes that if participant $a$ completes a protocol run at timepoint $i$, there exists a participant $b$ that has previously run the protocol with $a$ and both participants agreed on a message term $t$.
+\textbf{Non-injective agreement} mandates that if participant $a$ completes a protocol run at timepoint $i$, there exists a participant $b$ that has previously run the protocol with $a$ and both participants agreed on a message term $t$.
 
 \begin{lstlisting}
 lemma noninjective_agreement:
@@ -387,8 +387,7 @@ lemma noninjective_agreement:
 \end{lstlisting}
 
 \textbf{Injective agreement} specifies that if participant $a$ completes a protocol run at timepoint $i$, there exists a participant $b$ that has previously run the protocol with $a$ and both participants agreed on a message term $t$.
-Furthermore, there exisits an injective mapping between the number of protocol executions by $a$ and $b$.
-That is, both participants execute the protocol together each time, not more and not less often.
+Furthermore, there exisits a one-to-one relationship between the number of protocol executions by $a$ and $b$.
 
 \begin{lstlisting}
 lemma injective_agreement:
@@ -403,32 +402,22 @@ lemma injective_agreement:
 In addition to trace properties, \textsc{Tamarin} is also able to prove observational equivalence using the \textsf{\textbf{diff}} operator introduced by \cite{basin2015automated}.
 The underlying idea is to check whether two multiset rewriting system exhibit identical rules but vary only by their instanciation, i.e. by the valuation of their variables.
 If it would be possible to apply different rules in one of the systems that are not available in the other, the adversary would be able to distinguish the two.
-This type of check is particularly revelent for proving privacy properties, for example in e-voting protocols.
+Internally, \textsc{Tamarin} duplicates the model and checks whether every rule execution in one instanciation has a corresponding rule execution in thre other one.
+This type of check is particularly relevant for proving privacy properties, for example in e-voting protocols. (see \cite{tamarin2019manual}, pp. 57-64)
 
 \subsubsection{Featureset \& Limitations}
 
-security properties:
-\begin{enumerate}
-    \item reachability (secrecy)
-    \item trace properties (authentication)
-    \begin{enumerate}
-        \item aliveness
-        \item weak agreement
-        \item non-injective agreement
-        \item injective agreement
-    \end{enumerate}
-    \item observational equivalence
-\end{enumerate}
+As established previously, \textsc{Tamarin} offers support for a range of trace properties that allow for the specification of common secrecy, authentication, and privacy goals.
+On top of that, it provides a number cryptographic primitives built-in that are commonly used in security protocols: hashes, signatures, symmetric and asymmetric encryption, diffie-hellman groups, bilinear groups, XOR operations, and multisets. 
+The first three of these are of relevance to the \gls{prins} protocol, as hash functions and symmetric encryption are key for defining \gls{jwe}'s \gls{aead} encryption scheme and digital signatures are the core of \gls{jws}.
+Additional language features to optimize the formal verification include various channel properties (Dolev-Yao, authentic, confidential, and secure channels), various heuristics to optimize automated proof methods, and induction.
 
-cryptographic primitives:
-\begin{enumerate}
-    \item sym encryption
-    \item asym encryption
-    \item hashes
-    \item signatures
-\end{enumerate}
+In its current version, \textsc{Tamarin} does not support blind signatures and trapdoor commitments, i.e. non-subterm-convergent theories, although there are extensions that tackle specificly those (see \cite{dreier2017beyond}).
+Since neither of these properties is required for the \gls{prins} protocol, this does not hinder our verification in any way.
+When operated in observational equivalence mode, the tool is sound, but not complete. (\cite{tamarin2019manual}, p. 107)
 
 \subsection{ProVerif}
+\label{ssec:proverif}
 
 \textsc{ProVerif} is another example for a popular tool for symbolic model checking.
 Chiefly developed by Bruno Blanchet at INRIA Paris, it is one of the most mature model checking tools in existence, being actively maintained for almost 20 years.
@@ -455,7 +444,7 @@ Processes are used to model protocol participants, the Dolev-Yao adversary, as w
 While names represent atomic data, variables are a placeholder for other terms and can be replaced by such.
 Constructors are functions with a certain arity used to build terms.
 All three kinds of terms are defined with a type.
-The default types defiend by \textsc{ProVerif} are \texttt{channel}, \texttt{boolean}, and \texttt{bitstring}, but the tool also supports custom types.
+The default types defiend by \textsc{ProVerif} are \textsf{channel}, \textsf{boolean}, and \textsf{bitstring}, but the tool also supports custom types.
 
 \lstset{
     mathescape,
@@ -474,7 +463,7 @@ The default types defiend by \textsc{ProVerif} are \texttt{channel}, \texttt{boo
     \label{fig:pv-terms}
 \end{figure}
 
-\textbf{}{Expressions} evaluate so-called \textit{may-fail} terms.
+\textbf{Expressions} evaluate so-called \textit{may-fail} terms.
 That is, their evaluation yields a result that is either a term $M$ or the special constant $fail$, representing a failed computation.
 This laguage feature allows for the modeling of complex data types as well as cryptographic primitives, such as encryption which constructs a ciphertext from atomic terms (key and plaintext) and decryption which resolves a \textit{may-fail} term (ciphertext) into the original plaintext, unless it fails.
 
@@ -523,7 +512,7 @@ A \textit{clause} is a disjunction of literals, for example:
 \end{equation}
 
 \noindent
-A \textit{Horn clause} is a clause containing at most one positive literal, for example:
+A \textit{Horn clause} is a clause containing at most one positive literal.
 A Horn clause without any negative literals or variables is called a \textit{fact}.
 Rather than in disjunctive form, these clauses are used to describe logical implication:
 
@@ -592,27 +581,19 @@ However, merging different processes into a single biprocess requires at least a
 
 \subsubsection{Featureset \& Limitations}
 
-Ssecurity properties:
-\begin{enumerate}
-    \item reachability (secrecy)
-    \item correspondence (authentication)
-    \begin{enumerate}
-        \item weak agreement
-        \item injective agreement
-    \end{enumerate}
-    \item observational equivalence
-    \begin{enumerate}
-        \item strong secrecy
-        \item offline guessing
-        \item process instances
-        \item processes
-    \end{enumerate}
-\end{enumerate}
+\textsc{ProVerif} supports the verification of secrecy, authentication and privacy properties, similar to \textsc{Tamarin}.
+Unlike \textsc{Tamarin}, queries for weak agreement and non-injective agreement are not built-in and are not explicitly pointed out in the user manual.
+However, the tool offers more options for checking various types of observational equivalence.
+Whereas \textsc{Tamarin} only features this kind of analysis for a full protocol execution, \textsc{ProVerif}'s \textbf{choice}, \textbf{noninf}, and \textbf{weaksecret} constructs allow for more granular checks. 
+The cryptographic primitives supported out of the box are symmetric and asymmetric encryption, probabilistic encryption, hashes, signatures, diffie-hellman groups,
+zero-knowledge proofs, and trapdoor commitments ( c.f. \cite{blanchet2020proverif}, pp. 42-51).
+As pointed out before, the \gls{prins} protocol makes use of symmetric encryption, hashes, and signatures.
+Thus, \textsc{ProVerif} does support modeling all necessary cryptographic operations.
+Similar to \textsc{Tamarin}, it also supports proof by induction and channel properties, albeit in a less granular fashion -- public Dolev-Yao channels or private (secure) ones.
 
-cryptographic primitives:
-\begin{enumerate}
-    \item sym encryption
-    \item asym encryption
-    \item hashes
-    \item signatures
-\end{enumerate}
+Additionally, \textsc{ProVerif} supports basic temporal constructs in the form of \textbf{phases} and \textbf{synchronization}.
+When using protocol phases, each has its own security properties and process communication across different phases is forbidden.
+If processes have not fully terminated when transitioning from one phase to another, they are discarded. (see \cite{blanchet2020proverif}, pp. 41-42).
+Synchronization on the other hand allows for modeling a mandatory order of commands across processes at certain points.
+If one process has not executed certain commands prior a point of synchronization yet, it waits (potentially indefinitely) until these are executed.
+\textbf{Tables} can be used to model persistent storage of any of the participants that is not accessible by the adversary.
