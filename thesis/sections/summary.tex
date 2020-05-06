@@ -1,0 +1,63 @@
+As outlined in section \ref{sec:n32}, \gls{prins} is a non-trivial security protocol involving three active participants (initiating \gls{sepp}, responding \gls{sepp}, intermediary \gls{ipx} providers), and two interdependent protocol channels.
+Its security goals mainly evolve around confidentiality, integrity, and authentication of message (or patch) sources.
+
+The previous section \ref{sec:formal} introduces the underlying theory and basic functionality of \textsc{Tamarin} and \textsc{ProVerif}.
+Before transposing the \gls{prins} protocol specification into a model for formal verification, the question arises whether one is objectively better suited for this particular application.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{l|l|cc|c|c}
+    \multicolumn{2}{l|}{\multirow{2}{*}{}}                                    & \multicolumn{2}{c|}{PRINS} & \multirow{2}{*}{Tamarin} & \multirow{2}{*}{ProVerif}  \\
+    \multicolumn{2}{l|}{}                                                     & \small{N32-c} & \small{N32-f}              &                          &                            \\
+    \hline
+    \multirow{11}{*}{\begin{tabular}[c]{@{}l@{}}Cryptographic \\primitives\end{tabular}}                 & Symmetric encryption                   &      & $\bullet$                   & \checkmark                        & \checkmark                          \\
+                                               & Asymmetric encryption                  &       &                    & \checkmark                        & \checkmark                          \\
+                                               & Probabilistic encryption               &       &                    &                          & \checkmark                          \\
+                                               & Digital signatures           &      & $\bullet$                   & \checkmark                        & \checkmark                          \\
+                                               & Hashing                      &      & $\bullet$                   & \checkmark                        & \checkmark                          \\
+                                               & Diffie-Hellman groups        &       &                    & \checkmark                        & \checkmark                          \\
+                                               & Zero-knowledge proofs        &       &                    &                         & \checkmark                          \\
+                                               & Trapdoor commitments        &       &                     &                         & \checkmark                          \\
+                                               & Bilinear groups        &       &                    & \checkmark                        &                          \\
+                                               & XOR operations        &       &                    & \checkmark                       &                           \\
+    \hline
+    \multirow{4}{*}{Authentication}            & Aliveness                    &       &                    & \checkmark                        & \checkmark                          \\
+                                               & Weak agreement               &       &                    & \checkmark                        &                            \\
+                                               & Non-injective agreement      &       &                    & \checkmark                        &                            \\
+                                               & Injective agreement          & $\bullet$     &                    & \checkmark                        & \checkmark                          \\
+    \hline
+    \multirow{4}{*}{\begin{tabular}[c]{@{}l@{}}Observational \\equivalence \end{tabular}} & Strong secrecy               &      &                    &                        & \checkmark                          \\
+                                               & Offline guessing             &       &                    &                          & \checkmark                           \\
+                                               & Equivalence of same processes &       &                    & \checkmark                         & \checkmark                           \\
+                                               & Equivalence of similar processes &       &                    &                          & \checkmark                           \\
+    \hline
+    \multirow{4}{*}{\begin{tabular}[c]{@{}l@{}}Channel \\properties\end{tabular}} & Dolev-Yao                    &       & $\bullet$                  & \checkmark                        & \checkmark                          \\
+                                               & Authenticated                &       &                    & \checkmark                        &                            \\
+                                               & Confidential                 &       &                    & \checkmark                        &                            \\
+                                               & Secure                       & $\bullet$\footnotemark     &                    & \checkmark                        & \checkmark                         \\
+    \hline
+    \multirow{3}{*}{\begin{tabular}[c]{@{}l@{}}Additional \\features\end{tabular}} & Tables                       & $\circ$     & $\circ$                  &                          & \checkmark                          \\
+                                               & Phases                       &       &                    &                          & \checkmark                          \\
+                                               & Synchronization              & $\circ$      & $\circ$                   &                          & \checkmark            \\\hline
+    \multicolumn{6}{c}{\begin{tabular}{cc}$\bullet$ \textit{\small{mandatory}} &$\circ$ \textit{\small{optional}}\end{tabular}}
+    \end{tabular}
+    \caption{Comparison of Tamarin and ProVerif features in relation to PRINS}
+    \label{tab:tama-pro-comparison}
+\end{table}
+
+\footnotetext{Since \gls{tls} is considered secure (c.f. section \ref{sec:goal}), the N32-c channel is modeled as a secure channel.}
+
+Table \ref{tab:tama-pro-comparison} aims to capture modeling features of both \textsc{Tamarin} and \textsc{ProVerif} and to map them to the requirements of \gls{prins}.
+Note that this does not preclude the fact that further operations (e.g. \gls{aead} encryption) cannot be specified using these built-in primitives.
+What is considered here is only the ,,out-of-the-box'' functionality of each respective tool.
+
+One can gather from this overview that both model checkers offer support for cryptographic primitives, authentication types, and channel properties necessary to model the \gls{prins} protocol.
+Since the \gls{3gpp} specification does not explicitly mention any observational equivalence requirements, any security property that can be proven in this category is considered \textit{nice to have}.
+However, as noted before, \textsc{ProVerif} does offer finer control over the type of observational equivalence to be verified.
+
+It is the additional features of \textsc{ProVerif} that can help modeling the protocol more closely aligned to the \gls{3gpp} specification.
+Its concept of tables can be utilized to recreate the N32-f context and the associated information stored by each of the \glspl{sepp}.
+Synchronization on the other hand is a suitable way to control the execution order of \mbox{N32-c} handshake and N32-f data transmission:
+As long as the handshake procedure described in section \ref{ssec:prins-sequence} is not finalized by both parties, there should be no N32-f communication.
+Both these constructs may not be strictly mandatory to accurately specify the \gls{prins} protocol, but they certainly make it more straightforward and hence, contribute to avoiding mistakes during modeling.
+Therefore, from chapter \ref{chap:modeling} onwards, this thesis focuses on modeling and verifying \gls{prins} using \textsc{ProVerif}.
