@@ -215,6 +215,12 @@ Before forwarding the message to the next hop, the complete \textit{modifiedData
     \item \textit{modifiedDataToIntegrityProtect} contains the operations to be performed on the original message's \textit{dataToIntegrityProtect} object. In addition, the IPX provider supplies a unique identity that is not further defined. Lastly, the \gls{jwe} authentication tag created by the sending \gls{sepp} is included as well, serving the purpose of replay protection.
 \end{enumerate}
 
+\begin{figure}[h!]
+    \centering
+    \includegraphics{n32f-message.pdf}
+    \caption{N32-f message structure according to TS 29.573 (\cite{3gpp.29.573}, p. 22)}
+    \label{fig:n32f-message}
+\end{figure}
 
 \subsection{PRINS Sequences and Security Properties}
 \label{ssec:prins-sequence}
