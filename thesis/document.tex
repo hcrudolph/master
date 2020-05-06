@@ -25,9 +25,11 @@
 
 %--- Figures ---%
 \listoffigures
-
-%--- Tables ---%
+\begingroup
+\let\clearpage\relax
+\vspace{3cm}
 \listoftables
+\endgroup
 
 %--- Glossary ---%
 \printglossary
@@ -66,11 +68,11 @@ Section \ref{sec:outline} describes the approach taken to answer the research qu
 \chapter{Theoretical Preliminaries}
 \label{chap:theory}
 
-Section \ref{sec:n32} initially describes design rationale and functional requirements on \gls{prins}.
-Subsequently, the individual protocol components and message flows are outlined.
-Specific focus is put on security requirements to be verified later on.
-Section \ref{sec:formal} serves as an introduction to symbolic model checking of security protocols and compares two tools that can be used for this purpose.
-Key concepts are explained to an extent that allows the reader to understand the formal model of the \gls{prins} protocol and its verification described in chapter \ref{chap:verification}.
+Section~\ref{sec:n32} initially describes design rationale and functional requirements on \gls{prins}.
+Subsequently, the individual protocol components and message flows are outlined, specifically focussing on security requirements to be verified.
+Section~\ref{sec:formal} serves as an introduction to symbolic model checking of security protocols and compares two tools that can be used for this purpose.
+Key concepts are explained to an extent that allows the reader to understand the formal model of the \gls{prins} protocol and its verification later on.
+Section~\ref{sec:summary} summarizes the theoretical background and draws a conclusion about which tool to use for further analysis.
 
 \section{5G Signaling and the PRINS Protocol}
 \label{sec:n32}

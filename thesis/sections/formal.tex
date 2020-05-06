@@ -10,13 +10,10 @@ The act of model checking is the exploration of all system states, verifying whe
 An issue is discovered if the provided model does not accurately match the formula – hence the term 'model checking'.
 In practice, there exists a number of optimizations to make the task of exploring all system states more efficient than a brute-force search (see \cite{etessami2000optimizing}).
 If these operations are performed by a computer, it is considered automatic model checking.
-Most model checkers, including the ones that are considered in this thesis, build on some subset of \gls{fol}, which shall be briefly introduced hereafter.
+Most model checkers, including the ones that are considered in this thesis, build on some subset of \gls{fol}, which shall be briefly introduced in the remainder of this section.
 These fundamental concepts are key to understand what kind of system properties are in scope of the following analysis.
 
-%Literature:
-%\begin{enumerate}
-%    \item \cite{schoning2008logic}
-%\end{enumerate}
+\subsubsection{First-Order Logic}
 
 First-Order Logic (also referred to as predicate logic) extends classical, propositional logic by the notion of predicates and quantifiers.
 Whereas the latter is solely concerned with logical statements and connectives, first-order logic is inherently connected to a domain of discourse or universe and the semantics associated with it.
@@ -329,7 +326,7 @@ These allow the adversary send and receive messages on the public channel, learn
     \right\}
 \end{equation*}
 
-\subsubsection{Security properties} 
+\subsubsection{Security properties}
 
 In \textsc{Tamarin} security properties are denoted using two-sorted first-order logic formulas over message terms and timepoints (c.f. \cite{meier2013advancing}).
 These so-called lemmas allow for the specification of various trace properties as well as some forms of observational equivalence.
@@ -371,7 +368,7 @@ While this is closer to the intuitive definition of authentication, this does no
 
 \begin{lstlisting}
 lemma weak_agreement:
-    "All a b t1 #i. 
+    "All a b t1 #i.
         Commit(a,b,t1) @i
         ==> (Ex t2 #j. Running(b,a,t2) @j)
             | (Ex C #r. Reveal(C) @r & Honest(C) @i)"
@@ -384,7 +381,7 @@ Since this does not align with \gls{3gpp}'s specification either, an even strict
 
 \begin{lstlisting}
 lemma noninjective_agreement:
-    "All a b t #i. 
+    "All a b t #i.
         Commit(a,b,t) @i
         ==> (Ex #j. Running(b,a,t) @j)
             | (Ex C #r. Reveal(C) @r & Honest(C) @i)"
@@ -395,7 +392,7 @@ Furthermore, there exisits a one-to-one relationship between the number of proto
 
 \begin{lstlisting}
 lemma injective_agreement:
-    "All A B t #i. 
+    "All A B t #i.
         Commit(A,B,t) @i
         ==> (Ex #j. Running(B,A,t) @j
         & j < i
@@ -412,7 +409,7 @@ This type of check is particularly relevant for proving privacy properties, for 
 \subsubsection{Featureset \& Limitations}
 
 As established previously, \textsc{Tamarin} offers support for a range of trace properties that allow for the specification of common secrecy, authentication, and privacy goals.
-On top of that, it provides a number cryptographic primitives built-in that are commonly used in security protocols: hashes, signatures, symmetric and asymmetric encryption, diffie-hellman groups, bilinear groups, XOR operations, and multisets. 
+On top of that, it provides a number cryptographic primitives built-in that are commonly used in security protocols: hashes, signatures, symmetric and asymmetric encryption, diffie-hellman groups, bilinear groups, XOR operations, and multisets.
 The first three of these are of relevance to the \gls{prins} protocol, as hash functions and symmetric encryption are key for defining \gls{jwe}'s \gls{aead} encryption scheme and digital signatures are the core of \gls{jws}.
 Additional language features to optimize the formal verification include various channel properties (Dolev-Yao, authentic, confidential, and secure channels), various heuristics to optimize automated proof methods, and induction.
 
@@ -586,14 +583,14 @@ However, merging different processes into a single biprocess requires at least a
 \subsubsection{Featureset \& Limitations}
 
 \textsc{ProVerif} supports the verification of secrecy, authentication and privacy properties, similar to \textsc{Tamarin}.
-However unlike it, queries for weak agreement and non-injective agreement are not built-in and are not explicitly pointed out in the user manual.
-However, the tool offers more options for checking various types of observational equivalence.
-Whereas \textsc{Tamarin} only features this kind of analysis for a full protocol execution, \textsc{ProVerif}'s \textbf{choice}, \textbf{noninf}, and \textbf{weaksecret} constructs allow for more granular checks. 
+Unlike the latter, queries for weak agreement and non-injective agreement are not built-in and are not explicitly pointed out in the user manual.
+The tool offers more options for checking various types of observational equivalence.
+Whereas \textsc{Tamarin} only features this kind of analysis for a full protocol execution, \textsc{ProVerif}'s \textbf{choice}, \textbf{noninf}, and \textbf{weaksecret} constructs allow for more granular checks.
 The cryptographic primitives supported out of the box are symmetric and asymmetric encryption, probabilistic encryption, hashes, signatures, diffie-hellman groups,
 zero-knowledge proofs, and trapdoor commitments ( c.f. \cite{blanchet2020proverif}, pp. 42-51).
 As pointed out before, the \gls{prins} protocol makes use of symmetric encryption, hashes, and signatures.
 Thus, \textsc{ProVerif} does support modeling all necessary cryptographic operations.
-Similar to \textsc{Tamarin}, it also supports proof by induction and channel properties, albeit in a less granular fashion -- public Dolev-Yao channels or private (secure) ones.
+Similar to \textsc{Tamarin}, it also supports proof by induction and channel properties, albeit in a less granular fashion -- channels can be declared as public Dolev-Yao channels or private (secure) ones.
 
 Additionally, \textsc{ProVerif} supports basic temporal constructs in the form of \textbf{phases} and \textbf{synchronization}.
 When using protocol phases, each has its own security properties and process communication across different phases is forbidden.
