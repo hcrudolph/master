@@ -1,8 +1,10 @@
 As outlined in section \ref{sec:n32}, \gls{prins} is a non-trivial security protocol involving three active participants (initiating \gls{sepp}, responding \gls{sepp}, intermediary \gls{ipx} providers), and two interdependent protocol channels.
-Its security goals mainly evolve around confidentiality, integrity, and authentication of message (or patch) sources.
+Its security goals evolve around confidentiality, integrity, replay protection, observational equivalenve, and authentication of message and patch sources.
+These properties do lend themselves to verification using formal methods.
 
 The previous section \ref{sec:formal} introduces the underlying theory and basic functionality of \textsc{Tamarin} and \textsc{ProVerif}.
 Before transposing the \gls{prins} protocol specification into a model for formal verification, the question arises whether one is objectively better suited for this particular application.
+\\
 
 \begin{table}[h]
     \centering
@@ -21,12 +23,12 @@ Before transposing the \gls{prins} protocol specification into a model for forma
                                                & Bilinear groups        &       &                    & \checkmark                        &                          \\
                                                & XOR operations        &       &                    & \checkmark                       &                           \\
     \hline
-    \multirow{4}{*}{Authentication}            & Aliveness                    &       &                    & \checkmark                        & \checkmark                          \\
+\multirow{4}{*}{\begin{tabular}[c]{@{}l@{}}Authentication \\types\end{tabular}}            & Aliveness                    &       &                    & \checkmark                        & \checkmark                          \\
                                                & Weak agreement               &       &                    & \checkmark                        &                            \\
                                                & Non-injective agreement      &       &                    & \checkmark                        &                            \\
                                                & Injective agreement          & $\bullet$     &                    & \checkmark                        & \checkmark                          \\
     \hline
-    \multirow{4}{*}{\begin{tabular}[c]{@{}l@{}}Observational \\equivalence \end{tabular}} & Strong secrecy               &      &                    &                        & \checkmark                          \\
+    \multirow{4}{*}{\begin{tabular}[c]{@{}l@{}}Observational \\equivalence \end{tabular}} & Strong secrecy               & $\bullet$     &                    &                        & \checkmark                          \\
                                                & Offline guessing             &       &                    &                          & \checkmark                           \\
                                                & Equivalence of same processes &       &                    & \checkmark                         & \checkmark                           \\
                                                & Equivalence of similar processes &       &                    &                          & \checkmark                           \\
@@ -45,17 +47,17 @@ Before transposing the \gls{prins} protocol specification into a model for forma
     \label{tab:tama-pro-comparison}
 \end{table}
 
-\footnotetext{Since \gls{tls} is considered secure (c.f. section \ref{sec:goal}), the N32-c channel is modeled as a secure channel.}
-
 Table \ref{tab:tama-pro-comparison} aims to capture modeling features of both \textsc{Tamarin} and \textsc{ProVerif} and to map them to the requirements of \gls{prins}.
 Note that this does not preclude the fact that further operations (e.g. \gls{aead} encryption) cannot be specified using these built-in primitives.
 What is considered here is only the ,,out-of-the-box'' functionality of each respective tool.
 
-One can gather from this overview that both model checkers offer support for cryptographic primitives, authentication types, and channel properties necessary to model the \gls{prins} protocol.
-Since the \gls{3gpp} specification does not explicitly mention any observational equivalence requirements, any security property that can be proven in this category is considered \textit{nice to have}.
-However, as noted before, \textsc{ProVerif} does offer finer control over the type of observational equivalence to be verified.
+\footnotetext{Since \gls{tls} is considered secure (c.f. section \ref{sec:goal}), the N32-c channel is modeled as a secure channel.}
 
-It is the additional features of \textsc{ProVerif} that can help modeling the protocol more closely aligned to the \gls{3gpp} specification.
+One can gather from this overview that both model checkers offer support for cryptographic primitives, authentication types, and channel properties necessary to model the \gls{prins} protocol.
+Although the \gls{3gpp} specification does not explicitly spell out any observational equivalence requirements, it is to be assumed that the refresh of N32-f session keys should not be noticable to adversaries controlling the N32-f channel, given that this procedure is performed via the end-to-end protected N32-c channel.
+As noted before, \textsc{ProVerif} does offer finer control over the type of observational equivalence to be verified and proving strong secrecy of individual terms is a particular advantage over \textsc{Tamarin}.
+
+Furthermore, the additional features of \textsc{ProVerif} can potentially help modeling the protocol more closely aligned to the \gls{3gpp} specification.
 Its concept of tables can be utilized to recreate the N32-f context and the associated information stored by each of the \glspl{sepp}.
 Synchronization on the other hand is a suitable way to control the execution order of \mbox{N32-c} handshake and N32-f data transmission:
 As long as the handshake procedure described in section \ref{ssec:prins-sequence} is not finalized by both parties, there should be no N32-f communication.

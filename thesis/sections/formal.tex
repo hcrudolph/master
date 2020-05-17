@@ -10,7 +10,7 @@ The act of model checking is the exploration of all system states, verifying whe
 An issue is discovered if the provided model does not accurately match the formula – hence the term 'model checking'.
 In practice, there exists a number of optimizations to make the task of exploring all system states more efficient than a brute-force search (see \cite{etessami2000optimizing}).
 If these operations are performed by a computer, it is considered automatic model checking.
-Most model checkers, including the ones that are considered in this thesis, build on some subset of \gls{fol}, which shall be briefly introduced in the remainder of this section.
+Most model checkers, including the ones that are considered in this thesis, build on some subset of first-order logic, which shall be briefly introduced in the remainder of this section.
 These fundamental concepts are key to understand what kind of system properties are in scope of the following analysis.
 
 \subsubsection{First-Order Logic}
@@ -21,12 +21,12 @@ For example, propositional logic is only able to express binary relations using 
 
 \begin{equation*}
     \begin{gathered}
-        \textit{"If it is sunny, it is not raining."}\\
-        P \rightarrow \lnot Q
+        \textit{"If it is sunny (S), it is not raining (R)."}\\
+        S \rightarrow \lnot R
     \end{gathered}
 \end{equation*}
 
-A First-Order Logic on the other hand is comprised quantified of symbols, functions, as well as propositions (or relations) between these elements.
+A first-order logic on the other hand is comprised of quantified symbols, functions, as well as propositions (or relations) between these elements.
 Functions and relations are not necessarily binary but can take any number of parameters greater than zero.
 
 \begin{equation*}
@@ -37,9 +37,9 @@ Functions and relations are not necessarily binary but can take any number of pa
 \end{equation*}
 \begin{equation*}
     \text{where }
-    Mx: x \text{ has a mother; }
-    Hx: x \text{ is human; }
-    j: \text{constant 'John'}
+    Hx:= x \text{ is human; }
+    Mx:= x \text{ has a mother; }
+    j:= \text{constant 'John'}
 \end{equation*}
 
 Or
@@ -52,16 +52,16 @@ Or
 \end{equation*}
 \begin{equation*}
     \text{where }
-    Mxy: x \text{ is the mother of y; }
-    Fx: x \text{ is female; }
-    j: \text{ constant 'John'}
+    Mxy:= x \text{ is the mother of y; }
+    Fx:= x \text{ is female; }
+    j:= \text{ constant 'John'}
 \end{equation*}
 
-\gls{fol} is defined relative to a \textit{signature}, i.e. a set of symbols not inherent to classical logic, by a particular syntax and semantics.
+First-order logic is defined relative to a \textit{signature}, i.e. a set of symbols not inherent to classical logic, by a particular syntax and semantics.
 The syntax determines the set of well-formed formulas, whereas the semantics associates meaning to these formulas.
 This thesis follows the formal definition of Schöning (c.f. \cite{schoning2008logic}, pp. 41-47), the key points of which are summarized below.
 
-The \gls{fol} syntax is comprised of variables, predicates, functions and quantifiers.
+The first-order logic syntax is comprised of variables, predicates, functions and quantifiers.
 A \textit{variable} is of the form $x_i$ where $i= 1, 2, 3, \ldots$.
 A \textit{predicate symbol} is of the form $P_i^k$ and a \textit{function symbol} of the form $f_i^k$ where $i = 1, 2, 3 , \ldots$ and
 $k = 0, 1, 2, \ldots$, where $i$ is the index and $k$ is the arity.
@@ -93,7 +93,7 @@ It denotes its argument holds true sometimes (read: ,,There exists $x, \ldots$''
 The symbol $\forall$ is called the \textit{universal quantifier}.
 It denotes its argument holds true everytime (read: ,,For all $x, \ldots$'').
 
-\gls{fol} is defined in relation to a domain of discourse that gives it meaning.
+Each first-order logic is defined in relation to a domain of discourse that gives it meaning.
 A \textit{structure} is a pair $A = (U_A, I_A)$ where $U_A$ is an arbitrary, non-empty set called the \textit{universe}.
 $I_A$ is a mapping that maps
 
@@ -193,21 +193,22 @@ More formally, invariants can be defined as follows (c.f. \cite{baier2008princip
 A property $P_{inv}$ over $A$ is an invariant if there is a first-order logic formula $F$ over $A$ such that
 
 \begin{equation*}
-    P_{inv} = \{ A_0, A_1, A_2, \ldots \in (A)^\omega | \forall j \geq 0. A_j \models F \}
+    P_{inv} = \{ A_0, A_1, A_2, \ldots \in (2^{AP})^\omega | \forall j \geq 0. A_j \models F \}
 \end{equation*}
 
 \noindent
-$F$ is called an invariant condition (or state condition) of $P_{inv}$.
+$(2^{AP})^\omega$ denotes the set of words arising from the infinite concatenation of words in the set of atomic propositions $2^{AP}$.
+$F$ is called an invariant condition of $P_{inv}$ that holds true for every possible word, ruling out the reachability of a certain bad state.
 
 In addition to invariants, there exist safety properties that are more involved than just the absence of certain undesired states.
 Instead, these may impose requirements on parts of the system's execution trace itself.
 Consider, for example, an arbitrary security protocol that would allow sending data prior to performing the cryptogrtaphic operations that ensure integrity or confidentiality.
 Even though this trivial case would likely already be discoverd during modeling phase, it examplifies that the order of subsequent states is relevant.
 That is, these type properties is not about guaranteeing the reachability of ,,bad'' states, but ,,bad'' path fragments in the execution trace.
-Such safety properties are a generalization of invariantes and are fullfilled if there is no execution trace contains a finite prefix that violates the premise.
-They can be defiend as follows (c.f. \cite{baier2008principles}, p. 112).
+Some of the relevant features of security protocols that can be expressed expressed by this logic include confidentiality and authentication.
+Such safety properties are a generalization of invariants and are fullfilled if there is no execution trace that contains a finite prefix violating the premise (c.f. \cite{baier2008principles}, p. 112).
 
-A property $P_{safe}$ over $A$ is called a safety property if for all words $\sigma \in (2^{A})^{\omega} \in P_{safe}$ there exists a finite prefix $\widehat{\sigma}$ of $\sigma$ such that
+A property $P_{safe}$ over $A$ is called a safety property if for all words $\sigma \in (2^{AP})^{\omega} \in P_{safe}$ there exists a finite prefix $\widehat{\sigma}$ of $\sigma$ such that
 
 \begin{equation*}
     P_{safe} \cap \{ \sigma' \in (2^{A})^{\omega} | \widehat{\sigma} \text{ is a finite prefix of } \sigma' \} = \emptyset
@@ -215,8 +216,6 @@ A property $P_{safe}$ over $A$ is called a safety property if for all words $\si
 
 \noindent
 Any such finite word $\widehat{\sigma}$ is called a bad prefix for $P_{safe}$.
-
-Some of the relevant features of security protocols that can be expressed using safety properties include confidentiality, integrity, and authentication.
 
 \subsubsection{Liveliness Properties}
 
@@ -331,8 +330,8 @@ These allow the adversary send and receive messages on the public channel, learn
 In \textsc{Tamarin} security properties are denoted using two-sorted first-order logic formulas over message terms and timepoints (c.f. \cite{meier2013advancing}).
 These so-called lemmas allow for the specification of various trace properties as well as some forms of observational equivalence.
 As shown in section \ref{sec:formal}, one of the most common use case of trace properties as far as security protocols are concerned is specifying secrecy (recall that invariants are simply a special form of trace properties).
-Secrecy in \textsc{Tamarin} can be expressed using the following lemma, stating that for any secret action $x$ at timepoint $i$, there exsists no timepoint $j$ at which the adversary has knowledge about $x$.
-The very last line is added to ensure satisfiability of the lemma in the face of a potential key compromise of an honest participant $B$ at timepoint $r$.
+Secrecy in \textsc{Tamarin} can be expressed using the following lemma, stating that for any secret action~$x$ at timepoint~$i$, there exsists no timepoint~$j$ at which the adversary has knowledge about~$x$.
+The very last line is added to ensure satisfiability of the lemma in the face of a potential key compromise of an honest participant~$B$ at timepoint~$r$.
 Beyond this basic secrecy property, the tool further offers support for perfect forward secrecy. (see \cite{tamarin2019manual}, pp. 71-72)
 
 \lstset{
@@ -351,8 +350,8 @@ lemma secrecy:
 
 Trace properties are also used to specify authentication between protocol participants.
 As \cite{lowe1997hierarchy} shows, there are several ways to define authentication that vary greatly in stictness.
-With the exception of \textbf{Recentness}, \textsc{Tamarin} can model the following four types of authentication (see \cite{tamarin2019manual}, pp. 74-75).
-\textbf{Aliveness} mandates that if participant $a$ completes a protocol run at timepoint $i$, there exists a participant $b$ that has previously run the protocol.
+With the exception of Recentness, \textsc{Tamarin} can model the following four types of authentication (see \cite{tamarin2019manual}, pp. 74-75).
+\textbf{Aliveness} mandates that if participant~$a$ completes a protocol run at timepoint~$i$, there exists a participant~$b$ that has previously run the protocol.
 Intuitively, this is a rather weak premise that is not useful for varifying the \gls{prins} protocol.
 
 \begin{lstlisting}
@@ -363,7 +362,7 @@ lemma aliveness:
             | (Ex C #r. Reveal(C) @r & Honest(C) @i)"
 \end{lstlisting}
 
-\textbf{Weak agreement} specifies that if participant $a$ completes a protocol run at timepoint $i$, there exists a participant $b$ that has previously run the protocol with $a$.
+\textbf{Weak agreement} specifies that if participant~$a$ completes a protocol run at timepoint~$i$, there exists a participant~$b$ that has previously run the protocol with $a$.
 While this is closer to the intuitive definition of authentication, this does not accurately model the \gls{prins} requirement either, as both participants further need to agree a secret session key amongst each other.
 
 \begin{lstlisting}
@@ -374,9 +373,9 @@ lemma weak_agreement:
             | (Ex C #r. Reveal(C) @r & Honest(C) @i)"
 \end{lstlisting}
 
-\textbf{Non-injective agreement} mandates that if participant $a$ completes a protocol run at timepoint $i$, there exists a participant $b$ that has previously run the protocol with $a$ and both participants agreed on a message term $t$.
+\textbf{Non-injective agreement} mandates that if participant~$a$ completes a protocol run at timepoint~$i$, there exists a participant~$b$ that has previously run the protocol with~$a$ and both participants agreed on a message term~$t$.
 Note that this does not guarantee both participants completing a protocol run the same number of times.
-That is, participant $a$ could run the protocol three times with participant $b$, while for its part, the latter only recognizes one full protocol execution.
+That is, participant~$a$ could run the protocol three times with participant~$b$, while for its part, the latter only recognizes one full protocol execution.
 Since this does not align with \gls{3gpp}'s specification either, an even stricter form of authentication is required.
 
 \begin{lstlisting}
@@ -387,8 +386,8 @@ lemma noninjective_agreement:
             | (Ex C #r. Reveal(C) @r & Honest(C) @i)"
 \end{lstlisting}
 
-\textbf{Injective agreement} specifies that if participant $a$ completes a protocol run at timepoint $i$, there exists a participant $b$ that has previously run the protocol with $a$ and both participants agreed on a message term $t$.
-Furthermore, there exisits a one-to-one relationship between the number of protocol executions by $a$ and $b$.
+\textbf{Injective agreement} specifies that if participant~$a$ completes a protocol run at timepoint~$i$, there exists a participant~$b$ that has previously run the protocol with~$a$ and both participants agreed on a message term~$t$.
+Furthermore, there exisits a one-to-one relationship between the number of protocol executions by~$a$ and~$b$.
 
 \begin{lstlisting}
 lemma injective_agreement:
@@ -411,10 +410,10 @@ This type of check is particularly relevant for proving privacy properties, for 
 As established previously, \textsc{Tamarin} offers support for a range of trace properties that allow for the specification of common secrecy, authentication, and privacy goals.
 On top of that, it provides a number cryptographic primitives built-in that are commonly used in security protocols: hashes, signatures, symmetric and asymmetric encryption, diffie-hellman groups, bilinear groups, XOR operations, and multisets.
 The first three of these are of relevance to the \gls{prins} protocol, as hash functions and symmetric encryption are key for defining \gls{jwe}'s \gls{aead} encryption scheme and digital signatures are the core of \gls{jws}.
-Additional language features to optimize the formal verification include various channel properties (Dolev-Yao, authentic, confidential, and secure channels), various heuristics to optimize automated proof methods, and induction.
+Additional language features to optimize the formal verification include different channel properties (Dolev-Yao, authentic, confidential, and secure channels), various heuristics to optimize automated proof methods, and proof by induction.
 
 In its current version, \textsc{Tamarin} does not support blind signatures and trapdoor commitments, i.e. non-subterm-convergent theories, although there are extensions that tackle specificly those (see \cite{dreier2017beyond}).
-Since neither of these properties is required for the \gls{prins} protocol, this does not hinder our verification in any way.
+Since neither of these properties is required for the \gls{prins} protocol, this does not hinder the verification in any way.
 When operated in observational equivalence mode, the tool is sound, but not complete. (\cite{tamarin2019manual}, p. 107)
 
 \subsection{ProVerif}
@@ -548,7 +547,7 @@ This can be denoted in two ways (c.f. \cite{blanchet2020proverif}, p. 55):
     escapechar=\&
 }
 \begin{lstlisting}
-    query attacker(M) &\lstcomment{// adversary cannot compute M}&
+    query attacker(M) &\lstcomment{// adversary cannot compute term M}&
     query secret x &\lstcomment{// adversary cannot compute bound variable x}&
 \end{lstlisting}
 
@@ -598,3 +597,6 @@ If processes have not fully terminated when transitioning from one phase to anot
 Synchronization on the other hand allows for modeling a mandatory order of commands across processes at certain points.
 If one process has not executed certain commands prior a point of synchronization yet, it waits (potentially indefinitely) until these are executed.
 \textbf{Tables} can be used to model persistent storage of any of the participants that is not accessible by the adversary.
+
+Since the problem of verifying security properties of a protocol with an unlimited message space and number of sessions is fundamentally undecidable, \textsc{ProVerif} may not always terminate.
+Furthermore, the fact that the tool employs certain approximations when translating protocols from the applied pi calculus into Horn clauses -- mainly ignoring the number of repetitions of actions (c.f. \cite{blanchet2020proverif}, p. 118) -- can lead to the detection of false attacks that would not be feasible in real-world scenarios.

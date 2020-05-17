@@ -1,11 +1,11 @@
 \subsection{Global Interconnect Networks}
 
-Ever since the first international mobile communication standard \gls{gls:2g}/GSM, Mobile Network Operators around the world exchange signaling and user data via the global \gls{ipx} network.
-Designed to be a private channel for communication amongst \glspl{mno} only, the way in which it is used today, and the plethora of different agents connected to it --many of them not network operators-- renders it a network that is not any more trustworthy than the public internet.
-Coupled with weaknesses in the established network protocols as previously summarized in section \ref{sec:related}, the interconnect interface is cause for major security and fraud concerns for any mobile operator.
+Ever since the introduction of the first international mobile communication standard \gls{gls:2g}/GSM, \glspl{mno} around the world exchange signaling and user data via the global \gls{ipx} network.
+Designed to be a private channel for communication amongst \glspl{mno} only, the way in which it is used today, and the plethora of different parties connected to it --many of them not network operators-- renders it a network that is not any more trustworthy than the public internet.
+Coupled with weaknesses in the established network protocols as previously summarized in section \ref{sec:related}, the interconnect interface is cause for major security and fraud concerns for any mobile service provider.
 
 One of the reasons why this well-known problem still persists several years after the publication of possible exploits is the role that operators of \gls{ipx} peering platforms play in inter-\gls{plmn} signaling, which goes well beyond that of pure connectivity providers.
-Many \glspl{mno} depend on them for supplementary services that require to access or even modify the contents of the signaling traffic.
+Many \glspl{mno} depend on them for supplementary services that require accessing or even modifying the contents of signaling traffic.
 These services include, for example, normalization of the protocol syntax, replacement of attributes to alleviate technical incompatibilities, and business intelligence offerings.
 Note that for the communication partners on either side it is intransparent which routing path messages take on the interconnect network.
 A single \gls{plmn} can simultaneously be connected to multiple \gls{ipx} providers, which in turn may or may not connect directly to each other.
@@ -19,8 +19,9 @@ A single \gls{plmn} can simultaneously be connected to multiple \gls{ipx} provid
     \item Both \glspl{plmn} are connected to two distinct \gls{ipx} providers that are each allowed to access message contents and are connected via additional \gls{ipx} providers that are not expected to access message contents.
 \end{enumerate}
 
-Intuitively, one can see an overlap with the premises of the Dolev-Yao model: All signaling messages are intercepted by an \gls{ipx} provider, i.e. the potential adversary, and all messages received are sent by such an entity.
-This constellation, in which different external parties are expected to perform certain changes that cannot be validated or traced with the existing security protocols is one of the motivating factors for the definition of \gls{prins}.
+Intuitively, one can dicern an overlap with the premises of the Dolev-Yao model:
+All signaling messages are intercepted or potentially blocked by an \gls{ipx} provider, i.e. the potential adversary, and all messages received by any \gls{sepp} are sent by such an entity.
+This constellation, in which different external parties are expected to perform certain changes that cannot be validated or traced with existing security protocols is one of the motivating factors for the definition of \gls{prins}.
 
 \subsection{5G Core Network Signaling}
 
@@ -72,7 +73,7 @@ The ones currently adopted by \gls{3gpp} are:
     \item \textit{Layered Systems}
 
     \noindent
-    This constraint demands that the client does not need to be aware of what exactly happens on server side to fulfill a request or even which server instance is answering.
+    This constraint demands that the client does not need to be aware of what exactly happens on server side to fulfill a request or even what server instance is answering.
     In essence, this is about decoupling of individual services which is inherent to the design of the 5G \gls{gls:cn}.
 
 \end{enumerate}
@@ -93,7 +94,7 @@ Certain \gls{ipx} providers may add changes to the transported messages, using t
 Each patch is digitally signed using \gls{jws} and the \gls{ipx} provider's private key.
 Before any message modifications are possible, the related public key needs to be shared with the involved \glspl{mno}.
 By relying on asymmetric cryptography, traceability of any intermediary patches can be ensured.
-Once a \gls{sepp} receives an incoming message on N32 , it validates the integrity of the original contents and any patches added by \gls{ipx} providers.
+Once a \gls{sepp} receives an incoming message on N32, it validates the integrity of the original contents and any patches added by \gls{ipx} providers.
 If this first validation is successful and the added \gls{json} patches only modify information elements that are allowed to be accessed, the \gls{sepp} transforms the \gls{json} element back into a signaling message, applying changes by the \gls{ipx} providers in the process.
 The resulting \gls{http} message is forwarded to the destination \gls{nf}.
 This flow is illustrated in figure \ref{fig:n32} below.
@@ -115,15 +116,15 @@ The protocol is comprised of two logical channels.
 
 \textbf{N32-c} is a \gls{tls}-protected connection used for session management.
 Once an interconnect session is established, each of the communicating \glspl{sepp} sets up an N32-c channel to be able to send and receive such messages by its peer.
-Messages exchanged via this channel serve the purpose of session parameter exchange (e.g. protection policies and cryptographic profiles), session key agreement and refesh, and error handling throughout the session.
-Since none of these use cases require access to the message contents by any intermediaries, they are carried out via a separate end-to-end protected channel.
+Information exchanged via this channel serve the purpose of session parameter exchange (e.g. protection policies and cryptographic profiles), session key agreement and refesh, as well as error handling throughout the session.
+Since none of these use cases require access to the message contents by any intermediaries, they are transported via this dedicated end-to-end protected channel.
 
-In case two \glspl{plmn} are directly connected, without any intermediaries whatsoever, \gls{3gpp} also specifies the option to utilize the N32-c channel to transfer signaling messages directly, without the use of \gls{prins}.
-This purely \gls{tls}-based operation is mentioned for completeness sake and shall not be analyzed in detail, for reasons cited in section~\ref{sec:goal}.
+If none of the communicating \glspl{plmn} have a need for the active involvement of \gls{ipx} providers, \gls{3gpp} also specifies the option to utilize the N32-c channel directly for transfering signaling messages without the use of \gls{prins}.
+This purely \gls{tls}-based operation is mentioned for completeness sake and shall not be analyzed in detail.
 \\
 
 \textbf{N32-f} is a \gls{prins}-protected connection carrying \gls{http} messages that contain the inter-operator signaling data serialized as \gls{json} objects.
-The level of protection provided for individual information elements on this channel is determined by two types of protection policies, specified by the communicating parties:
+The level of protection provided for individual information elements in these messages is determined by two types of protection policies, specified by the communicating parties:
 
 \begin{enumerate}[label=--]
     \item \textit{Data-type encryption policy}, describing what types of information elements require confidentiality protection.
@@ -131,16 +132,17 @@ The level of protection provided for individual information elements on this cha
 \end{enumerate}
 
 The data-type encryption policy is supported by an \textit{\gls{nf} \gls{api} data-type placement mapping}, defining the data-type of a particular information element.
-It is specific per roaming partner, i.e. peer \gls{plmn}.
-\gls{prins} expects this policy to be the same in both communicating \glspl{sepp} in order to rule out inconsistencies in confidentiality requirements.
-The specification does not describe how such mismatch is to be be handled.
-In addition to the operator-defined data-type encryption policies, \gls{3gpp} defines a set of types that are to be confidentiality protected by default, i.e. data of type ,,[a]uthentication [v]ectors'', ,,[l]ocation data'', and ,,[c]ryptographic material'' (\cite{3gpp.33.501}, p. 31).
-Protection policies by the operator shall not contradict these default policies.
-The specification does not describe how such mismatch is to be be handled.
+The \gls{prins} protocol expects this policy to be the same in both communicating \glspl{sepp} in order to rule out inconsistencies in confidentiality requirements.
+The specification does not describe how such mismatch, if it were to happen, is supposed to be be handled.
+In addition to the operator-defined data-type encryption policies, \gls{3gpp} defines a set of data-types to be confidentiality protected by default.
+That is, data of type ,,Authentication Vectors'', ,,Location data'', and ,,Cryptographic material'' (\cite{3gpp.33.501}, p. 31).
+None of the custom protection policies compiled by the operators should contradict these default policies.
+However, the specification does not describe how such misconfiguration is to be be handled either.
 
-The modification policy defined by each communicating party is only applicable to the \gls{ipx} provider that the defining \gls{mno} has a business relationship with, i.e. any mobile network operator can only actively allow changes by its directly connected interconnection providers.
-By default, modifications are prohibited.
-The policy is specific per roaming partner, i.e. peer \gls{plmn}, and per \gls{ipx} provider.
+The modification policy of each communicating party is only applicable to the \gls{ipx} provider that the defining \gls{mno} has a business relationship with, i.e. any mobile network operator can only actively allow changes by its directly connected interconnection providers.
+By default, any modifications by intermediaries are prohibited.
+The policy is roaming partner specific, i.e. one needs to be defined peer \gls{plmn}/\gls{ipx} provider combination.
+\\
 
 An N32-f session is identified by an \textit{N32-f context} -- supplementary session information stored by each \gls{sepp} in order to correlate and validate different messages.
 This information can be summarized as follows:
@@ -148,8 +150,8 @@ This information can be summarized as follows:
 \begin{enumerate}[label=--]
     \item \textit{N32-f context ID}, uniquely identifying a given N32-f session.
     \item \textit{N32-f peer information}, containing the peer \gls{plmn} ID, peer \gls{sepp} ID, and its \gls{ip} address.
-    \item \textit{N32-f security context}, incl. the \gls{prins} session keys, \gls{jose} cipher suites, protection policies, session counters, initialization vectors, and a so-called \gls{ipx} security information list.
     \item \textit{N32-f context information}, containing details on session validity and an indication whether to use \gls{prins} or \gls{tls}.
+    \item \textit{N32-f security context}, incl. the \gls{prins} session keys, \gls{jose} cipher suites, protection policies, session counters, initialization vectors, and a so-called \gls{ipx} security information list.
 \end{enumerate}
 
 The N32-f context ID is created by both \glspl{sepp} during the initial handshake procedure described in the following subsection.
@@ -158,11 +160,17 @@ It is referenced in each N32-f message in order to inform the receiving \gls{sep
 The N32-f peer information holds the \gls{plmn} ID and an additional \gls{sepp} ID in order to differentiate multiple instances in the foreign network.
 A remote \gls{sepp} address is required for routing purposes.
 
+The N32-f security context further references the aforementioned protection policies, as their scope is one particular N32-f session.
+The agreed cryptographic algorithms for \gls{jwe} protection are stored as cipher suites.
+Lastly, the N32-f security context holds an \gls{ipx} security information list -- identifiers of all intermediary \gls{ipx} providers as well as the related  public keys or certificates used to validate message modifications submitted by them.
+It is expected that \glspl{mno} act as certificate authorities for their IPX providers, issuing certificates for them to sign their message modifications.
+
 The N32-f security context contains the complete N32-f key hierarchy, which is comprised of a single master key generated from the initial N32-c \gls{tls} session, using the \gls{tls} export mechanism specified in RFC 5705 (\cite{rfc5705}), as well as two sets of session keys and \gls{iv} derived form the master key and sequence counters.
 The latter are used for applying \gls{jwe} protection to N32-f messages -- keys for encryption, \glspl{iv} and counters for constructing the nonce required by \gls{aes}-\gls{gcm}.
 Two sets of each are required since N32-f, similar to N32-c, requires setting up two distinct \gls{http} connections to enable a \gls{sepp} to both send and receive messages.
 Hence, \gls{3gpp} specifies ,,parallel'' session keys and \glspl{iv} for use by the \gls{sepp} that initialted the N32-c session.
 The other sets of ,,reverse'' session keys and \glspl{iv} are to be used for a \gls{prins} session with the \gls{sepp} that responded to the initial N32-c establishment.
+\\
 
 \begin{minipage}[l]{0.5\textwidth}
     \begin{enumerate}[label=--]
@@ -179,12 +187,7 @@ The other sets of ,,reverse'' session keys and \glspl{iv} are to be used for a \
         \item \texttt{reverse\_request\_iv\_salt}
         \item \texttt{reverse\_response\_iv\_salt}
     \end{enumerate}
-\end{minipage}\\
-
-The N32-f security context further references the aforementioned protection policies, as their scope is one particular N32-f session.
-The agreed cryptographic algorithms for \gls{jwe} protection are stored as cipher suites.
-Lastly, the N32-f security context holds an \gls{ipx} security information list -- identifiers of all intermediary \gls{ipx} providers as well as the related  public keys or certificates used to validate message modifications submitted by them.
-It is expected that \glspl{mno} act as certificate authorities for their IPX providers, issuing certificates for them to sign their message modifications.
+\end{minipage}
 
 \subsubsection{N32-f Message Format}
 
@@ -208,8 +211,8 @@ The use of \gls{jwe} with these particular cipher suites allows for the choice t
 Resulting from this operation is the ciphertext itself and a \gls{jwe} authentication tag, which can be used to verify the integrity of both the ciphertext and \gls{aad}.
 
 IPX providers performing intermediate changes are only allowed to do so on the clear text parts of the N32-f message, i.e. the \textit{dataToIntegrityProtect} object.
-Modifications are not applied directly, but appended to the original message as a separate \gls{json} object.
-Before forwarding the message to the next hop, the complete \textit{modifiedDataToIntegrityProtect} object is signed using \gls{jws} and the private key belonging to the IPX provider's certificate that was issues by its client \gls{mno}.
+Modifications are not applied directly, but appended to the original message as a separate \gls{json} patch.
+Before forwarding the message to the next hop, the complete \textit{modifiedDataToIntegrityProtect} object is signed using \gls{jws} and the private key belonging to the IPX provider's certificate issues by its client \gls{mno}.
 
 \begin{enumerate}[label=--]
     \item \textit{modifiedDataToIntegrityProtect} contains the operations to be performed on the original message's \textit{dataToIntegrityProtect} object. In addition, the IPX provider supplies a unique identity that is not further defined. Lastly, the \gls{jwe} authentication tag created by the sending \gls{sepp} is included as well, serving the purpose of replay protection.
@@ -274,7 +277,10 @@ Therefore, a distinction is made between security properties which are explicitl
     \asgoal{
         Security property 4: Following above step 11, both \glspl{sepp} shall derive the same N32-f master session key.
     }
-    \item The responding \gls{sepp} creates a separate \gls{tls}-protected N32-c session, enabling it to send error messages to the initiating \gls{sepp}.
+    \item The responding \gls{sepp} creates a separate \gls{tls}-protected N32-c session, enabling it to actively send messages to the initiating \gls{sepp}. Both \glspl{sepp} leave their N32-c channels open throughout the complete lifetime of a session for the purposes of secure error signaling and session management.
+    \asgoal{
+        Security property 5: An adversary shall not be able to detect a change in session keys.
+    }
 \end{enumerate}
 
 \subsubsection{N32-f}
@@ -290,15 +296,15 @@ Therefore, a distinction is made between security properties which are explicitl
     \item After receiving a signaling message from a \gls{nf} in its network, the sending \gls{sepp} rewrites the message into the \gls{json} structures described previously.
     \item On the resulting object, the sending \gls{sepp} applies \gls{jose} protection as follows: The \textit{dataToIntegrityProtectAndCipher} object serves as input for the encryption whereas the \textit{dataToIntegrityProtect} object is used as \gls{aad}.
     \sgoal{
-        Security property 6: Information in the \textit{dataToIntegrityProtectAndCipher} object shall be confidentiality and integrity protected. (c.f. \cite{3gpp.33.501}, p. 135)
+        Security property 6: Information in the \textit{dataToIntegrityProtect} object shall be integrity protected. (c.f. \cite{3gpp.33.501}, p. 135)
     }
     \sgoal{
-        Security property 7: Information in the \textit{dataToIntegrityProtect} object shall be integrity protected. (c.f. \cite{3gpp.33.501}, p. 135)
+        Security property 7: Information in the \textit{dataToIntegrityProtectAndCipher} object shall be confidentiality and integrity protected. (c.f. \cite{3gpp.33.501}, p. 135)
     }
     \item The protected \gls{json} object is embedded into the body of a new \gls{http} request and sent to the first \gls{ipx} provider.
     \item The first \gls{ipx} provider in the path parses the \textit{dataToIntegrityProtect} object and determines the necessary changes. It creates a new \textit{modifiedDataToIntegrityProtect} object, containing a list of all modifications. If there are no modifications to be performed, the \gls{ipx} provider shall write the empty list into the \textit{modifiedDataToIntegrityProtect} object.
     \sgoal{
-        Security property 8: Intemediaries in the routing path shall not be able to remove message modifications previously added by \gls{ipx} providers. (c.f. \cite{3gpp.33.501}, p. 135)
+        Security property 8: Intermediaries in the path shall not be able to remove message modifications previously added by \gls{ipx} providers. (c.f. \cite{3gpp.33.501}, p. 135)
     }
     \item The \gls{json} object created in the previous step is fed into the \gls{jws} algorithm, and appended to the original message together with the signature.
     \asgoal{
@@ -308,19 +314,19 @@ Therefore, a distinction is made between security properties which are explicitl
         Security property 10: It shall not be possible to re-apply message modifications by \gls{ipx} providers to N32-f messages at a later point in time (replay protection). (c.f. \cite{3gpp.33.501}, p. 138)
     }
     \item The modified message is embedded into the body of a new \gls{http} request and sent to the next hop.
-    \item Similar to step 4, the second \gls{ipx} provider determines the changes necssary and adds approprite \gls{json} patches to the existing \textit{modifiedDataToIntegrityProtect} object.
+    \item Similar to step 4, the second \gls{ipx} provider determines the changes necssary and adds appropriate \gls{json} patches to the existing \textit{modifiedDataToIntegrityProtect} object.
     \item The second \gls{ipx} provider signs the complete \textit{modifiedDataToIntegrityProtect} object and appends the resulting signature to the message.
     \item The modified message is embedded into the body of a new \gls{http} request and sent to the receiving \gls{sepp}.
     \item After receving an N32-f message, a \gls{sepp} first verifies the authenticity of the original message contents, i.e. the \textit{dataToIntegrityProtectAndCipher} and \textit{dataToIntegrityProtect} object, using its peer \gls{sepp}'s raw public key or certificate.
     \asgoal{
-        Security property xx: The source of N32-f messages shall be authenticated by the receiving \gls{sepp}.
+        Security property 11: The source of N32-f messages shall be authenticated by the receiving \gls{sepp}.
     }
     \item Afterwards, the \gls{sepp} verifies all \gls{ipx} modifications by checking the contained \gls{jws} signatures and comparing the patch operations to the modification policies of both roaming partners.
     \asgoal{
-        Security property 11: Only IPX providers referenced in one of the \gls{sepp} operator's IPX security information lists shall be able to perform message modifications. (c.f. \cite{3gpp.33.501}, p. 127)
+        Security property 12: Only IPX providers referenced in one of the \gls{sepp} operator's IPX security information lists shall be able to perform message modifications. (c.f. \cite{3gpp.33.501}, p. 127)
     }
     \asgoal{
-        Security property 12: Only message modifications referenced in one of the \gls{sepp} operator's modification policies shall be possible. (c.f. \cite{3gpp.33.501}, p. 127)
+        Security property 13: Only message modifications referenced in one of the \gls{sepp} operator's modification policies shall be possible. (c.f. \cite{3gpp.33.501}, p. 127)
     }
     \item Lastly, the signaling message is reassembled while applying all legitimate modifications successfully verified in the previous step. The resulting message is sent to its final destination.
 \end{enumerate}
