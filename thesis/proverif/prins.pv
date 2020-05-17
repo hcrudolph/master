@@ -1,21 +1,23 @@
-(* Type definitions *)
+(* Custom type definitions *)
 
 type key.
 type mac.
-type rand.
-type skey.
-type pkey.
+type privkey.
+type pubkey.
 type prins.
 type aad.
 type ipxmod.
 
 
-(* Free names *)
+(* Free names / channels *)
 
 free n32f_ati: channel. (* Channel between SEPP A and IPX A *)
 free n32f_iti: channel. (* Channel between IPX A and IPX B *)
 free n32f_bti: channel. (* Channel between IPX B and SEPP B *)
 free n32c: channel [private].       (* Channel between SEPP A and SEPP B *)
+
+(* Tables - private by default *)
+
 table localStorageSeppA(bitstring,  (* N32-f context id *)
                         key,        (* N32-f session key *)
                         bitstring,  (* IV *)
@@ -23,8 +25,9 @@ table localStorageSeppA(bitstring,  (* N32-f context id *)
                         bitstring,  (* Data-type encryption policy *)
                         bitstring,  (* SEPP A modification policy *)
                         bitstring,  (* SEPP B modification policy *)
-                        pkey,       (* IPX A public key *)
-                        pkey).      (* IPX B public key *)
+                        pubkey,       (* IPX A public key *)
+                        pubkey).      (* IPX B public key *)
+
 table localStorageSeppB(bitstring,  (* N32-f context id *)
                         key,        (* N32-f session key *)
                         bitstring,  (* IV *)
@@ -32,19 +35,14 @@ table localStorageSeppB(bitstring,  (* N32-f context id *)
                         bitstring,  (* Data-type encryption policy *)
                         bitstring,  (* SEPP B modification policy *)
                         bitstring,  (* SEPP A modification policy *)
-                        pkey,       (* IPX B public key *)
-                        pkey).      (* IPX A public key *)
+                        pubkey,       (* IPX B public key *)
+                        pubkey).      (* IPX A public key *)
 
-free n32fkey: key [private].
-free n32f_cid_a: bitstring [private].
-free n32f_cid_b: bitstring [private].
-free pol_a: bitstring.
-free pol_b: bitstring.
 
 (* Custom Functions *)
 
-fun deriveMKey(bitstring): key [private].
-fun deriveSKey(key): key.
+fun deriveMasterKey(bitstring): key [private].
+fun deriveSessionKey(key): key.
 fun deriveIV(key): bitstring.
 
 (* Custom Constructors *)
@@ -96,13 +94,13 @@ fun senc(bitstring, key): bitstring.
 reduc forall m: bitstring, k: key; sdec(senc(m, k), k) = m.
 
 (* Signatures *)
-fun pk(skey): pkey.
-fun sign(bitstring, skey): bitstring.
-reduc forall m: bitstring, k: skey; getmess(sign(m, k)) = m.
-reduc forall m: bitstring, k: skey; checksign(sign(m, k), pk(k)) = true.
+fun pk(privkey): pubkey.
+fun sign(bitstring, privkey): bitstring.
+reduc forall m: bitstring, k: privkey; getmess(sign(m, k)) = m.
+reduc forall m: bitstring, k: privkey; checksign(sign(m, k), pk(k)) = true.
 
-fun signprins'(prins, bitstring, bitstring, bitstring, skey): bitstring.
-reduc forall p: prins, ops: bitstring, id: bitstring, tag: bitstring, k: skey;
+fun signprins'(prins, bitstring, bitstring, bitstring, privkey): bitstring.
+reduc forall p: prins, ops: bitstring, id: bitstring, tag: bitstring, k: privkey;
     checksignprins'(signprins'(p, ops, id, tag, k), pk(k)) = true.
 
 (* AEAD Encryption *)
@@ -121,12 +119,18 @@ reduc forall k: key, iv: bitstring, payload: bitstring, adata: aad;
 
 (* Queries *)
 
-event agreedSendContextA(bitstring).
-event agreedRecvContextA(bitstring).
-event agreedSendContextB(bitstring).
-event agreedRecvContextB(bitstring).
-event agreedEncPolicyA(bitstring).
-event agreedEncPolicyB(bitstring).
+event agreedContextSendSeppA(bitstring).
+event agreedContextRecvSeppA(bitstring).
+event agreedContextSendSeppB(bitstring).
+event agreedContextRecvSeppB(bitstring).
+event agreedEncPolicySendSeppA(bitstring).
+event agreedEncPolicyRecvSeppA(bitstring).
+event agreedEncPolicySendSeppB(bitstring).
+event agreedEncPolicyRecvSeppB(bitstring).
+event agreedMasterKeySendSeppA(key).
+event agreedMasterKeyRecvSeppA(key).
+event agreedMasterKeySendSeppB(key).
+event agreedMasterKeyRecvSeppB(key).
 
 event recvAvalidIpxPatchA(ipxmod).
 event recvAvalidIpxPatchB(ipxmod).
@@ -139,99 +143,151 @@ event ipxModBin(ipxmod).
 event ipxModBout(ipxmod).
 
 (* N32-f Context Ids equivalent *)
-query event(agreedSendContextA(n32f_cid_a)) && event(agreedRecvContextB(n32f_cid_b))
-    ==> n32f_cid_a = n32f_cid_b.
+query n32f_cid_a: bitstring, n32f_cid_b: bitstring;
+    event(agreedContextSendSeppA(n32f_cid_a)) && event(agreedContextRecvSeppB(n32f_cid_b))
+    ==> n32f_cid_a = n32f_cid_b [induction].
 
-(* N32-f Context Ids equivalent *)
-query event(agreedSendContextB(n32f_cid_b)) && event(agreedRecvContextA(n32f_cid_a))
-    ==> n32f_cid_b = n32f_cid_a.
+query n32f_cid_a: bitstring, n32f_cid_b: bitstring;
+    event(agreedContextSendSeppB(n32f_cid_b)) && event(agreedContextRecvSeppA(n32f_cid_a))
+    ==> n32f_cid_b = n32f_cid_a [induction].
 
-(* N32-f Context Ids equivalent *)
-query event(agreedEncPolicyA(pol_a)) && event(agreedEncPolicyB(pol_b))
-    ==> pol_a = pol_b.
+query n32f_cid_a: bitstring, n32f_cid_b: bitstring;
+    event(agreedContextSendSeppB(n32f_cid_b)) && event(agreedContextRecvSeppA(n32f_cid_a))
+    ==> n32f_cid_b = n32f_cid_a [induction].
 
-query inj-event(agreedSendContextA(n32f_cid_a))
-    ==> inj-event(agreedRecvContextB(n32f_cid_b)).
+(* Encryption policies equivalent *)
+query encp_a: bitstring, encp_b: bitstring;
+    event(agreedEncPolicySendSeppA(encp_a)) && event(agreedEncPolicyRecvSeppB(encp_b))
+    ==> encp_a = encp_b [induction].
 
-query event(ipxModAout(mod_a)) ==> event(ipxModBin(mod_b))
-    ==> event(recvBvalidIpxPatchA(mod_a)) && event(recvBvalidIpxPatchB(mod_b)).
+query encp_a: bitstring, encp_b: bitstring;
+    event(agreedEncPolicySendSeppB(encp_b)) && event(agreedEncPolicyRecvSeppA(encp_a))
+    ==> encp_b = encp_a [induction].
 
-query attacker(n32f_cid_a);
-      attacker(n32f_cid_a).
+(* master keys equivalent *)
+query master_key_a: key, master_key_b: key;
+    event(agreedMasterKeySendSeppA(master_key_a)) && event(agreedMasterKeyRecvSeppB(master_key_b))
+    ==> master_key_a = master_key_b [induction].
+
+query master_key_a: key, master_key_b: key;
+    event(agreedMasterKeySendSeppB(master_key_b)) && event(agreedMasterKeyRecvSeppA(master_key_a))
+    ==> master_key_b = master_key_a [induction].
+
+(* IPX modifications valid *)
+query modp_a: ipxmod, modp_b: ipxmod;
+    event(ipxModAout(modp_a)) && event(ipxModBin(modp_b))
+    ==> event(recvBvalidIpxPatchA(modp_a)) && event(recvBvalidIpxPatchB(modp_b)).
+
+query modp_a: ipxmod, modp_b: ipxmod;
+    event(ipxModBout(modp_b)) && event(ipxModAin(modp_a))
+    ==> event(recvAvalidIpxPatchA(modp_a)) && event(recvAvalidIpxPatchB(modp_b)).
+
+free master_key_a, master_key_b, session_key_a, session_key_b: key [private].
+free conf: bitstring [private].
+
+query attacker(master_key_a);
+      attacker(master_key_b).
+
+query attacker(session_key_a);
+      attacker(session_key_b).
+
+noninterf master_key_a.
+noninterf master_key_b.
+weaksecret master_key_a.
+weaksecret master_key_b.
+
+query attacker(conf).
+
 
 
 (* SEPP A N32-c Processes *)
 
-let N32cSendSeppA(csuite: bitstring, encp_a: bitstring, modp_a: bitstring, ipxkey_a: pkey)=
-    new n32f_pid_a: bitstring;              (* create random N32-f prefix id *)
-    out(n32c, (csuite, n32f_pid_a));
-    in(n32c, (cs_b: bitstring, n32fpid_b: bitstring));
-    if csuite = cs_b then
-        let n32f_cid_a = createContextId(n32f_pid_a, n32fpid_b) in
-            event agreedSendContextA(n32f_cid_a);
-            out(n32c, (encp_a, modp_a));        (* send protection policies *)
-            in(n32c, (encp_b: bitstring, modp_b: bitstring));
-            if encp_b = encp_a then             (* data-type encryption policies should be equal *)
-                event agreedEncPolicyA(encp_a);
-                out(n32c, ipxkey_a);
-                in(n32c, ipxkey_b: pkey);
-                let master_key = deriveMKey(n32f_cid_a) in
-                    insert localStorageSeppA(n32f_cid_a, deriveSKey(master_key), deriveIV(master_key),
-                                            csuite, encp_a, modp_a, modp_b, ipxkey_a, ipxkey_b).
+let N32cSendSeppA(cipher_suite: bitstring, encp: bitstring, modp: bitstring, ipxkey: pubkey)=
+    (* create random N32-f precontext id *)
+    new n32f_pid: bitstring;
+    out(n32c, (cipher_suite, n32f_pid));
+    in(n32c, (cs_b: bitstring, n32f_pid_b: bitstring));
+    if cipher_suite = cs_b then
+        (* create N32-f context from precontext ids *)
+        let n32f_cid = createContextId(n32f_pid, n32f_pid_b) in
+        event agreedContextSendSeppA(n32f_cid);
+        out(n32c, (encp, modp));
+        in(n32c, (encp_b: bitstring, modp_b: bitstring));
+        if encp_b = encp then
+            event agreedEncPolicySendSeppA(encp);
+            out(n32c, ipxkey);
+            in(n32c, ipxkey_b: pubkey);
+            let master_key_a = deriveMasterKey(n32f_cid) in
+            event agreedMasterKeySendSeppA(master_key_a);
+            let session_key_a = deriveSessionKey(master_key_a) in
+            insert localStorageSeppA(n32f_cid, session_key_a,
+                                    deriveIV(master_key_a), cipher_suite, encp,
+                                    modp, modp_b, ipxkey, ipxkey_b).
 
-let N32cRecvSeppA(csuite: bitstring, encp_a: bitstring, modp_a: bitstring, ipxkey_a: pkey)=
-    new n32f_pid_a: bitstring;              (* create random N32-f prefix id *)
-    in(n32c, (cs_b: bitstring, n32fpid_b: bitstring));
-    if csuite = cs_b then
-        out(n32c, (csuite, n32f_pid_a));
-        let n32f_cid_a = createContextId(n32fpid_b, n32f_pid_a) in
-            event agreedRecvContextA(n32f_cid_a);
-            in(n32c, (encp_b: bitstring, modp_b: bitstring));
-            if encp_b = encp_a then         (* data-type encryption policies should be equal *)
-                event agreedEncPolicyA(encp_a);
-                out(n32c, (encp_a, modp_a));
-                in(n32c, ipxkey_b: pkey);
-                out(n32c, ipxkey_a);
-                let master_key = deriveMKey(n32f_cid_a) in
-                    insert localStorageSeppA(n32f_cid_a, deriveSKey(master_key), deriveIV(master_key),
-                                            csuite, encp_a, modp_a, modp_b, ipxkey_a, ipxkey_b).
+let N32cRecvSeppA(cipher_suite: bitstring, encp: bitstring, modp_a: bitstring, ipxkey: pubkey)=
+    (* create random N32-f precontext id *)
+    new n32f_pid: bitstring;
+    in(n32c, (cs_b: bitstring, n32f_pid_b: bitstring));
+    if cipher_suite = cs_b then
+        out(n32c, (cipher_suite, n32f_pid));
+        let n32f_cid = createContextId(n32f_pid_b, n32f_pid) in
+        (* Create N32-f context from precontext ids *)
+        event agreedContextRecvSeppA(n32f_cid);
+        in(n32c, (encp_b: bitstring, modp_b: bitstring));
+        if encp_b = encp then
+            event agreedEncPolicyRecvSeppA(encp);
+            out(n32c, (encp, modp_a));
+            in(n32c, ipxkey_b: pubkey);
+            out(n32c, ipxkey);
+            let master_key_a = deriveMasterKey(n32f_cid) in
+            event agreedMasterKeyRecvSeppA(master_key_a);
+            let session_key_a = deriveSessionKey(master_key_a) in
+            insert localStorageSeppA(n32f_cid, session_key_a,
+                                    deriveIV(master_key_a), cipher_suite, encp,
+                                    modp_a, modp_b, ipxkey, ipxkey_b).
 
 
 (* SEPP B N32-c Processes *)
 
-let N32cSendSeppB(csuite: bitstring, encp_b: bitstring, modp_b: bitstring, ipxkey_b: pkey)=
+let N32cSendSeppB(cipher_suite: bitstring, encp: bitstring, modp: bitstring, ipxkey: pubkey)=
     new n32f_pid: bitstring;
-    out(n32c, (csuite, n32f_pid));
-    in(n32c, (cs_a: bitstring, n32fpid_a: bitstring));
-    if csuite = cs_a then
-        let n32f_cid_b = createContextId(n32f_pid, n32fpid_a) in
-            event agreedSendContextB(n32f_cid_b);
-            out(n32c, (encp_b, modp_b));        (* send protection policies *)
-            in(n32c, (encp_a: bitstring, modp_a: bitstring));
-            if encp_a = encp_b then             (* data-type encryption policies should be equal *)
-                event agreedEncPolicyB(encp_b);
-                out(n32c, ipxkey_b);
-                in(n32c, ipxkey_a: pkey);
-                let master_key = deriveMKey(n32f_cid_b) in
-                    insert localStorageSeppB(n32f_cid_b, deriveSKey(master_key), deriveIV(master_key),
-                                            csuite, encp_b, modp_b, modp_a, ipxkey_b, ipxkey_a).
+    out(n32c, (cipher_suite, n32f_pid));
+    in(n32c, (cs_a: bitstring, n32f_pid_a: bitstring));
+    if cipher_suite = cs_a then
+        let n32f_cid = createContextId(n32f_pid, n32f_pid_a) in
+        event agreedContextSendSeppB(n32f_cid);
+        out(n32c, (encp, modp));
+        in(n32c, (encp_a: bitstring, modp_a: bitstring));
+        if encp_a = encp then
+            event agreedEncPolicySendSeppB(encp);
+            out(n32c, ipxkey);
+            in(n32c, ipxkey_a: pubkey);
+            let master_key_b = deriveMasterKey(n32f_cid) in
+            event agreedMasterKeySendSeppB(master_key_b);
+            let session_key_b = deriveSessionKey(master_key_b) in
+            insert localStorageSeppB(n32f_cid, session_key_b,
+                                    deriveIV(master_key_b), cipher_suite, encp,
+                                    modp, modp_a, ipxkey, ipxkey_a).
 
-let N32cRecvSeppB(csuite: bitstring, encp_b: bitstring, modp_b: bitstring, ipxkey_b: pkey)=
-    new n32f_pid_b: bitstring;
-    in(n32c, (cs_a: bitstring, n32fpid_a: bitstring));
-    if csuite = cs_a then
-        out(n32c, (csuite, n32f_pid_b));
-        let n32f_cid_b = createContextId(n32fpid_a, n32f_pid_b) in
-            event agreedRecvContextB(n32f_cid_b);
-            in(n32c, (encp_a: bitstring, modp_a: bitstring));
-            if encp_a = encp_b then         (* data-type encryption policies should be equal *)
-                event agreedEncPolicyB(encp_b);
-                out(n32c, (encp_b, modp_b));
-                in(n32c, ipxkey_a: pkey);
-                out(n32c, ipxkey_b);
-                let master_key = deriveMKey(n32f_cid_b) in
-                insert localStorageSeppB(n32f_cid_b, deriveSKey(master_key), deriveIV(master_key),
-                                        csuite, encp_b, modp_b, modp_a, ipxkey_b, ipxkey_a).
+let N32cRecvSeppB(cipher_suite: bitstring, encp: bitstring, modp: bitstring, ipxkey: pubkey)=
+    new n32f_pid: bitstring;
+    in(n32c, (cs_a: bitstring, n32f_pid_a: bitstring));
+    if cipher_suite = cs_a then
+        out(n32c, (cipher_suite, n32f_pid));
+        let n32f_cid = createContextId(n32f_pid_a, n32f_pid) in
+        event agreedContextRecvSeppB(n32f_cid);
+        in(n32c, (encp_a: bitstring, modp_a: bitstring));
+        if encp_a = encp then
+            event agreedEncPolicyRecvSeppB(encp);
+            out(n32c, (encp, modp));
+            in(n32c, ipxkey_a: pubkey);
+            out(n32c, ipxkey);
+            let master_key_b = deriveMasterKey(n32f_cid) in
+            event agreedMasterKeyRecvSeppB(master_key_b);
+            let session_key_b = deriveSessionKey(master_key_b) in
+            insert localStorageSeppB(n32f_cid, session_key_b,
+                                    deriveIV(master_key_b), cipher_suite, encp,
+                                    modp, modp_a, ipxkey, ipxkey_a).
 
 
 (* SEPP A N32-f Processes *)
@@ -239,7 +295,7 @@ let N32cRecvSeppB(csuite: bitstring, encp_b: bitstring, modp_b: bitstring, ipxke
 let N32fSendSeppA(http_message: bitstring, auth_ipx_id: bitstring)=
     let http(nonconf, conf) = http_message in
         new message_id: bitstring;
-        get localStorageSeppA(n32f_context, session_key, iv, csuite, encp, modp_a, modp_b, ipxkey_a, ipxkey_b) in
+        get localStorageSeppA(n32f_context, session_key, iv, cipher_suite, encp, modp_a, modp_b, ipxkey_a, ipxkey_b) in
         let associated_data = combineAAD(nonconf, message_id, auth_ipx_id, n32f_context) in
             let (payload: bitstring, jwe_tag: bitstring) = AEAD_Encrypt(
                     session_key,
@@ -247,7 +303,7 @@ let N32fSendSeppA(http_message: bitstring, auth_ipx_id: bitstring)=
                     conf,
                     associated_data
                 ) in
-            out(n32f_ati, prins'(csuite, iv, associated_data, payload, jwe_tag)).
+            out(n32f_ati, prins'(cipher_suite, iv, associated_data, payload, jwe_tag)).
 
 let N32fRecvSeppA()=
     in(n32f_bti, prins_messsage: prins);
@@ -258,8 +314,8 @@ let N32fRecvSeppA()=
         jwe_tag: bitstring,
         ipx_mods_b: ipxmod,
         ipx_mods_a: ipxmod) = prins_messsage in
-    get localStorageSeppB(n32f_context, session_key, iv, csuite, encp, modp_b, modp_a, ipxkey_b, ipxkey_a) in
-    let recv_payload_a = AEAD_Decrypt(
+    get localStorageSeppB(n32f_context, session_key, iv, cipher_suite, encp, modp_b, modp_a, ipxkey_b, ipxkey_a) in
+    let conf = AEAD_Decrypt(
         session_key,
         iv,
         dataToIntegrityProtectAndCipher,
@@ -267,7 +323,7 @@ let N32fRecvSeppA()=
 
     let jsonPatch(
         ops_b: bitstring,
-        ipx_id_b: bitstring,
+        ipx_b_id: bitstring,
         jwe_tag_b: bitstring,
         jws_signature_b: bitstring) = ipx_mods_b in
         if checksignprins'(jws_signature_b, ipxkey_b) && jwe_tag_b = jwe_tag then
@@ -275,7 +331,7 @@ let N32fRecvSeppA()=
 
     let jsonPatch(
         ops_a: bitstring,
-        ipx_id_a: bitstring,
+        ipx_a_id: bitstring,
         jwe_tag_a: bitstring,
         jws_signature_a: bitstring) = ipx_mods_a in
         if checksignprins'(jws_signature_a, ipxkey_a) && jwe_tag_a = jwe_tag then
@@ -287,7 +343,7 @@ let N32fRecvSeppA()=
 let N32fSendSeppB(http_message: bitstring, auth_ipx_id: bitstring)=
     let http(nonconf, conf) = http_message in
         new message_id: bitstring;
-        get localStorageSeppA(n32f_context, session_key, iv, csuite, encp, modp_b, modp_a, ipxkey_b, ipxkey_a) in
+        get localStorageSeppA(n32f_context, session_key, iv, cipher_suite, encp, modp_b, modp_a, ipxkey_b, ipxkey_a) in
         let associated_data = combineAAD(nonconf, message_id, auth_ipx_id, n32f_context) in
             let (payload: bitstring, jwe_tag: bitstring) = AEAD_Encrypt(
                     session_key,
@@ -295,7 +351,7 @@ let N32fSendSeppB(http_message: bitstring, auth_ipx_id: bitstring)=
                     conf,
                     associated_data
                 ) in
-            out(n32f_bti, prins'(csuite, iv, associated_data, payload, jwe_tag)).
+            out(n32f_bti, prins'(cipher_suite, iv, associated_data, payload, jwe_tag)).
 
 let N32fRecvSeppB()=
     in(n32f_bti, prins_messsage: prins);
@@ -306,8 +362,8 @@ let N32fRecvSeppB()=
         jwe_tag: bitstring,
         ipx_mods_a: ipxmod,
         ipx_mods_b: ipxmod) = prins_messsage in
-    get localStorageSeppB(n32f_context, session_key, iv, csuite, encp, modp_b, modp_a, ipxkey_b, ipxkey_a) in
-    let recv_payload_b = AEAD_Decrypt(
+    get localStorageSeppB(n32f_context, session_key, iv, cipher_suite, encp, modp_b, modp_a, ipxkey_b, ipxkey_a) in
+    let conf = AEAD_Decrypt(
         session_key,
         iv,
         dataToIntegrityProtectAndCipher,
@@ -315,7 +371,7 @@ let N32fRecvSeppB()=
 
     let jsonPatch(
         ops_a: bitstring,
-        ipx_id_a: bitstring,
+        ipx_a_id: bitstring,
         jwe_tag_a: bitstring,
         jws_signature_a: bitstring) = ipx_mods_a in
         if checksignprins'(jws_signature_a, ipxkey_a) && jwe_tag_a = jwe_tag then
@@ -323,7 +379,7 @@ let N32fRecvSeppB()=
 
     let jsonPatch(
         ops_b: bitstring,
-        ipx_id_b: bitstring,
+        ipx_b_id: bitstring,
         jwe_tag_b: bitstring,
         jws_signature_b: bitstring) = ipx_mods_b in
         if checksignprins'(jws_signature_b, ipxkey_b) && jwe_tag_b = jwe_tag then
@@ -332,7 +388,7 @@ let N32fRecvSeppB()=
 
 (* IPX A Process *)
 
-let IpxModAout(id: bitstring, privkey: skey, ops: bitstring)=
+let N32fSendIpxA(id: bitstring, privkey: privkey, ops: bitstring)=
     in(n32f_ati, (prins_message: prins));
     let prins'(jwe_headers: bitstring,
         iv: bitstring,
@@ -341,10 +397,10 @@ let IpxModAout(id: bitstring, privkey: skey, ops: bitstring)=
         jwe_tag: bitstring) = prins_message in
     let modifications = jsonPatch(ops, id, jwe_tag,
                             signprins'(prins_message, ops, id, jwe_tag, privkey)) in
-        out(n32f_iti, appendPatch(prins_message, modifications));
-        event ipxModAout(modifications).
+        event ipxModAout(modifications);
+        out(n32f_iti, appendPatch(prins_message, modifications)).
 
-let IpxModAin(id: bitstring, privkey: skey, ops: bitstring)=
+let N32fRecvIpxA(id: bitstring, privkey: privkey, ops: bitstring)=
     in(n32f_iti, (prins_message: prins));
     let prins''(jwe_headers: bitstring,
         iv: bitstring,
@@ -354,12 +410,12 @@ let IpxModAin(id: bitstring, privkey: skey, ops: bitstring)=
         ipxModificationsB: ipxmod) = prins_message in
     let modifications = jsonPatch(ops, id, jwe_tag,
                             signprins'(prins_message, ops, id, jwe_tag, privkey)) in
-        out(n32f_ati, appendPatch(prins_message, modifications));
-        event ipxModAin(modifications).
+        event ipxModAin(modifications);
+        out(n32f_ati, appendPatch(prins_message, modifications)).
 
 (* IPX B Process *)
 
-let IpxModBout(id: bitstring, privkey: skey, ops: bitstring)=
+let N32fSendIpxB(id: bitstring, privkey: privkey, ops: bitstring)=
     in(n32f_bti, (prins_message: prins));
     let prins'(jwe_headers: bitstring,
         iv: bitstring,
@@ -368,10 +424,10 @@ let IpxModBout(id: bitstring, privkey: skey, ops: bitstring)=
         jwe_tag: bitstring) = prins_message in
     let modifications = jsonPatch(ops, id, jwe_tag,
                             signprins'(prins_message, ops, id, jwe_tag, privkey)) in
-        out(n32f_iti, appendPatch(prins_message, modifications));
-        event ipxModBout(modifications).
+        event ipxModBout(modifications);
+        out(n32f_iti, appendPatch(prins_message, modifications)).
 
-let IpxModBin(id: bitstring, privkey: skey, ops: bitstring)=
+let N32fRecvIpxB(id: bitstring, privkey: privkey, ops: bitstring)=
     in(n32f_iti, (prins_message: prins));
     let prins''(jwe_headers: bitstring,
         iv: bitstring,
@@ -381,35 +437,36 @@ let IpxModBin(id: bitstring, privkey: skey, ops: bitstring)=
         ipxModificationsA: ipxmod) = prins_message in
     let modifications = jsonPatch(ops, id, jwe_tag,
                             signprins'(prins_message, ops, id, jwe_tag, privkey)) in
-        out(n32f_ati, appendPatch(prins_message, modifications));
-        event ipxModBin(modifications).
+        event ipxModBin(modifications);
+        out(n32f_ati, appendPatch(prins_message, modifications)).
+
 
 (* Main Process *)
 
 process
-    new sepp_a_skey: skey; new sepp_b_skey: skey;
+    new sepp_a_privkey: privkey; new sepp_b_privkey: privkey;
     new ciphersuites_a: bitstring; new ciphersuite_b: bitstring;
-    new enc_pol_a: bitstring; new enc_pol_b: bitstring;
-    new mod_pol_a: bitstring; new mod_pol_b: bitstring;
-    new ipx_id_a: bitstring; new ipx_id_b: bitstring;
-    new ipx_skey_a: skey; new ipx_skey_b: skey;
+    new encp_a: bitstring; new encp_b: bitstring;
+    new modp_a: bitstring; new modp_b: bitstring;
+    new ipx_a_id: bitstring; new ipx_b_id: bitstring;
+    new ipx_a_privkey: privkey; new ipx_b_privkey: privkey;
     new message: bitstring;
 
     (* Create key pairs & publish public keys *)
-    let ipx_pkey_a = pk(ipx_skey_a) in out(n32f_ati, ipx_pkey_a);
-    let ipx_pkey_b = pk(ipx_skey_b) in out(n32f_ati, ipx_pkey_b);
-    let sepp_a_pkey = pk(sepp_a_skey) in out(n32f_ati, sepp_a_pkey);
-    let sepp_b_pkey = pk(sepp_b_skey) in out(n32f_ati, sepp_b_pkey);
+    let ipx_a_pubkey = pk(ipx_a_privkey) in out(n32f_ati, ipx_a_pubkey);
+    let ipx_b_pubkey = pk(ipx_b_privkey) in out(n32f_ati, ipx_b_pubkey);
+    let sepp_a_pubkey = pk(sepp_a_privkey) in out(n32f_ati, sepp_a_pubkey);
+    let sepp_b_pubkey = pk(sepp_b_privkey) in out(n32f_ati, sepp_b_pubkey);
 
-    (!N32cSendSeppA(ciphersuites_a, enc_pol_a, mod_pol_a, ipx_pkey_a)) |
-    (!N32cSendSeppB(ciphersuite_b, enc_pol_b, mod_pol_b, ipx_pkey_b)) |
-    (!N32cRecvSeppA(ciphersuites_a, enc_pol_a, mod_pol_a, ipx_pkey_a)) |
-    (!N32cRecvSeppB(ciphersuite_b, enc_pol_b, mod_pol_b, ipx_pkey_b)) |
-    (phase 1; !N32fSendSeppA(message, mod_pol_a)) |
-    (!N32fSendSeppB(message, mod_pol_b)) |
-    (!N32fRecvSeppA()) |
-    (!N32fRecvSeppB()) |
-    (!IpxModAin(ipx_id_a, ipx_skey_a, mod_pol_a)) |
-    (!IpxModBin(ipx_id_b, ipx_skey_b, mod_pol_b)) |
-    (!IpxModAout(ipx_id_a, ipx_skey_a, mod_pol_a)) |
-    (!IpxModBout(ipx_id_b, ipx_skey_b, mod_pol_b))
+    (N32cSendSeppA(ciphersuites_a, encp_a, modp_a, ipx_a_pubkey)) |
+    (N32cSendSeppB(ciphersuite_b, encp_b, modp_b, ipx_b_pubkey)) |
+    (N32cRecvSeppA(ciphersuites_a, encp_a, modp_a, ipx_a_pubkey)) |
+    (N32cRecvSeppB(ciphersuite_b, encp_b, modp_b, ipx_b_pubkey)) |
+    (phase 1; N32fSendSeppA(message, modp_a)) |
+    (N32fSendSeppB(message, modp_b)) |
+    (N32fRecvSeppA()) |
+    (N32fRecvSeppB()) |
+    (N32fRecvIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
+    (N32fRecvIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
+    (N32fSendIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
+    (N32fSendIpxB(ipx_b_id, ipx_b_privkey, modp_b))
