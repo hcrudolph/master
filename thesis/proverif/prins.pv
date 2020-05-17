@@ -5,70 +5,411 @@ type mac.
 type rand.
 type skey.
 type pkey.
-type sskey.
-type spkey.
+type prins.
+type aad.
+type ipxmod.
+
 
 (* Free names *)
 
-free n32f: channel.
-free n32c: channel [private].
-free ss_sepp_key_a: sskey.
-free sp_sepp_key_a: spkey.
-free ss_sepp_key_b: sskey.
-free sp_sepp_key_b: spkey.
-free ipx_sskey_a: sskey.
-free ipx_spkey_a: spkey.
-free ipx_sskey_b: sskey.
-free ipx_spkey_b: spkey.
-free n32fkey: key.
-free ipx_a_info: bitstring.
-free ipx_b_info: bitstring.
-free n32f_precontext_id_a: bitstring.
-free n32f_precontext_id_a: bitstring.
-free n32f_context_id: bitstring.
-free datatype_encryption_policy_a: bitstring.
-free datatype_encryption_policy_b: bitstring.
-free modification_policy_a: bitstring.
-free modification_policy_b: bitstring.
+free n32f_ati: channel. (* Channel between SEPP A and IPX A *)
+free n32f_iti: channel. (* Channel between IPX A and IPX B *)
+free n32f_bti: channel. (* Channel between IPX B and SEPP B *)
+free n32c: channel [private].       (* Channel between SEPP A and SEPP B *)
+table localStorageSeppA(bitstring,  (* N32-f context id *)
+                        key,        (* N32-f session key *)
+                        bitstring,  (* IV *)
+                        bitstring,  (* JWE Ciphersuite *)
+                        bitstring,  (* Data-type encryption policy *)
+                        bitstring,  (* SEPP A modification policy *)
+                        bitstring,  (* SEPP B modification policy *)
+                        pkey,       (* IPX A public key *)
+                        pkey).      (* IPX B public key *)
+table localStorageSeppB(bitstring,  (* N32-f context id *)
+                        key,        (* N32-f session key *)
+                        bitstring,  (* IV *)
+                        bitstring,  (* JWE Ciphersuite *)
+                        bitstring,  (* Data-type encryption policy *)
+                        bitstring,  (* SEPP B modification policy *)
+                        bitstring,  (* SEPP A modification policy *)
+                        pkey,       (* IPX B public key *)
+                        pkey).      (* IPX A public key *)
 
-(* Constructor & destructor definitions *)
+free n32fkey: key [private].
+free n32f_cid_a: bitstring [private].
+free n32f_cid_b: bitstring [private].
+free pol_a: bitstring.
+free pol_b: bitstring.
+
+(* Custom Functions *)
+
+fun deriveMKey(bitstring): key [private].
+fun deriveSKey(key): key.
+fun deriveIV(key): bitstring.
+
+(* Custom Constructors *)
+
+fun createContextId(bitstring, bitstring): bitstring.
+
+fun http(bitstring, bitstring): bitstring [data].
+
+fun combineAAD(bitstring,                   (* DataToIntegrityProtect *)
+                bitstring,                  (* Msg Id *)
+                bitstring,                  (* Authorized IPX *)
+                bitstring):aad [data].      (* N32f Context Id *)
+
+fun jsonPatch(bitstring,                    (* Operations *)
+                bitstring,                  (* IPX Id *)
+                bitstring,                  (* JWE Tag *)
+                bitstring):ipxmod [data].   (* JWS Signature *)
+
+fun appendPatch(prins,                      (* Original N32f Message *)
+            ipxmod): prins [data].          (* IPX A Patch *)
+
+fun prins'(bitstring,                       (* JWE Headers (Cipher Suites etc.) *)
+            bitstring,                      (* Initialization Vector *)
+            aad,                            (* DataToIntegrityProtect (AAD) *)
+            bitstring,                      (* DataToIntegrityProtectAndCipher (Payload) *)
+            bitstring): prins [data].       (* JWE Tag *)
+
+fun prins''(bitstring,                      (* JWE Headers (Cipher Suites etc.) *)
+            bitstring,                      (* Initialization Vector *)
+            aad,                            (* DataToIntegrityProtect (AAD) *)
+            bitstring,                      (* DataToIntegrityProtectAndCipher (Payload) *)
+            bitstring,                      (* JWE Tag *)
+            ipxmod): prins [data].          (* IPX A Patch *)
+
+fun prins'''(bitstring,                     (* JWE Headers (Cipher Suites etc.) *)
+            bitstring,                      (* Initialization Vector *)
+            aad,                            (* DataToIntegrityProtect (AAD) *)
+            bitstring,                      (* DataToIntegrityProtectAndCipher (Payload) *)
+            bitstring,                      (* JWE Tag *)
+            ipxmod,                         (* IPX A Patch *)
+            ipxmod): prins [data].          (* IPX B Patch *)
 
 (* MAC *)
-fun mac(bitstring, key): mac
-reduc forall m: bitstring, k: key; verify_mac(mac(m, k), m, k) = true.
+fun macf(bitstring, key): mac.
+reduc forall m: bitstring, k: key; verify_mac(macf(m, k), m, k) = true.
 
-(* Symmetric encryption *)
+(* Symmetric Encryption *)
 fun senc(bitstring, key): bitstring.
 reduc forall m: bitstring, k: key; sdec(senc(m, k), k) = m.
 
-(* Asymmetric encryption *)
-fun pk(skey): pkey.
-fun aenc(bitstring, pkey): bitstring.
-reduc forall m: bitstring, k: skey; adec(aenc(m, pk(k)), k) = m.
-
 (* Signatures *)
-fun spk(sskey): spkey.
-fun sign(bitstring, sskey): bitstring.
-reduc forall m: bitstring, k: sskey; getmess(sign(m, k)) = m.
-reduc forall m: bitstring, k: sskey; checksign(sign(m, k), spk(k)) = m.
+fun pk(skey): pkey.
+fun sign(bitstring, skey): bitstring.
+reduc forall m: bitstring, k: skey; getmess(sign(m, k)) = m.
+reduc forall m: bitstring, k: skey; checksign(sign(m, k), pk(k)) = true.
 
-(* AEAD encryption *)
-fun aead_encrypt(bitstring, key, mac): bitstring.
-reduc forall m: bitstring, k: key, r: bitstring; aead_decrypt(aead_encrypt(m, k, r), k, r) = x.
-reduc forall k: key, n: mac, p: bitstring, ad: bitstring;
-    AEAD_Encrypt(k, n, p, ad) = (aead_encrypt(p, k, n), mac((n, ad, aead_encrypt(p, k, n)), k)).
-reduc forall k: key, n: mac, p: bitstring, ad: bitstring;
-    AEAD_Decrypt(k, n, (aead_encrypt(p, k, n), mac((n, ad, aead_encrypt(p, k, n)), k)), ad) = p.
+fun signprins'(prins, bitstring, bitstring, bitstring, skey): bitstring.
+reduc forall p: prins, ops: bitstring, id: bitstring, tag: bitstring, k: skey;
+    checksignprins'(signprins'(p, ops, id, tag, k), pk(k)) = true.
+
+(* AEAD Encryption *)
+fun encrypt(bitstring, key, bitstring): bitstring.
+reduc forall msg: bitstring, k: key, iv: bitstring;
+    decrypt(encrypt(msg, k, iv), k, iv) = msg.
+
+reduc forall k: key, iv: bitstring, payload: bitstring, adata: aad;
+    AEAD_Encrypt(k, iv, payload, adata) = (
+                                encrypt(payload, k, iv),
+                                macf((iv, adata, encrypt(payload, k, iv)), k)
+                                ).
+reduc forall k: key, iv: bitstring, payload: bitstring, adata: aad;
+    AEAD_Decrypt(k, iv, (encrypt(payload, k, iv), macf((iv, adata, encrypt(payload, k, iv)), k)), adata) = payload.
 
 
-(* SEPP A Process *)
+(* Queries *)
 
-Let seppA()=
+event agreedSendContextA(bitstring).
+event agreedRecvContextA(bitstring).
+event agreedSendContextB(bitstring).
+event agreedRecvContextB(bitstring).
+event agreedEncPolicyA(bitstring).
+event agreedEncPolicyB(bitstring).
 
-(* SEPP B Process *)
+event recvAvalidIpxPatchA(ipxmod).
+event recvAvalidIpxPatchB(ipxmod).
+event recvBvalidIpxPatchA(ipxmod).
+event recvBvalidIpxPatchB(ipxmod).
 
-Let seppB()=
+event ipxModAin(ipxmod).
+event ipxModAout(ipxmod).
+event ipxModBin(ipxmod).
+event ipxModBout(ipxmod).
 
-(* Main (IPX) Process *)
+(* N32-f Context Ids equivalent *)
+query event(agreedSendContextA(n32f_cid_a)) && event(agreedRecvContextB(n32f_cid_b))
+    ==> n32f_cid_a = n32f_cid_b.
 
-Let ipxA()=
+(* N32-f Context Ids equivalent *)
+query event(agreedSendContextB(n32f_cid_b)) && event(agreedRecvContextA(n32f_cid_a))
+    ==> n32f_cid_b = n32f_cid_a.
+
+(* N32-f Context Ids equivalent *)
+query event(agreedEncPolicyA(pol_a)) && event(agreedEncPolicyB(pol_b))
+    ==> pol_a = pol_b.
+
+query inj-event(agreedSendContextA(n32f_cid_a))
+    ==> inj-event(agreedRecvContextB(n32f_cid_b)).
+
+query event(ipxModAout(mod_a)) ==> event(ipxModBin(mod_b))
+    ==> event(recvBvalidIpxPatchA(mod_a)) && event(recvBvalidIpxPatchB(mod_b)).
+
+query attacker(n32f_cid_a);
+      attacker(n32f_cid_a).
+
+
+(* SEPP A N32-c Processes *)
+
+let N32cSendSeppA(csuite: bitstring, encp_a: bitstring, modp_a: bitstring, ipxkey_a: pkey)=
+    new n32f_pid_a: bitstring;              (* create random N32-f prefix id *)
+    out(n32c, (csuite, n32f_pid_a));
+    in(n32c, (cs_b: bitstring, n32fpid_b: bitstring));
+    if csuite = cs_b then
+        let n32f_cid_a = createContextId(n32f_pid_a, n32fpid_b) in
+            event agreedSendContextA(n32f_cid_a);
+            out(n32c, (encp_a, modp_a));        (* send protection policies *)
+            in(n32c, (encp_b: bitstring, modp_b: bitstring));
+            if encp_b = encp_a then             (* data-type encryption policies should be equal *)
+                event agreedEncPolicyA(encp_a);
+                out(n32c, ipxkey_a);
+                in(n32c, ipxkey_b: pkey);
+                let master_key = deriveMKey(n32f_cid_a) in
+                    insert localStorageSeppA(n32f_cid_a, deriveSKey(master_key), deriveIV(master_key),
+                                            csuite, encp_a, modp_a, modp_b, ipxkey_a, ipxkey_b).
+
+let N32cRecvSeppA(csuite: bitstring, encp_a: bitstring, modp_a: bitstring, ipxkey_a: pkey)=
+    new n32f_pid_a: bitstring;              (* create random N32-f prefix id *)
+    in(n32c, (cs_b: bitstring, n32fpid_b: bitstring));
+    if csuite = cs_b then
+        out(n32c, (csuite, n32f_pid_a));
+        let n32f_cid_a = createContextId(n32fpid_b, n32f_pid_a) in
+            event agreedRecvContextA(n32f_cid_a);
+            in(n32c, (encp_b: bitstring, modp_b: bitstring));
+            if encp_b = encp_a then         (* data-type encryption policies should be equal *)
+                event agreedEncPolicyA(encp_a);
+                out(n32c, (encp_a, modp_a));
+                in(n32c, ipxkey_b: pkey);
+                out(n32c, ipxkey_a);
+                let master_key = deriveMKey(n32f_cid_a) in
+                    insert localStorageSeppA(n32f_cid_a, deriveSKey(master_key), deriveIV(master_key),
+                                            csuite, encp_a, modp_a, modp_b, ipxkey_a, ipxkey_b).
+
+
+(* SEPP B N32-c Processes *)
+
+let N32cSendSeppB(csuite: bitstring, encp_b: bitstring, modp_b: bitstring, ipxkey_b: pkey)=
+    new n32f_pid: bitstring;
+    out(n32c, (csuite, n32f_pid));
+    in(n32c, (cs_a: bitstring, n32fpid_a: bitstring));
+    if csuite = cs_a then
+        let n32f_cid_b = createContextId(n32f_pid, n32fpid_a) in
+            event agreedSendContextB(n32f_cid_b);
+            out(n32c, (encp_b, modp_b));        (* send protection policies *)
+            in(n32c, (encp_a: bitstring, modp_a: bitstring));
+            if encp_a = encp_b then             (* data-type encryption policies should be equal *)
+                event agreedEncPolicyB(encp_b);
+                out(n32c, ipxkey_b);
+                in(n32c, ipxkey_a: pkey);
+                let master_key = deriveMKey(n32f_cid_b) in
+                    insert localStorageSeppB(n32f_cid_b, deriveSKey(master_key), deriveIV(master_key),
+                                            csuite, encp_b, modp_b, modp_a, ipxkey_b, ipxkey_a).
+
+let N32cRecvSeppB(csuite: bitstring, encp_b: bitstring, modp_b: bitstring, ipxkey_b: pkey)=
+    new n32f_pid_b: bitstring;
+    in(n32c, (cs_a: bitstring, n32fpid_a: bitstring));
+    if csuite = cs_a then
+        out(n32c, (csuite, n32f_pid_b));
+        let n32f_cid_b = createContextId(n32fpid_a, n32f_pid_b) in
+            event agreedRecvContextB(n32f_cid_b);
+            in(n32c, (encp_a: bitstring, modp_a: bitstring));
+            if encp_a = encp_b then         (* data-type encryption policies should be equal *)
+                event agreedEncPolicyB(encp_b);
+                out(n32c, (encp_b, modp_b));
+                in(n32c, ipxkey_a: pkey);
+                out(n32c, ipxkey_b);
+                let master_key = deriveMKey(n32f_cid_b) in
+                insert localStorageSeppB(n32f_cid_b, deriveSKey(master_key), deriveIV(master_key),
+                                        csuite, encp_b, modp_b, modp_a, ipxkey_b, ipxkey_a).
+
+
+(* SEPP A N32-f Processes *)
+
+let N32fSendSeppA(http_message: bitstring, auth_ipx_id: bitstring)=
+    let http(nonconf, conf) = http_message in
+        new message_id: bitstring;
+        get localStorageSeppA(n32f_context, session_key, iv, csuite, encp, modp_a, modp_b, ipxkey_a, ipxkey_b) in
+        let associated_data = combineAAD(nonconf, message_id, auth_ipx_id, n32f_context) in
+            let (payload: bitstring, jwe_tag: bitstring) = AEAD_Encrypt(
+                    session_key,
+                    iv,
+                    conf,
+                    associated_data
+                ) in
+            out(n32f_ati, prins'(csuite, iv, associated_data, payload, jwe_tag)).
+
+let N32fRecvSeppA()=
+    in(n32f_bti, prins_messsage: prins);
+    let prins'''(jwe_headers: bitstring,
+        iv: bitstring,
+        dataToIntegrityProtect: aad,
+        dataToIntegrityProtectAndCipher: bitstring,
+        jwe_tag: bitstring,
+        ipx_mods_b: ipxmod,
+        ipx_mods_a: ipxmod) = prins_messsage in
+    get localStorageSeppB(n32f_context, session_key, iv, csuite, encp, modp_b, modp_a, ipxkey_b, ipxkey_a) in
+    let recv_payload_a = AEAD_Decrypt(
+        session_key,
+        iv,
+        dataToIntegrityProtectAndCipher,
+        dataToIntegrityProtect) in
+
+    let jsonPatch(
+        ops_b: bitstring,
+        ipx_id_b: bitstring,
+        jwe_tag_b: bitstring,
+        jws_signature_b: bitstring) = ipx_mods_b in
+        if checksignprins'(jws_signature_b, ipxkey_b) && jwe_tag_b = jwe_tag then
+            event recvAvalidIpxPatchB(ipx_mods_b);
+
+    let jsonPatch(
+        ops_a: bitstring,
+        ipx_id_a: bitstring,
+        jwe_tag_a: bitstring,
+        jws_signature_a: bitstring) = ipx_mods_a in
+        if checksignprins'(jws_signature_a, ipxkey_a) && jwe_tag_a = jwe_tag then
+            event recvAvalidIpxPatchA(ipx_mods_a).
+
+
+(* SEPP B N32-f Processes *)
+
+let N32fSendSeppB(http_message: bitstring, auth_ipx_id: bitstring)=
+    let http(nonconf, conf) = http_message in
+        new message_id: bitstring;
+        get localStorageSeppA(n32f_context, session_key, iv, csuite, encp, modp_b, modp_a, ipxkey_b, ipxkey_a) in
+        let associated_data = combineAAD(nonconf, message_id, auth_ipx_id, n32f_context) in
+            let (payload: bitstring, jwe_tag: bitstring) = AEAD_Encrypt(
+                    session_key,
+                    iv,
+                    conf,
+                    associated_data
+                ) in
+            out(n32f_bti, prins'(csuite, iv, associated_data, payload, jwe_tag)).
+
+let N32fRecvSeppB()=
+    in(n32f_bti, prins_messsage: prins);
+    let prins'''(jwe_headers: bitstring,
+        iv: bitstring,
+        dataToIntegrityProtect: aad,
+        dataToIntegrityProtectAndCipher: bitstring,
+        jwe_tag: bitstring,
+        ipx_mods_a: ipxmod,
+        ipx_mods_b: ipxmod) = prins_messsage in
+    get localStorageSeppB(n32f_context, session_key, iv, csuite, encp, modp_b, modp_a, ipxkey_b, ipxkey_a) in
+    let recv_payload_b = AEAD_Decrypt(
+        session_key,
+        iv,
+        dataToIntegrityProtectAndCipher,
+        dataToIntegrityProtect) in
+
+    let jsonPatch(
+        ops_a: bitstring,
+        ipx_id_a: bitstring,
+        jwe_tag_a: bitstring,
+        jws_signature_a: bitstring) = ipx_mods_a in
+        if checksignprins'(jws_signature_a, ipxkey_a) && jwe_tag_a = jwe_tag then
+            event recvBvalidIpxPatchA(ipx_mods_a);
+
+    let jsonPatch(
+        ops_b: bitstring,
+        ipx_id_b: bitstring,
+        jwe_tag_b: bitstring,
+        jws_signature_b: bitstring) = ipx_mods_b in
+        if checksignprins'(jws_signature_b, ipxkey_b) && jwe_tag_b = jwe_tag then
+            event recvBvalidIpxPatchB(ipx_mods_b).
+
+
+(* IPX A Process *)
+
+let IpxModAout(id: bitstring, privkey: skey, ops: bitstring)=
+    in(n32f_ati, (prins_message: prins));
+    let prins'(jwe_headers: bitstring,
+        iv: bitstring,
+        dataToIntegrityProtect: aad,
+        dataToIntegrityProtectAndCipher: bitstring,
+        jwe_tag: bitstring) = prins_message in
+    let modifications = jsonPatch(ops, id, jwe_tag,
+                            signprins'(prins_message, ops, id, jwe_tag, privkey)) in
+        out(n32f_iti, appendPatch(prins_message, modifications));
+        event ipxModAout(modifications).
+
+let IpxModAin(id: bitstring, privkey: skey, ops: bitstring)=
+    in(n32f_iti, (prins_message: prins));
+    let prins''(jwe_headers: bitstring,
+        iv: bitstring,
+        dataToIntegrityProtect: aad,
+        dataToIntegrityProtectAndCipher: bitstring,
+        jwe_tag: bitstring,
+        ipxModificationsB: ipxmod) = prins_message in
+    let modifications = jsonPatch(ops, id, jwe_tag,
+                            signprins'(prins_message, ops, id, jwe_tag, privkey)) in
+        out(n32f_ati, appendPatch(prins_message, modifications));
+        event ipxModAin(modifications).
+
+(* IPX B Process *)
+
+let IpxModBout(id: bitstring, privkey: skey, ops: bitstring)=
+    in(n32f_bti, (prins_message: prins));
+    let prins'(jwe_headers: bitstring,
+        iv: bitstring,
+        dataToIntegrityProtect: aad,
+        dataToIntegrityProtectAndCipher: bitstring,
+        jwe_tag: bitstring) = prins_message in
+    let modifications = jsonPatch(ops, id, jwe_tag,
+                            signprins'(prins_message, ops, id, jwe_tag, privkey)) in
+        out(n32f_iti, appendPatch(prins_message, modifications));
+        event ipxModBout(modifications).
+
+let IpxModBin(id: bitstring, privkey: skey, ops: bitstring)=
+    in(n32f_iti, (prins_message: prins));
+    let prins''(jwe_headers: bitstring,
+        iv: bitstring,
+        dataToIntegrityProtect: aad,
+        dataToIntegrityProtectAndCipher: bitstring,
+        jwe_tag: bitstring,
+        ipxModificationsA: ipxmod) = prins_message in
+    let modifications = jsonPatch(ops, id, jwe_tag,
+                            signprins'(prins_message, ops, id, jwe_tag, privkey)) in
+        out(n32f_ati, appendPatch(prins_message, modifications));
+        event ipxModBin(modifications).
+
+(* Main Process *)
+
+process
+    new sepp_a_skey: skey; new sepp_b_skey: skey;
+    new ciphersuites_a: bitstring; new ciphersuite_b: bitstring;
+    new enc_pol_a: bitstring; new enc_pol_b: bitstring;
+    new mod_pol_a: bitstring; new mod_pol_b: bitstring;
+    new ipx_id_a: bitstring; new ipx_id_b: bitstring;
+    new ipx_skey_a: skey; new ipx_skey_b: skey;
+    new message: bitstring;
+
+    (* Create key pairs & publish public keys *)
+    let ipx_pkey_a = pk(ipx_skey_a) in out(n32f_ati, ipx_pkey_a);
+    let ipx_pkey_b = pk(ipx_skey_b) in out(n32f_ati, ipx_pkey_b);
+    let sepp_a_pkey = pk(sepp_a_skey) in out(n32f_ati, sepp_a_pkey);
+    let sepp_b_pkey = pk(sepp_b_skey) in out(n32f_ati, sepp_b_pkey);
+
+    (!N32cSendSeppA(ciphersuites_a, enc_pol_a, mod_pol_a, ipx_pkey_a)) |
+    (!N32cSendSeppB(ciphersuite_b, enc_pol_b, mod_pol_b, ipx_pkey_b)) |
+    (!N32cRecvSeppA(ciphersuites_a, enc_pol_a, mod_pol_a, ipx_pkey_a)) |
+    (!N32cRecvSeppB(ciphersuite_b, enc_pol_b, mod_pol_b, ipx_pkey_b)) |
+    (phase 1; !N32fSendSeppA(message, mod_pol_a)) |
+    (!N32fSendSeppB(message, mod_pol_b)) |
+    (!N32fRecvSeppA()) |
+    (!N32fRecvSeppB()) |
+    (!IpxModAin(ipx_id_a, ipx_skey_a, mod_pol_a)) |
+    (!IpxModBin(ipx_id_b, ipx_skey_b, mod_pol_b)) |
+    (!IpxModAout(ipx_id_a, ipx_skey_a, mod_pol_a)) |
+    (!IpxModBout(ipx_id_b, ipx_skey_b, mod_pol_b))
