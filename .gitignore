@@ -26,6 +26,8 @@
 document.pdf
 ## literature folder
 lit/
+## Mac metadata
+.DS_Store
 
 ## Bibliography auxiliary files (bibtex/biblatex/biber):
 *.bbl
