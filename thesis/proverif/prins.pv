@@ -58,12 +58,12 @@ fun createContextId(bitstring, bitstring): bitstring.
 fun combineAAD(bitstring,                   (* DataToIntegrityProtect *)
                 bitstring,                  (* Msg Id *)
                 bitstring,                  (* Authorized IPX *)
-                bitstring):aad [data].      (* N32f Context Id *)
+                bitstring): aad [data].     (* N32f Context Id *)
 
 fun jsonPatch(bitstring,                    (* Operations *)
                 bitstring,                  (* IPX Id *)
                 mac,                        (* JWE Tag *)
-                bitstring):ipxmod [data].   (* JWS Signature *)
+                bitstring): ipxmod [data].  (* JWS Signature *)
 
 fun prins'(nat,                             (* Sepp Id to avoid trivial cycles *)
             bitstring,                      (* JWE Headers (Cipher Suites etc.) *)
@@ -163,6 +163,8 @@ query attacker(master_key_a);
       attacker(master_key_b).
 query attacker(session_key_a);
       attacker(session_key_b).
+
+(* sec property 7: confidentiality protection *)
 query attacker(msg_a_conf);
       attacker(msg_b_conf).
 
@@ -172,6 +174,7 @@ noninterf master_key_b.
 noninterf session_key_a.
 noninterf session_key_b.
 
+(* sec property 3: N32-f Context IDs equivalent *)
 query n32f_context_a: bitstring, n32f_context_b: bitstring;
     event(agreedContextSendSeppA(n32f_context_a)) &&
     event(agreedContextRecvSeppB(n32f_context_b)) ==>
@@ -179,15 +182,6 @@ query n32f_context_a: bitstring, n32f_context_b: bitstring;
     event(agreedContextSendSeppB(n32f_context_b)) &&
     event(agreedContextRecvSeppA(n32f_context_a)) ==>
     n32f_context_b = n32f_context_a.
-
-(* sec property 3: master keys equivalent *)
-query n32f_cid: bitstring;
-    event(agreedMasterKeySendSeppA(n32f_cid, master_key_a)) &&
-    event(agreedMasterKeyRecvSeppB(n32f_cid, master_key_b)) ==>
-    master_key_a = master_key_b;
-    event(agreedMasterKeySendSeppB(n32f_cid, master_key_b)) &&
-    event(agreedMasterKeyRecvSeppA(n32f_cid, master_key_a)) ==>
-    master_key_b = master_key_a.
 
 (* sec property 4: master keys equivalent *)
 query n32f_cid: bitstring;
@@ -200,7 +194,7 @@ query n32f_cid: bitstring;
 
 
 (* sec property 6/7: integrity protection *)
-query sepp_a_id:nat, sepp_b_id:nat, n32f_context: bitstring, msg_id: bitstring;
+query sepp_a_id: nat, sepp_b_id: nat, n32f_context: bitstring, msg_id: bitstring;
     event(recvSeppA(n32f_context, msg_id, msg_a_conf, msg_a_nonconf)) ==>
     inj-event(sendSeppB(n32f_context, msg_id, msg_b_conf, msg_b_nonconf));
     event(recvSeppB(n32f_context, msg_id, msg_b_conf, msg_b_nonconf)) ==>
@@ -213,6 +207,28 @@ query sepp_a_id:nat, sepp_b_id:nat, n32f_context: bitstring, msg_id: bitstring;
     event(recvSeppA(n32f_context, msg_id, msg_a_conf, msg_a_nonconf)) ==>
     msg_a_conf = msg_b_conf &&
     msg_a_nonconf = msg_b_nonconf.
+
+query n32f_context: bitstring, jwe_tag: mac, ipx_a_mods: ipxmod, ipx_b_mods: ipxmod;
+    inj-event(recvAvalidIpxPatchA(n32f_context, jwe_tag, ipx_a_mods)) &&
+    inj-event(recvAvalidIpxPatchB(n32f_context, jwe_tag, ipx_b_mods)) ==>
+    (inj-event(ipxRecvA(n32f_context, jwe_tag, ipx_a_mods)) ==>
+    inj-event(ipxSendB(n32f_context, jwe_tag, ipx_b_mods))).
+
+query n32f_context: bitstring, jwe_tag: mac, ipx_a_mods: ipxmod, ipx_a_mods': ipxmod, ipx_b_mods: ipxmod, ipx_b_mods': ipxmod;
+    event(recvAvalidIpxPatchA(n32f_context, jwe_tag, ipx_a_mods')) &&
+    event(ipxRecvA(n32f_context, jwe_tag, ipx_a_mods)) ==>
+    ipx_a_mods = ipx_a_mods';
+    event(recvAvalidIpxPatchB(n32f_context, jwe_tag, ipx_b_mods')) &&
+    event(ipxSendB(n32f_context, jwe_tag, ipx_b_mods)) ==>
+    ipx_b_mods = ipx_b_mods'.
+
+query n32f_context: bitstring, jwe_tag: mac, ipx_a_mods: ipxmod, ipx_a_mods': ipxmod, ipx_b_mods: ipxmod, ipx_b_mods': ipxmod;
+    event(recvBvalidIpxPatchA(n32f_context, jwe_tag, ipx_a_mods')) &&
+    event(ipxSendA(n32f_context, jwe_tag, ipx_a_mods)) ==>
+    ipx_a_mods = ipx_a_mods';
+    event(recvBvalidIpxPatchB(n32f_context, jwe_tag, ipx_b_mods')) &&
+    event(ipxRecvB(n32f_context, jwe_tag, ipx_b_mods)) ==>
+    ipx_b_mods = ipx_b_mods'.
 
 (* effective key update *)
 query event(sendKeyUpdateSeppA(master_key_a)) && 
@@ -424,7 +440,7 @@ let N32fRecvSeppA(sepp_a_id: nat)=
             auth_ipx_id = ipx_b_id' &&
             ipx_b_ops = modp_b &&
             jwe_tag_b = jwe_tag then
-            event recvAvalidIpxPatchB(n32f_context, jwe_tag_b, ipx_b_mods);
+            event recvAvalidIpxPatchB(n32f_context, jwe_tag, ipx_b_mods);
 
             let jsonPatch(
                 ipx_a_ops: bitstring,
@@ -436,7 +452,7 @@ let N32fRecvSeppA(sepp_a_id: nat)=
                 ipx_a_id = ipx_a_id' &&
                 ipx_a_ops = modp_a &&
                 jwe_tag_a = jwe_tag then
-                event recvAvalidIpxPatchA(n32f_context, jwe_tag_a, ipx_a_mods).
+                event recvAvalidIpxPatchA(n32f_context, jwe_tag, ipx_a_mods).
 
 
 (* SEPP B N32-f Processes *)
@@ -494,7 +510,7 @@ let N32fRecvSeppB(sepp_b_id: nat)=
             auth_ipx_id = ipx_a_id' &&
             ipx_a_ops = modp_a &&
             jwe_tag_a = jwe_tag then
-            event recvBvalidIpxPatchA(n32f_context, jwe_tag_a, ipx_a_mods);
+            event recvBvalidIpxPatchA(n32f_context, jwe_tag, ipx_a_mods);
 
             let jsonPatch(
                 ipx_b_ops: bitstring,
@@ -506,7 +522,7 @@ let N32fRecvSeppB(sepp_b_id: nat)=
                 ipx_b_id' = ipx_b_id &&
                 ipx_b_ops = modp_b &&
                 jwe_tag_b = jwe_tag then
-                event recvBvalidIpxPatchB(n32f_context, jwe_tag_b, ipx_b_mods).
+                event recvBvalidIpxPatchB(n32f_context, jwe_tag, ipx_b_mods).
 
 
 (* IPX A Processes *)
