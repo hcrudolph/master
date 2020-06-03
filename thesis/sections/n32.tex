@@ -46,7 +46,7 @@ The ones currently adopted by \gls{3gpp} are:
 
 \begin{enumerate}[label=\arabic*), wide, labelwidth=!, labelindent=0pt]
     \item \textit{Resources, Resource Identifiers, and Resource Representation}
-    
+
     \noindent
     Every single data point that might be the target of a signaling message is considered a resource.
     A resource is an abstract entity that may be referenced by identifiers.
@@ -322,10 +322,10 @@ Therefore, a distinction is made between security properties which are explicitl
         Security property 11: The source of N32-f messages shall be authenticated by the receiving \gls{sepp}.
     }
     \item Afterwards, the \gls{sepp} verifies all \gls{ipx} modifications by checking the contained \gls{jws} signatures and comparing the patch operations to the modification policies of both roaming partners.
-    \asgoal{
+    \sgoal{
         Security property 12: Only IPX providers referenced in one of the \gls{sepp} operator's IPX security information lists shall be able to perform message modifications. (c.f. \cite{3gpp.33.501}, p. 127)
     }
-    \asgoal{
+    \sgoal{
         Security property 13: Only message modifications referenced in one of the \gls{sepp} operator's modification policies shall be possible. (c.f. \cite{3gpp.33.501}, p. 127)
     }
     \item Lastly, the signaling message is reassembled while applying all legitimate modifications successfully verified in the previous step. The resulting message is sent to its final destination.
