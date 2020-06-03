@@ -1,13 +1,14 @@
-(* custom type definitions *)
+(* custom types *)
 
-type key.
-type mac.
-type privkey.
-type pubkey.
-type prins.
-type modprins.
-type aad.
-type ipxmod.
+type key.                           (* symmetric key *)
+type mac.                           (* message authentication code *)
+type http.                          (* http message *)
+type privkey.                       (* asymmetric privat key *)
+type pubkey.                        (* asymmetric public key *)
+type prins.                         (* prins message *)
+type modprins.                      (* modified prins message w/ patches *)
+type aad.                           (* additional authenticated data *)
+type ipxmod.                        (* json patch / ipx modifications *)
 
 
 (* free names / channels *)
@@ -16,9 +17,9 @@ free n32f_ati: channel.             (* Channel between SEPP A and IPX A *)
 free n32f_iti: channel.             (* Channel between IPX A and IPX B *)
 free n32f_bti: channel.             (* Channel between IPX B and SEPP B *)
 free n32c: channel [private].       (* Channel between SEPP A and SEPP B *)
-const empty: ipxmod.
+const empty: ipxmod.                (* the empty ipx patch *)
 
-(* tables - private by default *)
+(* tables *)
 
 table localStorageSeppA(bitstring,  (* N32-f context id *)
                         key,        (* N32-f session key *)
@@ -45,61 +46,60 @@ table localStorageSeppB(bitstring,  (* N32-f context id *)
                         pubkey).    (* IPX A public key *)
 
 
+(* custom data constructors *)
+
+fun httpMess(bitstring,             (* conf *)
+        bitstring): http [data].    (* nonconf *)
+
+fun combineAAD(bitstring,           (* DataToIntegrityProtect *)
+        bitstring,                  (* Msg Id *)
+        bitstring,                  (* Authorized IPX *)
+        bitstring): aad [data].     (* N32f Context Id *)
+
+fun jsonPatch(bitstring,            (* Operations *)
+        bitstring,                  (* IPX Id *)
+        mac,                        (* JWE Tag *)
+        bitstring): ipxmod [data].  (* JWS Signature *)
+
+fun prins'(nat,                     (* Sepp Id to avoid trivial cycles *)
+        bitstring,                  (* JWE Headers (Cipher Suites etc.) *)
+        bitstring,                  (* Initialization Vector *)
+        aad,                        (* DataToIntegrityProtect (AAD) *)
+        bitstring,                  (* DataToIntegrityProtectAndCipher (Payload) *)
+        mac): prins [data].         (* JWE Tag *)
+
+fun prins''(nat,                    (* Sepp Id to avoid trivial cycles *)
+        bitstring,                  (* JWE Headers (Cipher Suites etc.) *)
+        bitstring,                  (* Initialization Vector *)
+        aad,                        (* DataToIntegrityProtect (AAD) *)
+        bitstring,                  (* DataToIntegrityProtectAndCipher (Payload) *)
+        mac,                        (* JWE Tag *)
+        ipxmod,                     (* IPX A Patch *)
+        ipxmod): modprins [data].   (* IPX B Patch *)
+
+
 (* custom functions *)
 
+fun createContextId(bitstring, bitstring): bitstring.
 fun deriveMasterKey(bitstring): key [private].
 fun deriveSessionKey(key): key.
 fun deriveIV(key): bitstring.
 
-(* custom constructors *)
-
-fun createContextId(bitstring, bitstring): bitstring.
-
-fun combineAAD(bitstring,                   (* DataToIntegrityProtect *)
-                bitstring,                  (* Msg Id *)
-                bitstring,                  (* Authorized IPX *)
-                bitstring): aad [data].     (* N32f Context Id *)
-
-fun jsonPatch(bitstring,                    (* Operations *)
-                bitstring,                  (* IPX Id *)
-                mac,                        (* JWE Tag *)
-                bitstring): ipxmod [data].  (* JWS Signature *)
-
-fun prins'(nat,                             (* Sepp Id to avoid trivial cycles *)
-            bitstring,                      (* JWE Headers (Cipher Suites etc.) *)
-            bitstring,                      (* Initialization Vector *)
-            aad,                            (* DataToIntegrityProtect (AAD) *)
-            bitstring,                      (* DataToIntegrityProtectAndCipher (Payload) *)
-            mac): prins [data].             (* JWE Tag *)
-
-fun prins''(nat,                            (* Sepp Id to avoid trivial cycles *)
-            bitstring,                      (* JWE Headers (Cipher Suites etc.) *)
-            bitstring,                      (* Initialization Vector *)
-            aad,                            (* DataToIntegrityProtect (AAD) *)
-            bitstring,                      (* DataToIntegrityProtectAndCipher (Payload) *)
-            mac,                            (* JWE Tag *)
-            ipxmod,                         (* IPX A Patch *)
-            ipxmod): modprins [data].       (* IPX B Patch *)
-
 (* mac *)
 fun macf(bitstring, key): mac.
-
-(* symmetric encryption *)
-fun senc(bitstring, key): bitstring.
-reduc forall m: bitstring, k: key; sdec(senc(m, k), k) = m.
 
 (* signatures *)
 fun pk(privkey): pubkey.
 fun sign(bitstring, privkey): bitstring.
-reduc forall m: bitstring, k: privkey; getmess(sign(m, k)) = m.
-reduc forall m: bitstring, k: privkey; checksign(sign(m, k), pk(k)) = true.
+reduc forall m: bitstring, k: privkey; getMess(sign(m, k)) = m.
+reduc forall m: bitstring, k: privkey; checkSign(sign(m, k), pk(k)) = true.
 
-fun signprins(prins, bitstring, bitstring, mac, privkey): bitstring.
+fun signPrins(prins, bitstring, bitstring, mac, privkey): bitstring.
 reduc forall p: prins, ops: bitstring, id: bitstring, tag: mac, k: privkey;
-    checksignprins(signprins(p, ops, id, tag, k), pk(k)) = true.
-fun signmodprins(modprins, bitstring, bitstring, mac, privkey): bitstring.
+    checkPrinsSign(signPrins(p, ops, id, tag, k), pk(k)) = true.
+fun signPrinsMod(modprins, bitstring, bitstring, mac, privkey): bitstring.
 reduc forall p: modprins, ops: bitstring, id: bitstring, tag: mac, k: privkey;
-    checksignmodprins(signmodprins(p, ops, id, tag, k), pk(k)) = true.
+    checkPrinsModSign(signPrinsMod(p, ops, id, tag, k), pk(k)) = true.
 
 (* aead encryption *)
 fun encrypt(bitstring, key, bitstring): bitstring.
@@ -118,7 +118,7 @@ reduc forall k: key, iv: bitstring, payload: bitstring, adata: aad;
                 ) = payload.
 
 
-(* queries *)
+(* event definitions *)
 
 event agreedContextSendSeppA(bitstring).
 event agreedContextRecvSeppA(bitstring).
@@ -133,40 +133,47 @@ event agreedMasterKeyRecvSeppA(bitstring, key).
 event agreedMasterKeySendSeppB(bitstring, key).
 event agreedMasterKeyRecvSeppB(bitstring, key).
 
-event sendSeppA(bitstring, bitstring, bitstring, bitstring).
-event recvSeppA(bitstring, bitstring, bitstring, bitstring).
-event sendSeppB(bitstring, bitstring, bitstring, bitstring).
-event recvSeppB(bitstring, bitstring, bitstring, bitstring).
+event sendSeppA(bitstring, mac, bitstring, bitstring).
+event recvSeppA(bitstring, mac, bitstring, bitstring).
+event sendSeppB(bitstring, mac, bitstring, bitstring).
+event recvSeppB(bitstring, mac, bitstring, bitstring).
 
 event recvAvalidIpxPatchA(bitstring, mac, ipxmod).
 event recvAvalidIpxPatchB(bitstring, mac, ipxmod).
 event recvBvalidIpxPatchA(bitstring, mac, ipxmod).
 event recvBvalidIpxPatchB(bitstring, mac, ipxmod).
+event recvAinvalIpxPatchA().
+event recvAinvalIpxPatchB().
+event recvBinvalIpxPatchA().
+event recvBinvalIpxPatchB().
 
-event sendKeyUpdateSeppA(key).
-event recvKeyUpdateSeppA(key).
-event sendKeyUpdateSeppB(key).
-event recvKeyUpdateSeppB(key).
+event sendKeyUpdateSeppA(bitstring, key).
+event recvKeyUpdateSeppA(bitstring, key).
+event sendKeyUpdateSeppB(bitstring, key).
+event recvKeyUpdateSeppB(bitstring, key).
 
 event ipxRecvA(bitstring, mac, ipxmod).
 event ipxSendA(bitstring, mac, ipxmod).
 event ipxRecvB(bitstring, mac, ipxmod).
 event ipxSendB(bitstring, mac, ipxmod).
+event ipxRecvR1(bitstring, mac, ipxmod).
+event ipxSendR1(bitstring, mac, ipxmod).
+event ipxRecvR2(bitstring, mac, ipxmod).
+event ipxSendR2(bitstring, mac, ipxmod).
+
 
 (* secrecy queries *)
 
 free master_key_a, master_key_b, session_key_a, session_key_b: key [private].
-free msg_a_conf, msg_b_conf: bitstring [private].
-free msg_a_nonconf, msg_b_nonconf: bitstring.
+free conf: bitstring [private].
 
 query attacker(master_key_a);
       attacker(master_key_b).
 query attacker(session_key_a);
       attacker(session_key_b).
 
-(* sec property 7: confidentiality protection *)
-query attacker(msg_a_conf);
-      attacker(msg_b_conf).
+(* sec property 7: message confidentiality protection *)
+query attacker(conf).
 
 (* sec property 5: strong secrecy of master/session keys *)
 noninterf master_key_a.
@@ -175,72 +182,65 @@ noninterf session_key_a.
 noninterf session_key_b.
 
 (* sec property 3: N32-f Context IDs equivalent *)
-query n32f_context_a: bitstring, n32f_context_b: bitstring;
-    event(agreedContextSendSeppA(n32f_context_a)) &&
-    event(agreedContextRecvSeppB(n32f_context_b)) ==>
-    n32f_context_a = n32f_context_b;
-    event(agreedContextSendSeppB(n32f_context_b)) &&
-    event(agreedContextRecvSeppA(n32f_context_a)) ==>
-    n32f_context_b = n32f_context_a.
+query n32f_context: bitstring;
+    event(agreedContextSendSeppA(n32f_context)) ==>
+    inj-event(agreedContextRecvSeppB(n32f_context));
+    event(agreedContextSendSeppB(n32f_context)) ==>
+    inj-event(agreedContextRecvSeppA(n32f_context)).
 
 (* sec property 4: master keys equivalent *)
-query n32f_cid: bitstring;
-    event(agreedMasterKeySendSeppA(n32f_cid, master_key_a)) &&
-    event(agreedMasterKeyRecvSeppB(n32f_cid, master_key_b)) ==>
-    master_key_a = master_key_b;
-    event(agreedMasterKeySendSeppB(n32f_cid, master_key_b)) &&
-    event(agreedMasterKeyRecvSeppA(n32f_cid, master_key_a)) ==>
-    master_key_b = master_key_a.
+query n32f_cid: bitstring, master_key: key;
+    event(agreedMasterKeySendSeppA(n32f_cid, master_key)) ==>
+    inj-event(agreedMasterKeyRecvSeppB(n32f_cid, master_key));
+    event(agreedMasterKeySendSeppB(n32f_cid, master_key)) ==>
+    inj-event(agreedMasterKeyRecvSeppA(n32f_cid, master_key)).
 
+(* sec property 6/7/11: integrity protection / authentication *)
+query n32f_context: bitstring, jwe_tag: mac, msg_conf: bitstring, msg_nonconf: bitstring;
+    event(recvSeppA(n32f_context, jwe_tag, msg_conf, msg_nonconf)) ==>
+    inj-event(sendSeppB(n32f_context, jwe_tag, msg_conf, msg_nonconf));
+    event(recvSeppB(n32f_context, jwe_tag, msg_conf, msg_nonconf)) ==>
+    inj-event(sendSeppA(n32f_context, jwe_tag, msg_conf, msg_nonconf)).
 
-(* sec property 6/7: integrity protection *)
-query sepp_a_id: nat, sepp_b_id: nat, n32f_context: bitstring, msg_id: bitstring;
-    event(recvSeppA(n32f_context, msg_id, msg_a_conf, msg_a_nonconf)) ==>
-    inj-event(sendSeppB(n32f_context, msg_id, msg_b_conf, msg_b_nonconf));
-    event(recvSeppB(n32f_context, msg_id, msg_b_conf, msg_b_nonconf)) ==>
-    inj-event(sendSeppA(n32f_context, msg_id, msg_a_conf, msg_a_nonconf));
-    event(sendSeppA(n32f_context, msg_id, msg_a_conf, msg_a_nonconf)) &&
-    event(recvSeppB(n32f_context, msg_id, msg_b_conf, msg_b_nonconf)) ==>
-    msg_a_conf = msg_b_conf &&
-    msg_a_nonconf = msg_b_nonconf;
-    event(sendSeppB(n32f_context, msg_id, msg_b_conf, msg_b_nonconf)) &&
-    event(recvSeppA(n32f_context, msg_id, msg_a_conf, msg_a_nonconf)) ==>
-    msg_a_conf = msg_b_conf &&
-    msg_a_nonconf = msg_b_nonconf.
-
+(* sec property 9: json patch authentication/integrity protection *)
 query n32f_context: bitstring, jwe_tag: mac, ipx_a_mods: ipxmod, ipx_b_mods: ipxmod;
-    inj-event(recvAvalidIpxPatchA(n32f_context, jwe_tag, ipx_a_mods)) &&
-    inj-event(recvAvalidIpxPatchB(n32f_context, jwe_tag, ipx_b_mods)) ==>
+    event(recvAvalidIpxPatchA(n32f_context, jwe_tag, ipx_a_mods)) ==>
+    (inj-event(recvAvalidIpxPatchB(n32f_context, jwe_tag, ipx_b_mods)) ==>
     (inj-event(ipxRecvA(n32f_context, jwe_tag, ipx_a_mods)) ==>
-    inj-event(ipxSendB(n32f_context, jwe_tag, ipx_b_mods))).
+    inj-event(ipxSendB(n32f_context, jwe_tag, ipx_b_mods))));
 
-query n32f_context: bitstring, jwe_tag: mac, ipx_a_mods: ipxmod, ipx_a_mods': ipxmod, ipx_b_mods: ipxmod, ipx_b_mods': ipxmod;
-    event(recvAvalidIpxPatchA(n32f_context, jwe_tag, ipx_a_mods')) &&
-    event(ipxRecvA(n32f_context, jwe_tag, ipx_a_mods)) ==>
-    ipx_a_mods = ipx_a_mods';
-    event(recvAvalidIpxPatchB(n32f_context, jwe_tag, ipx_b_mods')) &&
-    event(ipxSendB(n32f_context, jwe_tag, ipx_b_mods)) ==>
-    ipx_b_mods = ipx_b_mods'.
+    event(recvBvalidIpxPatchB(n32f_context, jwe_tag, ipx_b_mods)) ==>
+    (inj-event(recvBvalidIpxPatchA(n32f_context, jwe_tag, ipx_a_mods)) ==>
+    (inj-event(ipxRecvB(n32f_context, jwe_tag, ipx_b_mods)) ==>
+    inj-event(ipxSendA(n32f_context, jwe_tag, ipx_a_mods)))).
 
-query n32f_context: bitstring, jwe_tag: mac, ipx_a_mods: ipxmod, ipx_a_mods': ipxmod, ipx_b_mods: ipxmod, ipx_b_mods': ipxmod;
-    event(recvBvalidIpxPatchA(n32f_context, jwe_tag, ipx_a_mods')) &&
-    event(ipxSendA(n32f_context, jwe_tag, ipx_a_mods)) ==>
-    ipx_a_mods = ipx_a_mods';
-    event(recvBvalidIpxPatchB(n32f_context, jwe_tag, ipx_b_mods')) &&
-    event(ipxRecvB(n32f_context, jwe_tag, ipx_b_mods)) ==>
-    ipx_b_mods = ipx_b_mods'.
+(* sec property 12: no unknown ipx providers *)
+query n32f_context: bitstring, jwe_tag: mac, ipx_a_mods: ipxmod;
+    event(recvAvalidIpxPatchA(n32f_context, jwe_tag, ipx_a_mods)) &&
+    event(ipxRecvR2(n32f_context, jwe_tag, ipx_a_mods));
 
-(* effective key update *)
-query event(sendKeyUpdateSeppA(master_key_a)) && 
-      event(recvKeyUpdateSeppB(master_key_b)) ==>
-      master_key_a = master_key_b;
-      event(sendKeyUpdateSeppB(master_key_b)) && 
-      event(recvKeyUpdateSeppA(master_key_a)) ==>
-      master_key_a = master_key_b.
+    event(recvBvalidIpxPatchA(n32f_context, jwe_tag, ipx_a_mods)) &&
+    event(ipxSendR2(n32f_context, jwe_tag, ipx_a_mods)).
+
+(* sec property 13: unreferenced message modifications *)
+query n32f_context: bitstring, jwe_tag: mac, ipx_mods: ipxmod;
+    event(recvAvalidIpxPatchA(n32f_context, jwe_tag, ipx_mods)) &&
+    event(ipxRecvR1(n32f_context, jwe_tag, ipx_mods));
+
+    event(recvBvalidIpxPatchA(n32f_context, jwe_tag, ipx_mods)) &&
+    event(ipxSendR1(n32f_context, jwe_tag, ipx_mods)).
+
+(* sec property 8: removing previous message modifications *)
+query n32f_context: bitstring, jwe_tag: mac, ipx_a_mods: ipxmod, ipx_b_mods: ipxmod;
+    event(recvAvalidIpxPatchB(n32f_context, jwe_tag, ipx_b_mods)) &&
+    event(ipxRecvR1(n32f_context, jwe_tag, ipx_a_mods)).
+
 
 (* SEPP A N32-c Processes *)
 
-let N32cSendHandshakeSeppA(sepp_a_id: nat, sepp_a_privkey: privkey, cipher_suite: bitstring, encp: bitstring, modp: bitstring, ipx_a_id: bitstring, ipx_a_key: pubkey)=
+let N32cSendHandshakeSeppA(sepp_a_id: nat, sepp_a_privkey: privkey,
+                        cipher_suite: bitstring, encp: bitstring, modp: bitstring,
+                        ipx_a_id: bitstring, ipx_a_key: pubkey)=
     new n32f_pid: bitstring;
     new nonce: bitstring;
     let sig = sign(nonce, sepp_a_privkey) in
@@ -262,11 +262,15 @@ let N32cSendHandshakeSeppA(sepp_a_id: nat, sepp_a_privkey: privkey, cipher_suite
                                     deriveIV(master_key_a), cipher_suite, encp,
                                     modp, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key).
 
-let N32cRecvHandshakeSeppA(sepp_a_id: nat, sepp_b_pubkey: pubkey, cipher_suite: bitstring, encp: bitstring, modp: bitstring, ipx_a_id: bitstring, ipx_a_key: pubkey)=
+let N32cRecvHandshakeSeppA(sepp_a_id: nat, sepp_b_pubkey: pubkey,
+                        cipher_suite: bitstring, encp: bitstring, modp: bitstring,
+                        ipx_a_id: bitstring, ipx_a_key: pubkey)=
     new n32f_pid: bitstring;
     in(n32c, (cipher_suite_b: bitstring, n32f_pid_b: bitstring,
             nonce: bitstring, sig: bitstring, sepp_b_id: nat));
-    if sepp_b_id <> sepp_a_id && checksign(sig, sepp_b_pubkey) && cipher_suite = cipher_suite_b then
+    if sepp_b_id <> sepp_a_id &&
+       checkSign(sig, sepp_b_pubkey) &&
+       cipher_suite = cipher_suite_b then
         out(n32c, (cipher_suite, n32f_pid));
         let n32f_cid = createContextId(n32f_pid_b, n32f_pid) in
         event agreedContextRecvSeppA(n32f_cid);
@@ -295,25 +299,27 @@ let N32cSendKeyUpdateSeppA(sepp_a_id: nat, sepp_a_privkey: privkey)=
     insert localStorageSeppA(n32f_context, session_key_a, iv, cipher_suite, encp,
                         modp_a, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
     );
-    event sendKeyUpdateSeppA(master_key_a).
+    event sendKeyUpdateSeppA(nonce, master_key_a).
 
 let N32cRecvKeyUpdateSeppA(sepp_a_id: nat, sepp_b_pubkey: pubkey)=
     get localStorageSeppA(n32f_context, session_key_a, iv, cipher_suite, encp,
                         modp_a, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
     ) in
     in(n32c, (nonce: bitstring, sig: bitstring, sepp_b_id: nat));
-    if sepp_b_id <> sepp_a_id && checksign(sig, sepp_b_pubkey) then
+    if sepp_b_id <> sepp_a_id && checkSign(sig, sepp_b_pubkey) then
     let master_key_a = deriveMasterKey(nonce) in
     let session_key_a = deriveSessionKey(master_key_a) in
     insert localStorageSeppA(n32f_context, session_key_a, iv, cipher_suite, encp,
                         modp_a, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
     );
-    event recvKeyUpdateSeppA(master_key_a).
+    event recvKeyUpdateSeppA(nonce, master_key_a).
 
 
 (* SEPP B N32-c Processes *)
 
-let N32cSendHandshakeSeppB(sepp_b_id: nat, sepp_b_privkey: privkey, cipher_suite: bitstring, encp: bitstring, modp: bitstring, ipx_b_id: bitstring, ipx_b_key: pubkey)=
+let N32cSendHandshakeSeppB(sepp_b_id: nat, sepp_b_privkey: privkey,
+                        cipher_suite: bitstring, encp: bitstring, modp: bitstring,
+                        ipx_b_id: bitstring, ipx_b_key: pubkey)=
     new n32f_pid: bitstring;
     new nonce: bitstring;
     let sig = sign(nonce, sepp_b_privkey) in
@@ -335,11 +341,15 @@ let N32cSendHandshakeSeppB(sepp_b_id: nat, sepp_b_privkey: privkey, cipher_suite
                                     deriveIV(master_key_b), cipher_suite, encp,
                                     modp, modp_a, ipx_b_id, ipx_b_key, ipx_a_id, ipx_a_key).
 
-let N32cRecvHandshakeSeppB(sepp_b_id: nat, sepp_a_pubkey: pubkey, cipher_suite: bitstring, encp: bitstring, modp: bitstring, ipx_b_id: bitstring, ipx_b_key: pubkey)=
+let N32cRecvHandshakeSeppB(sepp_b_id: nat, sepp_a_pubkey: pubkey,
+                        cipher_suite: bitstring, encp: bitstring, modp: bitstring,
+                        ipx_b_id: bitstring, ipx_b_key: pubkey)=
     new n32f_pid: bitstring;
     in(n32c, (cipher_suite_a: bitstring, n32f_pid_a: bitstring,
             nonce: bitstring, sig: bitstring, sepp_a_id: nat));
-    if sepp_a_id <> sepp_b_id && checksign(sig, sepp_a_pubkey) && cipher_suite = cipher_suite_a then
+    if sepp_a_id <> sepp_b_id &&
+       checkSign(sig, sepp_a_pubkey) &&
+       cipher_suite = cipher_suite_a then
         out(n32c, (cipher_suite, n32f_pid));
         let n32f_cid = createContextId(n32f_pid_a, n32f_pid) in
         event agreedContextRecvSeppB(n32f_cid);
@@ -368,26 +378,28 @@ let N32cSendKeyUpdateSeppB(sepp_b_id: nat, sepp_b_privkey: privkey)=
     insert localStorageSeppB(n32f_context, session_key_b, iv, cipher_suite, encp,
                         modp_b, modp_a, ipx_b_id, ipx_b_key, ipx_a_id, ipx_a_key
     );
-    event sendKeyUpdateSeppB(master_key_b).
+    event sendKeyUpdateSeppB(nonce, master_key_b).
 
 let N32cRecvKeyUpdateSeppB(sepp_b_id: nat, sepp_a_pubkey: pubkey)=
     get localStorageSeppB(n32f_context, session_key_b, iv, cipher_suite, encp,
                         modp_b, modp_a, ipx_b_id, ipx_b_key, ipx_a_id, ipx_a_key
     ) in
     in(n32c, (nonce: bitstring, sig: bitstring, sepp_a_id: nat));
-    if sepp_a_id <> sepp_b_id && checksign(sig, sepp_a_pubkey) then
+    if sepp_a_id <> sepp_b_id && checkSign(sig, sepp_a_pubkey) then
     let master_key_b = deriveMasterKey(nonce) in
     let session_key_b = deriveSessionKey(master_key_b) in
     insert localStorageSeppB(n32f_context, session_key_b, iv, cipher_suite, encp,
                         modp_b, modp_a, ipx_b_id, ipx_b_key, ipx_a_id, ipx_a_key
     );
-    event recvKeyUpdateSeppB(master_key_b).
+    event recvKeyUpdateSeppB(nonce, master_key_b).
 
 
 (* SEPP A N32-f Processes *)
 
-let N32fSendSeppA(sepp_a_id: nat, conf: bitstring, nonconf: bitstring)=
+let N32fSendSeppA(sepp_a_id: nat)=
     new msg_id: bitstring;
+    new msg: http;
+    let httpMess(conf, nonconf) = msg in
     get localStorageSeppA(n32f_context, session_key_a, iv, cipher_suite, encp,
                         modp_a, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
     ) in
@@ -399,10 +411,12 @@ let N32fSendSeppA(sepp_a_id: nat, conf: bitstring, nonconf: bitstring)=
         associated_data
     ) in
     out(n32f_ati, prins'(sepp_a_id, cipher_suite, iv, associated_data, payload, jwe_tag));
-    event sendSeppA(n32f_context, msg_id, conf, nonconf).
+    event sendSeppA(n32f_context, jwe_tag, conf, nonconf).
 
 let N32fRecvSeppA(sepp_a_id: nat)=
     in(n32f_ati, prins_messsage: modprins);
+
+    (* decompose prins message *)
     let prins''(sepp_b_id: nat,
         jwe_headers: bitstring,
         iv: bitstring,
@@ -412,9 +426,8 @@ let N32fRecvSeppA(sepp_a_id: nat)=
         ipx_b_mods: ipxmod,
         ipx_a_mods: ipxmod
     ) = prins_messsage in
-    get localStorageSeppA(n32f_context, session_key_a, iv, cipher_suite, encp,
-                        modp_a, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
-    ) in
+
+    (* decompose aad *)
     let combineAAD(
         nonconf: bitstring,
         msg_id: bitstring,
@@ -422,43 +435,65 @@ let N32fRecvSeppA(sepp_a_id: nat)=
         n32f_cid_b: bitstring
     ) = dataToIntegrityProtect in
 
-    if sepp_b_id <> sepp_a_id && n32f_cid_b = n32f_context then
+    get localStorageSeppA(n32f_context, session_key_a, iv, cipher_suite, encp,
+                        modp_a, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
+    ) in
+    (* verify same n32f context and different sepp, then decrypt *)
+    if n32f_cid_b = n32f_context && sepp_b_id <> sepp_a_id then
         let conf = aeadDecrypt(
             session_key_a,
             iv,
             dataToIntegrityProtectAndCipher,
             dataToIntegrityProtect
         ) in
-        event recvSeppA(n32f_context, msg_id, conf, nonconf);
+
+        (* verify ipx b json patch *)
         let jsonPatch(
             ipx_b_ops: bitstring,
             ipx_b_id': bitstring,
             jwe_tag_b: mac,
             ipx_b_jws: bitstring
         ) = ipx_b_mods in
-        if checksignprins(ipx_b_jws, ipx_b_key) &&
+        if checkPrinsSign(ipx_b_jws, ipx_b_key) &&
             auth_ipx_id = ipx_b_id' &&
             ipx_b_ops = modp_b &&
-            jwe_tag_b = jwe_tag then
-            event recvAvalidIpxPatchB(n32f_context, jwe_tag, ipx_b_mods);
+            jwe_tag_b = jwe_tag
+        then
+            let valid_patch_b: bool = true in
+            event recvAvalidIpxPatchB(n32f_context, jwe_tag, ipx_b_mods)
+        else
+            let valid_patch_b: bool = false in
+            event recvAinvalIpxPatchB();
 
-            let jsonPatch(
-                ipx_a_ops: bitstring,
-                ipx_a_id': bitstring,
-                jwe_tag_a: mac,
-                ipx_a_jws: bitstring
-            ) = ipx_a_mods in
-            if checksignmodprins(ipx_a_jws, ipx_a_key) &&
-                ipx_a_id = ipx_a_id' &&
-                ipx_a_ops = modp_a &&
-                jwe_tag_a = jwe_tag then
-                event recvAvalidIpxPatchA(n32f_context, jwe_tag, ipx_a_mods).
+        (* verify ipx a json patch *)
+        let jsonPatch(
+            ipx_a_ops: bitstring,
+            ipx_a_id': bitstring,
+            jwe_tag_a: mac,
+            ipx_a_jws: bitstring
+        ) = ipx_a_mods in
+        if checkPrinsModSign(ipx_a_jws, ipx_a_key) &&
+            ipx_a_id = ipx_a_id' &&
+            ipx_a_ops = modp_a &&
+            jwe_tag_a = jwe_tag
+        then
+            let valid_patch_a: bool = true in
+            event recvAvalidIpxPatchA(n32f_context, jwe_tag, ipx_a_mods)
+        else
+            let valid_patch_a: bool = false in
+            event recvAinvalIpxPatchA();
+
+        (* all patches valid *)
+        if valid_patch_a && valid_patch_b then
+        event recvSeppA(n32f_context, jwe_tag, conf, nonconf).
 
 
 (* SEPP B N32-f Processes *)
 
-let N32fSendSeppB(sepp_b_id: nat, conf: bitstring, nonconf: bitstring)=
+let N32fSendSeppB(sepp_b_id: nat)=
     new msg_id: bitstring;
+    new msg: http;
+    let httpMess(conf, nonconf) = msg in
     get localStorageSeppB(n32f_context, session_key_b, iv, cipher_suite, encp,
                         modp_b, modp_a, ipx_b_id, ipx_b_key, ipx_a_id, ipx_a_key
     ) in
@@ -470,10 +505,12 @@ let N32fSendSeppB(sepp_b_id: nat, conf: bitstring, nonconf: bitstring)=
         associated_data
     ) in
     out(n32f_bti, prins'(sepp_b_id, cipher_suite, iv, associated_data, payload, jwe_tag));
-    event sendSeppB(n32f_context, msg_id, conf, nonconf).
+    event sendSeppB(n32f_context, jwe_tag, conf, nonconf).
 
 let N32fRecvSeppB(sepp_b_id: nat)=
     in(n32f_bti, prins_messsage: modprins);
+
+    (* decompose prins message *)
     let prins''(sepp_a_id: nat,
         jwe_headers: bitstring,
         iv: bitstring,
@@ -483,52 +520,74 @@ let N32fRecvSeppB(sepp_b_id: nat)=
         ipx_a_mods: ipxmod,
         ipx_b_mods: ipxmod
     ) = prins_messsage in
-    get localStorageSeppB(n32f_context, session_key_b, iv, cipher_suite, encp,
-                        modp_b, modp_a, ipx_b_id, ipx_b_key, ipx_a_id, ipx_a_key
-    ) in
+
+    (* decompose aad *)
     let combineAAD(
         nonconf: bitstring,
         msg_id: bitstring,
         auth_ipx_id: bitstring,
         n32f_cid_a: bitstring
     ) = dataToIntegrityProtect in
-    if sepp_a_id <> sepp_b_id && n32f_cid_a = n32f_context then
+
+    get localStorageSeppB(n32f_context, session_key_b, iv, cipher_suite, encp,
+                        modp_b, modp_a, ipx_b_id, ipx_b_key, ipx_a_id, ipx_a_key
+    ) in
+    (* verify same n32f context and different sepp, then decrypt *)
+    if n32f_cid_a = n32f_context && sepp_a_id <> sepp_b_id then
         let conf = aeadDecrypt(
             session_key_b,
             iv,
             dataToIntegrityProtectAndCipher,
             dataToIntegrityProtect
         ) in
-        event recvSeppB(n32f_context, msg_id, conf, nonconf);
+
+        (* verify ipx a json patch *)
         let jsonPatch(
             ipx_a_ops: bitstring,
             ipx_a_id': bitstring,
             jwe_tag_a: mac,
             ipx_a_jws: bitstring
         ) = ipx_a_mods in
-        if checksignprins(ipx_a_jws, ipx_a_key) &&
+        if checkPrinsSign(ipx_a_jws, ipx_a_key) &&
             auth_ipx_id = ipx_a_id' &&
             ipx_a_ops = modp_a &&
-            jwe_tag_a = jwe_tag then
-            event recvBvalidIpxPatchA(n32f_context, jwe_tag, ipx_a_mods);
+            jwe_tag_a = jwe_tag
+        then
+            let valid_patch_a: bool = true in
+            event recvBvalidIpxPatchA(n32f_context, jwe_tag, ipx_a_mods)
+        else
+            let valid_patch_a: bool = false in
+            event recvBinvalIpxPatchA();
 
-            let jsonPatch(
-                ipx_b_ops: bitstring,
-                ipx_b_id': bitstring,
-                jwe_tag_b: mac,
-                ipx_b_jws: bitstring
-            ) = ipx_b_mods in
-            if checksignmodprins(ipx_b_jws, ipx_b_key) &&
-                ipx_b_id' = ipx_b_id &&
-                ipx_b_ops = modp_b &&
-                jwe_tag_b = jwe_tag then
-                event recvBvalidIpxPatchB(n32f_context, jwe_tag, ipx_b_mods).
+        (* verify ipx b json patch *)
+        let jsonPatch(
+            ipx_b_ops: bitstring,
+            ipx_b_id': bitstring,
+            jwe_tag_b: mac,
+            ipx_b_jws: bitstring
+        ) = ipx_b_mods in
+        if checkPrinsModSign(ipx_b_jws, ipx_b_key) &&
+            ipx_b_id' = ipx_b_id &&
+            ipx_b_ops = modp_b &&
+            jwe_tag_b = jwe_tag
+        then
+            let valid_patch_b: bool = true in
+            event recvBvalidIpxPatchB(n32f_context, jwe_tag, ipx_b_mods)
+        else
+            let valid_patch_b: bool = false in
+            event recvBinvalIpxPatchB();
+
+        (* all patches valid *)
+        if valid_patch_a && valid_patch_b then
+        event recvSeppB(n32f_context, jwe_tag, conf, nonconf).
 
 
 (* IPX A Processes *)
 
 let N32fSendIpxA(id: bitstring, privkey: privkey, ops: bitstring)=
     in(n32f_ati, (prins_message: prins));
+
+    (* decompose prins message *)
     let prins'(sepp_a_id: nat,
         jwe_headers: bitstring,
         iv: bitstring,
@@ -536,15 +595,21 @@ let N32fSendIpxA(id: bitstring, privkey: privkey, ops: bitstring)=
         dataToIntegrityProtectAndCipher: bitstring,
         jwe_tag: mac
     ) = prins_message in
+
+    (* compose ipx patch *)
     let modifications = jsonPatch(ops, id, jwe_tag,
-                        signprins(prins_message, ops, id, jwe_tag, privkey)
+                        signPrins(prins_message, ops, id, jwe_tag, privkey)
     ) in
+
+    (* decompose aad *)
     let combineAAD(
         nonconf: bitstring,
         msg_id: bitstring,
         auth_ipx_id : bitstring,
         n32f_context: bitstring
     ) = dataToIntegrityProtect in
+
+    (* compose modified message *)
     let modified_message = prins''(
                 sepp_a_id,
                 jwe_headers,
@@ -560,6 +625,8 @@ let N32fSendIpxA(id: bitstring, privkey: privkey, ops: bitstring)=
 
 let N32fRecvIpxA(id: bitstring, privkey: privkey, ops: bitstring)=
     in(n32f_iti, (prins_message: modprins));
+
+    (* decompose prins message *)
     let prins''(
         sepp_b_id: nat,
         jwe_headers: bitstring,
@@ -570,15 +637,21 @@ let N32fRecvIpxA(id: bitstring, privkey: privkey, ops: bitstring)=
         ipx_b_mods: ipxmod,
         empty: ipxmod
     ) = prins_message in
+
+    (* compose ipx patch *)
     let modifications = jsonPatch(ops, id, jwe_tag,
-                        signmodprins(prins_message, ops, id, jwe_tag, privkey)
+                        signPrinsMod(prins_message, ops, id, jwe_tag, privkey)
     ) in
+
+    (* decompose aad *)
     let combineAAD(
         nonconf: bitstring,
         msg_id : bitstring,
         auth_ipx_id : bitstring,
         n32f_context: bitstring
     ) = dataToIntegrityProtect in
+
+    (* compose modified message *)
     let modified_message = prins''(
         sepp_b_id,
         jwe_headers,
@@ -597,6 +670,8 @@ let N32fRecvIpxA(id: bitstring, privkey: privkey, ops: bitstring)=
 
 let N32fSendIpxB(id: bitstring, privkey: privkey, ops: bitstring)=
     in(n32f_bti, (prins_message: prins));
+
+    (* decompose prins message *)
     let prins'(
         sepp_b_id: nat,
         jwe_headers: bitstring,
@@ -605,15 +680,21 @@ let N32fSendIpxB(id: bitstring, privkey: privkey, ops: bitstring)=
         dataToIntegrityProtectAndCipher: bitstring,
         jwe_tag: mac
     ) = prins_message in
+
+    (* compose ipx patch *)
     let modifications = jsonPatch(ops, id, jwe_tag,
-                        signprins(prins_message, ops, id, jwe_tag, privkey)
+                        signPrins(prins_message, ops, id, jwe_tag, privkey)
     ) in
+
+    (* decompose aad *)
     let combineAAD(
         nonconf: bitstring,
         msg_id: bitstring,
         auth_ipx_id : bitstring,
         n32f_context: bitstring
     ) = dataToIntegrityProtect in
+
+    (* compose modified message *)
     let modified_message = prins''(
         sepp_b_id,
         jwe_headers,
@@ -629,6 +710,8 @@ let N32fSendIpxB(id: bitstring, privkey: privkey, ops: bitstring)=
 
 let N32fRecvIpxB(id: bitstring, privkey: privkey, ops: bitstring)=
     in(n32f_iti, (prins_message: modprins));
+
+    (* decompose prins message *)
     let prins''(
         sepp_a_id: nat,
         jwe_headers: bitstring,
@@ -639,15 +722,21 @@ let N32fRecvIpxB(id: bitstring, privkey: privkey, ops: bitstring)=
         ipx_a_mods: ipxmod,
         empty: ipxmod
     ) = prins_message in
+
+    (* compose ipx patch *)
     let modifications = jsonPatch(ops, id, jwe_tag,
-                        signmodprins(prins_message, ops, id, jwe_tag, privkey)
+                        signPrinsMod(prins_message, ops, id, jwe_tag, privkey)
     ) in
+
+    (* decompose aad *)
     let combineAAD(
         nonconf: bitstring,
         msg_id : bitstring,
         auth_ipx_id : bitstring,
         n32f_context: bitstring
     ) = dataToIntegrityProtect in
+
+    (* compose modified message *)
     let modified_message = prins''(
         sepp_a_id,
         jwe_headers,
@@ -662,39 +751,234 @@ let N32fRecvIpxB(id: bitstring, privkey: privkey, ops: bitstring)=
     event ipxRecvB(n32f_context, jwe_tag, modifications).
 
 
+(* Rouge IPX Processes *)
+
+(* IPX R1 (Send): applying bogus message modifications *)
+(* IPX R1 (Recv): removing previous IPX patch *)
+
+let N32fSendIpxR1(id: bitstring, privkey: privkey, ops: bitstring)=
+    in(n32f_ati, (prins_message: prins));
+
+    (* decompose prins message *)
+    let prins'(sepp_a_id: nat,
+        jwe_headers: bitstring,
+        iv: bitstring,
+        dataToIntegrityProtect: aad,
+        dataToIntegrityProtectAndCipher: bitstring,
+        jwe_tag: mac
+    ) = prins_message in
+
+    (* compose ipx patch *)
+    let modifications = jsonPatch(ops, id, jwe_tag,
+                        signPrins(prins_message, ops, id, jwe_tag, privkey)
+    ) in
+
+    (* decompose aad *)
+    let combineAAD(
+        nonconf: bitstring,
+        msg_id: bitstring,
+        auth_ipx_id : bitstring,
+        n32f_context: bitstring
+    ) = dataToIntegrityProtect in
+
+    (* compose modified message *)
+    let modified_message = prins''(
+                sepp_a_id,
+                jwe_headers,
+                iv,
+                dataToIntegrityProtect,
+                dataToIntegrityProtectAndCipher,
+                jwe_tag,
+                modifications,
+                empty
+    ) in
+    out(n32f_iti, modified_message);
+    event ipxSendR1(n32f_context, jwe_tag, modifications).
+
+let N32fRecvIpxR1(id: bitstring, privkey: privkey, ops: bitstring)=
+    in(n32f_iti, (prins_message: modprins));
+
+    (* decompose prins message *)
+    let prins''(
+        sepp_b_id: nat,
+        jwe_headers: bitstring,
+        iv: bitstring,
+        dataToIntegrityProtect: aad,
+        dataToIntegrityProtectAndCipher: bitstring,
+        jwe_tag: mac,
+        ipx_b_mods: ipxmod,
+        empty: ipxmod
+    ) = prins_message in
+
+    (* compose ipx patch *)
+    let modifications = jsonPatch(ops, id, jwe_tag,
+                        signPrinsMod(prins_message, ops, id, jwe_tag, privkey)
+    ) in
+
+    (* decompose aad *)
+    let combineAAD(
+        nonconf: bitstring,
+        msg_id : bitstring,
+        auth_ipx_id : bitstring,
+        n32f_context: bitstring
+    ) = dataToIntegrityProtect in
+
+    (* compose modified message *)
+    let modified_message = prins''(
+        sepp_b_id,
+        jwe_headers,
+        iv,
+        dataToIntegrityProtect,
+        dataToIntegrityProtectAndCipher,
+        jwe_tag,
+        empty,
+        modifications
+    ) in
+    out(n32f_ati, modified_message);
+    event ipxRecvR1(n32f_context, jwe_tag, modifications).
+
+(* IPX R2 (Send): unknown ipx_id *)
+(* IPX R2 (Recv): unknown ipx_id *)
+
+let N32fSendIpxR2(id: bitstring, privkey: privkey, ops: bitstring)=
+    in(n32f_ati, (prins_message: prins));
+
+    (* decompose prins message *)
+    let prins'(sepp_a_id: nat,
+        jwe_headers: bitstring,
+        iv: bitstring,
+        dataToIntegrityProtect: aad,
+        dataToIntegrityProtectAndCipher: bitstring,
+        jwe_tag: mac
+    ) = prins_message in
+
+    (* compose ipx patch *)
+    let modifications = jsonPatch(ops, id, jwe_tag,
+                        signPrins(prins_message, ops, id, jwe_tag, privkey)
+    ) in
+
+    (* decompose aad *)
+    let combineAAD(
+        nonconf: bitstring,
+        msg_id: bitstring,
+        auth_ipx_id : bitstring,
+        n32f_context: bitstring
+    ) = dataToIntegrityProtect in
+
+    (* compose modified message *)
+    let modified_message = prins''(
+                sepp_a_id,
+                jwe_headers,
+                iv,
+                dataToIntegrityProtect,
+                dataToIntegrityProtectAndCipher,
+                jwe_tag,
+                modifications,
+                empty
+    ) in
+    out(n32f_iti, modified_message);
+    event ipxSendR2(n32f_context, jwe_tag, modifications).
+
+let N32fRecvIpxR2(id: bitstring, privkey: privkey, ops: bitstring)=
+    in(n32f_iti, (prins_message: modprins));
+
+    (* decompose prins message *)
+    let prins''(
+        sepp_b_id: nat,
+        jwe_headers: bitstring,
+        iv: bitstring,
+        dataToIntegrityProtect: aad,
+        dataToIntegrityProtectAndCipher: bitstring,
+        jwe_tag: mac,
+        ipx_b_mods: ipxmod,
+        empty: ipxmod
+    ) = prins_message in
+
+    (* compose ipx patch *)
+    let modifications = jsonPatch(ops, id, jwe_tag,
+                        signPrinsMod(prins_message, ops, id, jwe_tag, privkey)
+    ) in
+
+    (* decompose aad *)
+    let combineAAD(
+        nonconf: bitstring,
+        msg_id : bitstring,
+        auth_ipx_id : bitstring,
+        n32f_context: bitstring
+    ) = dataToIntegrityProtect in
+
+    (* compose modified message *)
+    let modified_message = prins''(
+        sepp_b_id,
+        jwe_headers,
+        iv,
+        dataToIntegrityProtect,
+        dataToIntegrityProtectAndCipher,
+        jwe_tag,
+        empty,
+        modifications
+    ) in
+    out(n32f_ati, modified_message);
+    event ipxRecvR2(n32f_context, jwe_tag, modifications).
+
+
 (* Main Process *)
 
 process
+    (* jwe ciphersuite *)
     new ciphersuites: bitstring;
+
+    (* protection policies *)
     new encp: bitstring;
     new modp_a: bitstring;
     new modp_b: bitstring;
+    new modp_r1: bitstring;
+
+    (* ipx ids *)
     new ipx_a_id: bitstring;
     new ipx_b_id: bitstring;
+    new ipx_r2_id: bitstring;
 
+    (* sepp cryptographic keys *)
     new sepp_a_privkey: privkey;
     new sepp_b_privkey: privkey;
     let sepp_a_pubkey = pk(sepp_a_privkey) in out(n32f_ati, sepp_a_pubkey);
     let sepp_b_pubkey = pk(sepp_b_privkey) in out(n32f_bti, sepp_b_pubkey);
 
+    (* ipx cryptographic keys *)
     new ipx_a_privkey: privkey;
     new ipx_b_privkey: privkey;
+    new ipx_r2_privkey: privkey;
     let ipx_a_pubkey = pk(ipx_a_privkey) in out(n32f_ati, ipx_a_pubkey);
     let ipx_b_pubkey = pk(ipx_b_privkey) in out(n32f_bti, ipx_b_pubkey);
+    let ipx_r2_pubkey = pk(ipx_r2_privkey) in out(n32f_ati, ipx_r2_pubkey);
 
-    ((N32cSendHandshakeSeppA(0, sepp_a_privkey, ciphersuites, encp, modp_a, ipx_a_id, ipx_a_pubkey)) |
+    (* process execution *)
+    ((!N32cSendHandshakeSeppA(0, sepp_a_privkey, ciphersuites, encp, modp_a, ipx_a_id, ipx_a_pubkey)) |
     (!N32cRecvHandshakeSeppA(0, sepp_b_pubkey, ciphersuites, encp, modp_a, ipx_a_id, ipx_a_pubkey)) |
-    (N32cSendHandshakeSeppB(1, sepp_b_privkey, ciphersuites, encp, modp_b, ipx_b_id, ipx_b_pubkey)) |
+    (!N32cSendHandshakeSeppB(1, sepp_b_privkey, ciphersuites, encp, modp_b, ipx_b_id, ipx_b_pubkey)) |
     (!N32cRecvHandshakeSeppB(1, sepp_a_pubkey, ciphersuites, encp, modp_b, ipx_b_id, ipx_b_pubkey)) |
-    (N32fSendSeppA(0, msg_a_conf, msg_a_nonconf)) |
-    (N32fSendSeppB(1, msg_b_conf, msg_b_nonconf)) |
-    (!N32fRecvIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
-    (!N32fSendIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
-    (!N32fRecvIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
-    (!N32fSendIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
-    (!N32fRecvSeppA(0)) |
-    (!N32fRecvSeppB(1)) |
-    (phase 1; N32cSendKeyUpdateSeppA(0, sepp_a_privkey)) |
-    (phase 1; !N32cRecvKeyUpdateSeppA(0, sepp_b_pubkey)) |
-    (phase 1; N32cSendKeyUpdateSeppB(1, sepp_b_privkey)) |
-    (phase 1; !N32cRecvKeyUpdateSeppB(1, sepp_a_pubkey)))
+    (sync 1; !N32fSendSeppA(0)) |
+    (sync 1; !N32fSendSeppB(1)) |
+    (sync 1; !N32fRecvIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
+    (sync 1; !N32fSendIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
+    (sync 1; !N32fRecvIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
+    (sync 1; !N32fSendIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
+    (sync 1; !N32fRecvIpxR1(ipx_a_id, ipx_a_privkey, modp_a)) |
+    (sync 1; !N32fSendIpxR1(ipx_a_id, ipx_a_privkey, modp_r1)) |
+    (sync 1; !N32fRecvIpxR2(ipx_r2_id, ipx_r2_privkey, modp_a)) |
+    (sync 1; !N32fSendIpxR2(ipx_r2_id, ipx_r2_privkey, modp_a)) |
+    (sync 1; !N32fRecvSeppA(0)) |
+    (sync 1; !N32fRecvSeppB(1)) |
+    (sync 2; !N32cSendKeyUpdateSeppA(0, sepp_a_privkey)) |
+    (sync 2; !N32cRecvKeyUpdateSeppA(0, sepp_b_pubkey)) |
+    (sync 2; !N32cSendKeyUpdateSeppB(1, sepp_b_privkey)) |
+    (sync 2; !N32cRecvKeyUpdateSeppB(1, sepp_a_pubkey)) |
+    (sync 3; !N32fSendSeppA(0)) |
+    (sync 3; !N32fSendSeppB(1)) |
+    (sync 3; !N32fRecvIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
+    (sync 3; !N32fSendIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
+    (sync 3; !N32fRecvIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
+    (sync 3; !N32fSendIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
+    (sync 3; !N32fRecvSeppA(0)) |
+    (sync 3; !N32fRecvSeppB(1)))
