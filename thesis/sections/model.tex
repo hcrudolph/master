@@ -1,0 +1,295 @@
+\lstdefinestyle{proverif}{
+    basicstyle=\footnotesize\sffamily,
+    breakatwhitespace=false,
+    breaklines=false,
+    captionpos=b,
+    keywordstyle=\color{ForestGreen}\textbf,
+    commentstyle=\color{Gray}\textit,
+    frame=single,
+    keepspaces=true,
+    numbers=left,
+    numbersep=10pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    morekeywords={let, in, if, then, event, new, out, fun, reduc, forall, insert, get, table, type, free, const},
+    comment=[l]{(*}
+}
+\lstset{style=proverif}
+
+\subsection{Supporting contructs}
+
+As noted in the previous section, \textsc{ProVerif} features a basic type system.
+Aside from allowing for a closer representation of an actual protocol implementation, types also serve as guardrails while modelling the honest participants in that, for example, a function expecting a bitstring as an input cannot be called with a different type.
+However types are ignored during verification stage by default, allowing \textsc{ProVerif} to detect potential type flaw attacks (c.f. \cite{blanchet2020proverif}, p. 38).
+
+In addition to \textsc{ProVerif}'s built-in data types, custom types displayed in listing \ref{lst:types} are defined.
+Some compound data structures, such as aad, prins, and modprins, are defined solely for convenience and clarity so as to not pass each of their respective subcomponents individually.
+Other data types, for example mac, are supposed to model the inability to transform it back into its input types.
+Exactly how this is achieved is described in listing~\ref{lst:functions} below.
+
+\begin{lstlisting}[caption={Custom type definitions},label={lst:types},firstnumber=3]
+type key.                           (* symmetric key *)
+type mac.                           (* message authentication code *)
+type http.                          (* http message *)
+type privkey.                       (* asymmetric privat key *)
+type pubkey.                        (* asymmetric public key *)
+type prins.                         (* prins message *)
+type modprins.                      (* modified prins message w/ patches *)
+type aad.                           (* additional authenticated data *)
+type ipxmod.                        (* json patch / ipx modifications *)
+\end{lstlisting}
+
+Listing \ref{lst:channels} shows the defined channels used to pass messages between protocol participants.
+By default, channels follow the Dolev-Yao model, meaning that all information transferred over them can be read, modified, intercepted or arbitrarily created by the adversary.
+Secure channels can be modelled by explicitly annotating them as private.
+
+Three public channels are defined in order to represent the logical N32-f message flow from the sending \gls{sepp} to the first IPX provider, from there to the next IPX node, and finally to the receiving \gls{sepp}.
+If all N32f communication would use a single channel, the verification tool would have no inforamtion about the intended message routing.
+Thereby, separate channels alleviate the need to model routing based on parameters in each individual message.
+
+In contrast, N32c communication utilizes a single private channel.
+As highlighted in section \ref{sec:goal}, proving security of well-tested existing protocols is out of scope of this work.
+Since N32c completely builds upon \gls{tls}, this channel is assumed to be secure.
+
+\begin{lstlisting}[caption={Custom type declarations},label={lst:channels},firstnumber=15]
+free n32f_ati: channel.             (* Channel between SEPP A and IPX A *)
+free n32f_iti: channel.             (* Channel between IPX A and IPX B *)
+free n32f_bti: channel.             (* Channel between IPX B and SEPP B *)
+free n32c: channel [private].       (* Channel between SEPP A and SEPP B *)
+\end{lstlisting}
+
+\textsc{ProVerif}'s tables are used to model each \gls{sepp}'s local storage for N32 context information.
+As highlighted in section \ref{sec:n32}, each \gls{sepp} has to keep track of several such attributes in order to correlate transferred messages to a previously established session and check the validity of incoming messages.
+The created model does not consider all of these information, abstracting away the following attributes of the \gls{3gpp} specification:
+(1)~N32-f peer information, as the contained attributes primarily serve the purpose of message routing, which is modelled in an abstract form via separate channels as explained above.
+(2)~N32-f context information, which contains information about the lifetime of session keys and whether \gls{tls} transport of N32-f messages is used.
+Firstly, the session key lifetime cannot be verified using formal methods, due to the lack of appropriate temporal constructs.
+Secondly, it is explicitly assumed only \gls{prins} is used to carry N32-f messages.
+
+\begin{lstlisting}[caption={Declaration of local SEPP storage using tables},label={lst:tables},firstnumber=23]
+table storeSeppA(
+    bitstring,                      (* N32-f context id *)
+    key,                            (* N32-f session key *)
+    bitstring,                      (* IV *)
+    bitstring,                      (* JWE Ciphersuite *)
+    bitstring,                      (* Data-type encryption policy id *)
+    bitstring,                      (* Data-type encryption policy *)
+    bitstring,                      (* SEPP A modification policy id *)
+    bitstring,                      (* SEPP A modification policy *)
+    bitstring,                      (* SEPP B modification policy id *)
+    bitstring,                      (* SEPP B modification policy *)
+    bitstring,                      (* IPX A id *)
+    pubkey,                         (* IPX A public key *)
+    bitstring,                      (* IPX B id *)
+    pubkey).                        (* IPX B public key *)
+\end{lstlisting}
+
+Data constructors are used to model data type transformations in \textsc{ProVerif}.
+Listing \ref{lst:constructor} shows an example, combining the information elements added by intermediate \gls{ipx} providers when applying message modifications.
+This particular constructor takes four information elements of type bitstring, mac, bitstring, and bitstring and outputs a single ipxmod element.
+Fundamentally, the definition of a data constructor follows the same syntax as \textsc{ProVerif} functions.
+However, the [data] annotation has the effect that the adversary is able to deconstruct the resulting data type as well (c.f. \cite{blanchet2020proverif}, p. 37).
+
+\begin{lstlisting}[caption={Definition of custom data constructor},label={lst:constructor},firstnumber=59]
+fun jsonPatch(bitstring,            (* Operations *)
+    bitstring,                      (* IPX Id *)
+    mac,                            (* JWE Tag *)
+    bitstring): ipxmod [data].      (* JWS Signature *)
+\end{lstlisting}
+
+Listing \ref{lst:functions} and shows examples of custom functions being used in the created model.
+Functions are available to all protocol participants, incl. the adversary.
+Below functions for the derivation of N32-f context ID, master key, session key, and \gls{aes} initialization vector are one time functions.
+Since there are no related deconstructors, the original function inputs cannot be derived from its output.
+
+The function deriveMasterKey is defined as a private function due to a limitation of the created model.
+According to the \gls{3gpp} specification, the N32-f master key is derived from the related N32-c session using the \gls{tls} keying material exporters.
+Since the \gls{tls} protocol is not modelled in detail, the deriveMasterKey function is defined as a replacement that is not available to the Dolev-Yao adversary.
+Section \ref{sec:issues} describes in more detail exactly how this function is used.
+
+\begin{lstlisting}[caption={Definition of custom on-way functions},label={lst:functions},firstnumber=82]
+fun deriveContextId(bitstring, bitstring): bitstring.
+fun deriveMasterKey(bitstring): key [private].
+fun deriveSessionKey(key): key.
+fun deriveIV(key): bitstring.
+\end{lstlisting}
+
+In contrast to the functions displayed above, certain functions are defined with one or more deconstructors.
+This is examplified by the sign function in listing \ref{lst:destructors}.
+Given two inputs of type bitstring and privkey the function creates a bitstring, modelling a digital signature.
+The related deconstructor checkSign takes two arguments of type bitstring and pubkey and returns a boolean value.
+If the public key belongs to the private key previous used for signing the bitstring, i.e. if the signature is valid, the return value is true, else false.
+
+\begin{lstlisting}[caption={Definition of custom functions and destructors},label={lst:destructors},firstnumber=91]
+fun pk(privkey): pubkey.
+fun sign(bitstring, privkey): bitstring.
+reduc forall m: bitstring, k: privkey;
+    checkSign(sign(m, k), pk(k)) = true.
+\end{lstlisting}
+
+\subsection{N32-c processes}
+
+\begin{lstlisting}[caption={Definition of the N32-c handshake process},label={lst:n32c-handshake},firstnumber=253]
+let N32cSendHandshakeSeppA(sepp_a_id: nat, sepp_a_privkey: privkey,
+    ciphers_a: bitstring, encp_a: bitstring, modp_b: bitstring,
+    ipx_a_id: bitstring, ipx_a_key: pubkey)=
+    new n32f_pid: bitstring;
+    new nonce: bitstring;
+    let sig = sign(nonce, sepp_a_privkey) in
+    out(n32c, (ciphers_a, n32f_pid, nonce, sig, sepp_a_id));
+    in(n32c, (ciphers_b: bitstring, n32f_pid_b: bitstring, sepp_b_id: nat));
+
+    (* verify same ciphersuites and different sepp *)
+    if ciphers_a = ciphers_b && sepp_b_id <> sepp_a_id then
+        let n32f_cid = deriveContextId(n32f_pid, n32f_pid_b) in
+        event agreedContextSendSeppA(n32f_cid);
+        out(n32c, (encp_a, modp_b));
+        in(n32c, (encp_b: bitstring, modp_b: bitstring));
+
+        (* verify same encryption policies *)
+        if encp_b = encp_a then
+            event agreedEncPolicySendSeppA(n32f_cid, encp_a);
+            out(n32c, (ipx_a_id, ipx_a_key));
+            in(n32c, (ipx_b_id: bitstring, ipx_b_key: pubkey));
+            let master_key_a = deriveMasterKey(nonce) in
+            event agreedMasterKeySendSeppA(n32f_cid, master_key_a);
+            let session_key_a = deriveSessionKey(master_key_a) in
+
+            (* store session parameters *)
+            insert storeSeppA(n32f_cid, session_key_a,
+                deriveIV(master_key_a), ciphers_a, encp_a,
+                modp_b, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key).
+\end{lstlisting}
+
+\begin{lstlisting}
+let N32cRecvHandshakeSeppA(sepp_a_id: nat, sepp_b_pubkey: pubkey,
+    ciphers_a: bitstring, encp_a: bitstring, modp_b: bitstring,
+    ipx_a_id: bitstring, ipx_a_key: pubkey)=
+    new n32f_pid: bitstring;
+    in(n32c, (ciphers_b: bitstring, n32f_pid_b: bitstring,
+        nonce: bitstring, sig: bitstring, sepp_b_id: nat));
+
+    (* verify same ciphersuites, different sepp and valid signature *)
+    if sepp_b_id <> sepp_a_id &&
+       checkSign(sig, sepp_b_pubkey) &&
+       ciphers_a = ciphers_b then
+        out(n32c, (ciphers_a, n32f_pid));
+        let n32f_cid = createContextId(n32f_pid_b, n32f_pid) in
+        event agreedContextRecvSeppA(n32f_cid);
+        in(n32c, (encp_b: bitstring, modp_b: bitstring));
+
+        (* verify same encryption policies *)
+        if encp_b = encp_a then
+            event agreedEncPolicyRecvSeppA(n32f_cid, encp_a);
+            out(n32c, (encp_a, modp_b));
+            in(n32c, (ipx_b_id: bitstring, ipx_b_key: pubkey));
+            out(n32c, (ipx_a_id, ipx_a_key));
+            let master_key_a = deriveMasterKey(nonce) in
+            event agreedMasterKeyRecvSeppA(n32f_cid, master_key_a);
+            let session_key_a = deriveSessionKey(master_key_a) in
+
+            (* store session parameters *)
+            insert storeSeppA(n32f_cid, session_key_a,
+                deriveIV(master_key_a), ciphers_a, encp_a,
+                modp_b, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key).
+\end{lstlisting}
+
+\begin{lstlisting}
+let N32cSendKeyUpdateSeppA(sepp_a_id: nat, sepp_a_privkey: privkey)=
+    get storeSeppA(n32f_context, session_key_a, iv, ciphers_a, encp_a,
+        modp_a, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
+    ) in
+    new nonce: bitstring;
+    let sig = sign(nonce, sepp_a_privkey) in
+    out(n32c, (nonce, sig, sepp_a_id));
+    let master_key_a = deriveMasterKey(nonce) in
+    let session_key_a = deriveSessionKey(master_key_a) in
+    insert storeSeppA(n32f_context, session_key_a, iv, ciphers_a, encp_a,
+        modp_a, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
+    );
+    event sendKeyUpdateSeppA(nonce, master_key_a).
+\end{lstlisting}
+
+\begin{lstlisting}
+let N32cRecvKeyUpdateSeppA(sepp_a_id: nat, sepp_b_pubkey: pubkey)=
+    get storeSeppA(n32f_context, session_key_a, iv, ciphers_a, encp_a,
+        modp_a, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
+    ) in
+    in(n32c, (nonce: bitstring, sig: bitstring, sepp_b_id: nat));
+    if sepp_b_id <> sepp_a_id && checkSign(sig, sepp_b_pubkey) then
+    let master_key_a = deriveMasterKey(nonce) in
+    let session_key_a = deriveSessionKey(master_key_a) in
+    insert storeSeppA(n32f_context, session_key_a, iv, ciphers_a, encp_a,
+        modp_a, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
+    );
+    event recvKeyUpdateSeppA(nonce, master_key_a).
+\end{lstlisting}
+
+\subsection{N32-f processes}
+
+\begin{lstlisting}
+let N32cSendHandshakeSeppB(sepp_b_id: nat, sepp_b_privkey: privkey,
+    cipher_suite_b: bitstring, encp_b: bitstring, modp_b: bitstring,
+    ipx_b_id: bitstring, ipx_b_key: pubkey)=
+    new n32f_pid: bitstring;
+    new nonce: bitstring;
+    let sig = sign(nonce, sepp_b_privkey) in
+    out(n32c, (cipher_suite_b, n32f_pid, nonce, sig, sepp_b_id));
+    in(n32c, (cipher_suite_a: bitstring, n32f_pid_a: bitstring, sepp_a_id: nat));
+
+    (* verify same ciphersuites and different sepp *)
+    if cipher_suite_b = cipher_suite_a && sepp_a_id <> sepp_b_id then
+        let n32f_cid = createContextId(n32f_pid, n32f_pid_a) in
+        event agreedContextSendSeppB(n32f_cid);
+        out(n32c, (encp_b, modp_b));
+        in(n32c, (encp_a: bitstring, modp_a: bitstring));
+
+        (* verify same encryption policies *)
+        if encp_a = encp_b then
+            event agreedEncPolicySendSeppB(n32f_cid, encp_b);
+            out(n32c, (ipx_b_id, ipx_b_key));
+            in(n32c, (ipx_a_id: bitstring, ipx_a_key: pubkey));
+            let master_key_b = deriveMasterKey(nonce) in
+            event agreedMasterKeySendSeppB(n32f_cid, master_key_b);
+            let session_key_b = deriveSessionKey(master_key_b) in
+
+            (* store session parameters *)
+            insert localStorageSeppB(n32f_cid, session_key_b,
+                deriveIV(master_key_b), cipher_suite_b, encp_b,
+                modp_b, modp_a, ipx_b_id, ipx_b_key, ipx_a_id, ipx_a_key).
+\end{lstlisting}
+
+\begin{lstlisting}
+let N32cRecvHandshakeSeppB(sepp_b_id: nat, sepp_a_pubkey: pubkey,
+        cipher_suite_b: bitstring, encp_b: bitstring, modp_b: bitstring,
+        ipx_b_id: bitstring, ipx_b_key: pubkey)=
+    new n32f_pid: bitstring;
+    in(n32c, (cipher_suite_a: bitstring, n32f_pid_a: bitstring,
+            nonce: bitstring, sig: bitstring, sepp_a_id: nat));
+
+    (* verify same ciphersuites, different sepp and valid signature *)
+    if sepp_a_id <> sepp_b_id &&
+       checkSign(sig, sepp_a_pubkey) &&
+       cipher_suite_b = cipher_suite_a then
+        out(n32c, (cipher_suite_b, n32f_pid));
+        let n32f_cid = createContextId(n32f_pid_a, n32f_pid) in
+        event agreedContextRecvSeppB(n32f_cid);
+        in(n32c, (encp_a: bitstring, modp_a: bitstring));
+
+        (* verify same encryption policies *)
+        if encp_a = encp_b then
+            event agreedEncPolicyRecvSeppB(n32f_cid, encp_b);
+            out(n32c, (encp_b, modp_b));
+            in(n32c, (ipx_a_id: bitstring, ipx_a_key: pubkey));
+            out(n32c, (ipx_b_id, ipx_b_key));
+            let master_key_b = deriveMasterKey(nonce) in
+            event agreedMasterKeyRecvSeppB(n32f_cid, master_key_b);
+            let session_key_b = deriveSessionKey(master_key_b) in
+
+            (* store session parameters *)
+            insert localStorageSeppB(n32f_cid, session_key_b,
+                deriveIV(master_key_b), cipher_suite_b, encp_b,
+                modp_b, modp_a, ipx_b_id, ipx_b_key, ipx_a_id, ipx_a_key).
+\end{lstlisting}
