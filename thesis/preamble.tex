@@ -72,6 +72,24 @@
 
 \newcommand*{\lstcomment}[1]{\hfill\makebox[8cm][l]{#1}}
 
+\let\origthelstnumber\thelstnumber
+\makeatletter
+\newcommand*\Suppressnumber{%
+  \lst@AddToHook{OnNewLine}{%
+    \let\thelstnumber\relax%
+%    \advance\c@lstnumber-\@ne\relax% Not really necessary
+  }%
+}
+
+\newcommand\Reactivatenumber[1]{%
+  \global\c@lstnumber#1%
+  \global\advance\c@lstnumber\m@ne\relax%
+  \lst@AddToHook{OnNewLine}{%
+  \let\thelstnumber\origthelstnumber%
+  }%
+}
+\makeatother
+
 
 % count footnotes globally
 \usepackage{chngcntr}
