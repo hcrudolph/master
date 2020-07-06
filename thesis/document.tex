@@ -95,17 +95,22 @@ This chapter expains the \textsc{ProVerif} model of \gls{prins}, design decision
 Section \ref{sec:model} describes the how the individual components of the protocol are represented by \textsc{ProVerif} constructs.
 Section \ref{sec:issues} focusses on the assumptions and shortcuts that have been made due to the limitations of formal verification in general or \textsc{ProVerif} specifically.
 
-\section{Model transposition}
+The code fragments provided in in the remainder of this thesis follow a certain naming convetion.
+Variables are written in lowercase with underscores (e.g.  {\sffamily var\_a}).
+Global constants are written in uppercase (e.g.  {\sffamily CONST}).
+Functions, constructors, destructors, and events are written in camel case (e.g.  {\sffamily sendMsg}).
+
+\section{Model Transposition}
 \label{sec:model}
 \import{sections/}{model.tex}
 
-\section{Modeling Issues}
+\section{Deviations from the Specification}
 \label{sec:issues}
 \import{sections/}{issues.tex}
 
 \clearpage
 
-\chapter{Verifying of the PRINS Protocol}
+\chapter{Verifying the PRINS Protocol}
 \label{chap:verification}
 
 \section{Critical Analysis}
