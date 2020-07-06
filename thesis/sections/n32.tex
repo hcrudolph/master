@@ -132,7 +132,8 @@ The level of protection provided for individual information elements in these me
 \end{enumerate}
 
 The data-type encryption policy is supported by an \textit{\gls{nf} \gls{api} data-type placement mapping}, defining the data-type of a particular information element.
-The \gls{prins} protocol expects this policy to be the same in both communicating \glspl{sepp} in order to rule out inconsistencies in confidentiality requirements.
+The \gls{prins} protocol expects this policy to be the same in both communicating \glspl{sepp} in order to rule out inconsistencies in confidentiality requirements:
+,,The data-type encryption policies in the two partner SEPPs shall be equal to enforce a consistent ciphering [...]'' (\cite{3gpp.33.501}, p. 135).
 The specification does not describe how such mismatch, if it were to happen, is supposed to be be handled.
 In addition to the operator-defined data-type encryption policies, \gls{3gpp} defines a set of data-types to be confidentiality protected by default.
 That is, data of type ,,Authentication Vectors'', ,,Location data'', and ,,Cryptographic material'' (\cite{3gpp.33.501}, p. 31).
