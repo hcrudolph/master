@@ -30,4 +30,23 @@
 \renewcommand{\figurename}{Abbildung}
 \renewcommand{\arraystretch}{1.5}
 
+\let\origthelstnumber\thelstnumber
+\makeatletter
+\newcommand*\Suppressnumber{%
+  \lst@AddToHook{OnNewLine}{%
+    \let\thelstnumber\relax%
+     \advance\c@lstnumber-\@ne\relax%
+    }%
+}
+
+\newcommand*\Reactivatenumber[1]{%
+  \lst@AddToHook{OnNewLine}{%
+   \let\thelstnumber\origthelstnumber%
+   \setcounter{lstnumber}{\numexpr#1-1\relax}%
+   %\advance\c@lstnumber\@ne\relax%
+  }%
+}
+
+\makeatother
+
 \makeglossaries
