@@ -101,12 +101,13 @@ fun deriveIV(bitstring, key): bitstring.
 (* mac *)
 fun macf(bitstring, key): mac.
 
-(* message rewriting *)
-fun reformatN32f(bitstring, bitstring, bitstring): http.
-reduc forall c: bitstring, n: bitstring, p: bitstring;
-    reformatHttp(reformatN32f(c, n, p), p) = (c, n).
-reduc forall c: bitstring, n: bitstring, p: bitstring;
-    reformatHttp'(reformatN32f(c, n, p)) = (c, n).
+(* data-type encryption policy application *)
+fun policyApplication(bitstring, bitstring): bitstring.
+fun policyValidation(bitstring, bitstring): bool
+    reduc forall m: bitstring, p: bitstring;
+        policyValidation(policyApplication(m, p), p) = true
+    otherwise forall m: bitstring, p: bitstring, p': bitstring;
+        policyValidation(policyApplication(m, p), p') = false.
 
 (* signatures *)
 fun pk(privkey): pubkey.
@@ -599,7 +600,8 @@ let N32fSendSeppA(sepp_b_addr: bitstring)=
         rev_key_a, par_iv_a, rev_iv_a, cipher_suite, encp, modp_a,
         modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
     ) suchthat sepp_b_addr' = sepp_b_addr in
-    let (conf: bitstring, nonconf: bitstring) = reformatHttp(msg, encp) in
+    let (conf: bitstring,
+        nonconf: bitstring) = policyApplication(msg_body, encp_a) in
     let msg_id: nat = msg_cnt_a + 1 in
     let associated_data = combineAAD(
         nonconf, msg_id, ipx_a_id, n32f_context
@@ -701,8 +703,9 @@ let N32fRecvSeppA(sepp_a_addr: bitstring)=
         out(err_a, (n32f_context, msg_id));
 
     (* all patches valid *)
-    if valid_patch_a && valid_patch_b then
-    event recvN32fMsgSeppA(n32f_context, conf, nonconf).
+    if valid_patch_a &&
+        valid_patch_b &&
+        policyValidation((conf, nonconf), encp_a) then
 
 
 (* SEPP B N32-f Processes *)
@@ -714,7 +717,8 @@ let N32fSendSeppB(sepp_a_addr: bitstring)=
         rev_key_b, par_iv_b, rev_iv_b, cipher_suite, encp, modp_b,
         modp_a, ipx_b_id, ipx_b_key, ipx_a_id, ipx_a_key
     ) suchthat sepp_a_addr' = sepp_a_addr in
-    let (conf: bitstring, nonconf: bitstring) = reformatHttp(msg, encp) in
+    let (conf: bitstring,
+        nonconf: bitstring) = policyApplication(msg_body, encp_b) in
     let msg_id: nat = msg_cnt_b + 1 in
     let associated_data = combineAAD(
         nonconf, msg_id, ipx_b_id, n32f_context
@@ -816,8 +820,9 @@ let N32fRecvSeppB(sepp_b_addr: bitstring)=
         out(err_b, (n32f_context, msg_id));
 
     (* all patches valid *)
-    if valid_patch_a && valid_patch_b then
-    event recvN32fMsgSeppB(n32f_context, conf, nonconf).
+    if valid_patch_a &&
+        valid_patch_b &&
+        policyValidation((conf, nonconf), encp_b) then
 
 
 (* IPX A Processes *)
