@@ -145,10 +145,10 @@ reduc forall m: bitstring, k: privkey;
 
 fun signPrins(prins, bitstring, bitstring, mac, privkey): bitstring.
 reduc forall p: prins, ops: bitstring, id: bitstring, tag: mac, k: privkey;
-    checkPrinsSign(signPrins(p, ops, id, tag, k), pk(k)) = true.
+    validPrinsSign(signPrins(p, ops, id, tag, k), pk(k)) = true.
 fun signPrinsMod(modprins, bitstring, bitstring, mac, privkey): bitstring.
 reduc forall p: modprins, ops: bitstring, id: bitstring, tag: mac, k: privkey;
-    checkPrinsModSign(signPrinsMod(p, ops, id, tag, k), pk(k)) = true.
+    validPrinsModSign(signPrinsMod(p, ops, id, tag, k), pk(k)) = true.
 
 (* aead encryption *)
 fun encrypt(bitstring, key, bitstring): bitstring.
@@ -802,8 +802,8 @@ let N32fSendSeppA(sepp_b_addr': bitstring)=
     ) in
 
     (* determine session key & iv *)
-    let key = (if msg_type = REQ then 
-        par_req_key_a else 
+    let key = (if msg_type = REQ then
+        par_req_key_a else
         par_res_key_a) in
     let nonce = (if msg_type = REQ then
         deriveNonce(par_req_iv_a, msg_id) else
@@ -882,10 +882,10 @@ let N32fRecvSeppA(sepp_a_addr: bitstring)=
         jwe_tag_b: mac,
         ipx_b_jws: bitstring
     ) = ipx_b_mods in
-    if checkPrinsSign(ipx_b_jws, ipx_b_key) &&
-        auth_ipx_id = ipx_b_id' &&
-        ipx_b_ops = modp_b &&
-        jwe_tag_b = jwe_tag
+    if not(validPrinsSign(ipx_b_jws, ipx_b_key)) ||
+        auth_ipx_id <> ipx_b_id' ||
+        ipx_b_ops <> modp_b ||
+        jwe_tag_b <> jwe_tag
     then
     (
         let valid_patch_b: bool = false in
@@ -907,10 +907,10 @@ let N32fRecvSeppA(sepp_a_addr: bitstring)=
         jwe_tag_a: mac,
         ipx_a_jws: bitstring
     ) = ipx_a_mods in
-    if checkPrinsModSign(ipx_a_jws, ipx_a_key) &&
-        ipx_a_id' = ipx_a_id &&
-        ipx_a_ops = modp_a &&
-        jwe_tag_a = jwe_tag
+    if not(validPrinsModSign(ipx_a_jws, ipx_a_key)) ||
+        ipx_a_id' <> ipx_a_id ||
+        ipx_a_ops <> modp_a ||
+        jwe_tag_a <> jwe_tag
     then
     (
         let valid_patch_a: bool = false in
@@ -1046,10 +1046,10 @@ let N32fRecvSeppB(sepp_b_addr: bitstring)=
         jwe_tag_a: mac,
         ipx_a_jws: bitstring
     ) = ipx_a_mods in
-    if checkPrinsSign(ipx_a_jws, ipx_a_key) &&
-        auth_ipx_id = ipx_a_id' &&
-        ipx_a_ops = modp_a &&
-        jwe_tag_a = jwe_tag
+    if not(validPrinsSign(ipx_a_jws, ipx_a_key)) ||
+        auth_ipx_id <> ipx_a_id' ||
+        ipx_a_ops <> modp_a ||
+        jwe_tag_a <> jwe_tag
     then
     (
         let valid_patch_a: bool = false in
@@ -1071,10 +1071,10 @@ let N32fRecvSeppB(sepp_b_addr: bitstring)=
         jwe_tag_b: mac,
         ipx_b_jws: bitstring
     ) = ipx_b_mods in
-    if checkPrinsModSign(ipx_b_jws, ipx_b_key) &&
-        ipx_b_id' = ipx_b_id &&
-        ipx_b_ops = modp_b &&
-        jwe_tag_b = jwe_tag
+    if not(validPrinsModSign(ipx_b_jws, ipx_b_key)) ||
+        ipx_b_id' <> ipx_b_id ||
+        ipx_b_ops <> modp_b ||
+        jwe_tag_b <> jwe_tag
     then
     (
         let valid_patch_b: bool = false in
