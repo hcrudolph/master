@@ -20,7 +20,7 @@ free plmn_b: channel [private].     (* PLMN B internal channel *)
 free n32f_a: channel.               (* Channel between SEPP A and IPX A *)
 free n32f_i: channel.               (* Channel between IPX A and IPX B *)
 free n32f_b: channel.               (* Channel between IPX B and SEPP B *)
-free n32c: channel [private].     (* Channel between SEPP A and SEPP B *)
+free n32c: channel [private].       (* Channel between SEPP A and SEPP B *)
 free err_a: channel [private].      (* Internal error signalling Sepp A *)
 free err_b: channel [private].      (* Internal error signalling Sepp B *)
 
@@ -244,19 +244,33 @@ query attacker(conf).
 (* Debugging queries *)
 query msg: bitstring;
     event(sentHttpMsgNfA(REQ, msg));
-    event(recvHttpMsgSeppA(REQ, msg)).
-
-query msg: bitstring;
+    event(sentHttpMsgNfA(RES, msg));
     event(sentHttpMsgNfB(REQ, msg));
-    event(recvHttpMsgSeppB(REQ, msg)).
-
-query msg: bitstring;
+    event(sentHttpMsgNfB(RES, msg));
     event(recvHttpMsgNfA(REQ, msg));
-    event(recvHttpMsgNfA(RES, msg)).
+    event(recvHttpMsgNfA(RES, msg));
+    event(recvHttpMsgNfB(REQ, msg));
+    event(recvHttpMsgNfB(RES, msg)).
 
 query msg: bitstring;
-    event(recvHttpMsgNfB(RES, msg));
-    event(recvHttpMsgNfB(REQ, msg)).
+    event(sentHttpMsgSeppA(REQ, msg));
+    event(sentHttpMsgSeppA(RES, msg));
+    event(sentHttpMsgSeppB(REQ, msg));
+    event(sentHttpMsgSeppB(RES, msg));
+    event(recvHttpMsgSeppA(REQ, msg));
+    event(recvHttpMsgSeppA(RES, msg));
+    event(recvHttpMsgSeppB(REQ, msg));
+    event(recvHttpMsgSeppB(RES, msg)).
+
+query msg: bitstring, n32f_context: bitstring, msg_id: nat,
+    encp: bitstring, http_method: bitstring;
+    event(sentN32fMsgSeppA(n32f_context, msg_id,
+        getConf(msg, encp), getNonconf(msg, encp))) ==>
+    event(sentHttpMsgNfA(http_method, msg));
+
+    event(sentN32fMsgSeppB(n32f_context, msg_id,
+        getConf(msg, encp), getNonconf(msg, encp))) ==>
+    event(sentHttpMsgNfB(http_method, msg)).
 
 query n32f_context: bitstring, jwe_tag: mac, ipx_mods: ipxmod;
     event(ipxSendR1(n32f_context, jwe_tag, ipx_mods));
@@ -267,8 +281,7 @@ query n32f_context: bitstring, jwe_tag: mac, ipx_mods: ipxmod;
 
 query ipx_id: bitstring, n32f_context: bitstring, jwe_tag: mac, ipx_mods: ipxmod;
     event(recvInvalIpxPatchSeppA(ipx_id, n32f_context, jwe_tag, ipx_mods));
-    event(recvValidIpxPatchSeppA(ipx_id, n32f_context, jwe_tag, ipx_mods)).
-query ipx_id: bitstring, n32f_context: bitstring, jwe_tag: mac, ipx_mods: ipxmod;
+    event(recvValidIpxPatchSeppA(ipx_id, n32f_context, jwe_tag, ipx_mods));
     event(recvInvalIpxPatchSeppB(ipx_id, n32f_context, jwe_tag, ipx_mods));
     event(recvValidIpxPatchSeppB(ipx_id, n32f_context, jwe_tag, ipx_mods)).
 
@@ -1546,9 +1559,9 @@ process
         (!N32cRecvHandshakeSeppA(
             sepp_a_plmn, sepp_a_addr, sepp_b_plmn, sepp_b_addr,
             ciphersuites, encp, modp_a, ipx_a_id, ipx_a_pubkey)) |
-        (phase 1; !NfARequest(nf_a_addr, nf_b_addr)) |
+        (phase 1; NfARequest(nf_a_addr, nf_b_addr)) |
         (phase 1; !NfAResponse(nf_a_addr, nf_b_addr)) |
-        (phase 1; !NfBRequest(nf_b_addr, nf_a_addr)) |
+        (phase 1; NfBRequest(nf_b_addr, nf_a_addr)) |
         (phase 1; !NfBResponse(nf_b_addr, nf_a_addr)) |
         (phase 1; !N32fSendSeppA(sepp_b_addr)) |
         (phase 1; !N32fSendSeppB(sepp_a_addr)) |
