@@ -218,23 +218,26 @@ event ipxRecvR3(bitstring, nat, mac, ipxmod).
 
 (* secrecy queries *)
 
-free master_key_a, master_key_b,
-    par_req_key_a, par_res_key_a, rev_req_key_a, rev_res_key_a,
-    par_req_key_b, par_res_key_b, rev_req_key_b, rev_res_key_b: key [private].
+free par_req_key_a, par_res_key_a, rev_req_key_a, rev_res_key_a,
+    par_req_key_b, par_res_key_b, rev_req_key_b, rev_res_key_b,
+    master_key_a, master_key_b: key [private].
+free conf: bitstring [private].
+
+(* ipx key confidentiality *)
+query secret ipx_a_privkey [reachability].
+query secret ipx_b_privkey [reachability].
 
 (* master & session key confidentiality *)
-query attacker(master_key_a);
-      attacker(master_key_b).
-query attacker(par_req_key_a);
-      attacker(par_res_key_a);
-      attacker(rev_req_key_a);
-      attacker(rev_res_key_a);
-      attacker(par_req_key_b);
-      attacker(par_res_key_b);
-      attacker(rev_req_key_b);
-      attacker(rev_res_key_b).
-
-free conf: bitstring [private].
+query secret master_key_a [reachability].
+query secret master_key_b [reachability].
+query secret par_req_key_a [reachability].
+query secret par_res_key_a [reachability].
+query secret rev_req_key_a [reachability].
+query secret rev_res_key_a [reachability].
+query secret par_req_key_b [reachability].
+query secret par_res_key_b [reachability].
+query secret rev_req_key_b [reachability].
+query secret rev_res_key_b [reachability].
 
 (* sec property 7: message confidentiality *)
 query secret conf [reachability].
