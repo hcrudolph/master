@@ -1550,12 +1550,6 @@ process
     new ipx_b_id: bitstring;
     new ipx_r2_id: bitstring;
 
-    (* sepp cryptographic keys *)
-    new sepp_a_privkey: privkey;
-    new sepp_b_privkey: privkey;
-    let sepp_a_pubkey = pk(sepp_a_privkey) in out(n32f_a, sepp_a_pubkey);
-    let sepp_b_pubkey = pk(sepp_b_privkey) in out(n32f_b, sepp_b_pubkey);
-
     (* ipx cryptographic keys *)
     new ipx_a_privkey: privkey;
     new ipx_b_privkey: privkey;
