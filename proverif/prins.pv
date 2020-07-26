@@ -1,7 +1,7 @@
 set privateCommOnPublicFreeNames = false.
 set preciseActions = false.
 set verboseTerm = true.
-set selFun = Term.
+set selFun = TermMaxsize.
 set simplifyDerivation = true.
 set redundancyElim = best.
 set redundantHypElim = true.
@@ -227,20 +227,20 @@ free par_req_key_a, par_res_key_a, rev_req_key_a, rev_res_key_a,
 free conf: bitstring [private].
 
 (* ipx key confidentiality *)
-query secret privkey_ipx_a [reachability].
-query secret privkey_ipx_b [reachability].
+query secret privkey_ipx_a [reachability];
+    secret privkey_ipx_b [reachability].
 
 (* master & session key confidentiality *)
-query secret master_key_a [reachability].
-query secret master_key_b [reachability].
-query secret par_req_key_a [reachability].
-query secret par_res_key_a [reachability].
-query secret rev_req_key_a [reachability].
-query secret rev_res_key_a [reachability].
-query secret par_req_key_b [reachability].
-query secret par_res_key_b [reachability].
-query secret rev_req_key_b [reachability].
-query secret rev_res_key_b [reachability].
+query secret master_key_a [reachability];
+    secret master_key_b [reachability];
+    secret par_req_key_a [reachability];
+    secret par_res_key_a [reachability];
+    secret rev_req_key_a [reachability];
+    secret rev_res_key_a [reachability];
+    secret par_req_key_b [reachability];
+    secret par_res_key_b [reachability];
+    secret rev_req_key_b [reachability];
+    secret rev_res_key_b [reachability].
 
 (* sec property 7: message confidentiality *)
 query secret conf [reachability].
