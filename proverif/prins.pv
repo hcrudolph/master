@@ -20,8 +20,8 @@ type ipxmod.                        (* json patch / ipx modifications *)
 
 (* channels *)
 
-free plmn_a: channel [private].     (* PLMN A internal channel *)
-free plmn_b: channel [private].     (* PLMN B internal channel *)
+free plmn_a: channel.               (* PLMN A internal channel *)
+free plmn_b: channel.               (* PLMN B internal channel *)
 free n32f_a: channel.               (* Channel between SEPP A and IPX A *)
 free n32f_i: channel.               (* Channel between IPX A and IPX B *)
 free n32f_b: channel.               (* Channel between IPX B and SEPP B *)
@@ -225,6 +225,10 @@ free par_req_key_a, par_res_key_a, rev_req_key_a, rev_res_key_a,
     par_req_key_b, par_res_key_b, rev_req_key_b, rev_res_key_b,
     master_key_a, master_key_b: key [private].
 free conf: bitstring [private].
+
+(* ipx key confidentiality *)
+query secret privkey_ipx_a [reachability];
+    secret privkey_ipx_b [reachability].
 
 (* master & session key confidentiality *)
 query secret master_key_a [reachability];
