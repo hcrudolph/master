@@ -226,10 +226,6 @@ free par_req_key_a, par_res_key_a, rev_req_key_a, rev_res_key_a,
     master_key_a, master_key_b: key [private].
 free conf: bitstring [private].
 
-(* ipx key confidentiality *)
-query secret privkey_ipx_a [reachability];
-    secret privkey_ipx_b [reachability].
-
 (* master & session key confidentiality *)
 query secret master_key_a [reachability];
     secret master_key_b [reachability];
@@ -249,12 +245,10 @@ query secret conf [reachability].
 (* Debugging queries *)
 query msg: bitstring;
     event(sentHttpMsgNfA(REQ, msg));
-    event(sentHttpMsgNfA(RES, msg));
     event(sentHttpMsgNfB(REQ, msg));
+    event(sentHttpMsgNfA(RES, msg));
     event(sentHttpMsgNfB(RES, msg));
-    event(recvHttpMsgNfA(REQ, msg));
     event(recvHttpMsgNfA(RES, msg));
-    event(recvHttpMsgNfB(REQ, msg));
     event(recvHttpMsgNfB(RES, msg)).
 
 query msg: bitstring;
@@ -469,7 +463,6 @@ let NfAResponse(nf_a_addr: bitstring, nf_b_addr: bitstring)=
         msg_body: bitstring) = msg in
     if msg_type = REQ then
     (
-        event recvHttpMsgNfA(REQ, msg_body);
         event sentHttpMsgNfA(RES, msg_body);
         out(plmn_a, createHttp(nf_a_addr, nf_b_addr, RES, msg_body))
     )
@@ -649,7 +642,6 @@ let NfBResponse(nf_b_addr: bitstring, nf_a_addr: bitstring)=
         msg_body: bitstring) = msg in
     if msg_type = REQ then
     (
-        event recvHttpMsgNfB(REQ, msg_body);
         event sentHttpMsgNfB(RES, msg_body);
         out(plmn_b, createHttp(nf_b_addr, nf_a_addr, RES, msg_body))
     )
@@ -1552,13 +1544,13 @@ process
         (N32cSendHandshakeSeppA(
             sepp_a_plmn, sepp_a_addr, sepp_b_plmn, sepp_b_addr,
             ciphersuites, encp, modp_a, ipx_a_id, ipx_a_pubkey)) |
-        (!N32cRecvHandshakeSeppB(
+        (N32cRecvHandshakeSeppB(
             sepp_b_plmn, sepp_b_addr, sepp_a_plmn, sepp_a_addr,
             ciphersuites, encp, modp_b, ipx_b_id, ipx_b_pubkey)) |
         (N32cSendHandshakeSeppB(
             sepp_b_plmn, sepp_b_addr, sepp_a_plmn, sepp_a_addr,
             ciphersuites, encp, modp_b, ipx_b_id, ipx_b_pubkey)) |
-        (!N32cRecvHandshakeSeppA(
+        (N32cRecvHandshakeSeppA(
             sepp_a_plmn, sepp_a_addr, sepp_b_plmn, sepp_b_addr,
             ciphersuites, encp, modp_a, ipx_a_id, ipx_a_pubkey)) |
 
@@ -1584,6 +1576,26 @@ process
         (phase 3; N32cSendErrorSeppA(sepp_a_addr)) |
         (phase 3; N32cRecvErrorSeppA(sepp_a_addr)) |
         (phase 3; N32cSendErrorSeppB(sepp_b_addr)) |
-        (phase 3; N32cRecvErrorSeppB(sepp_b_addr))
+        (phase 3; N32cRecvErrorSeppB(sepp_b_addr)) |
+        (phase 3; N32fSendSeppA(sepp_b_addr)) |
+        (phase 3; N32fSendSeppB(sepp_a_addr)) |
 
+        (phase 4; N32fRecvIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
+        (phase 4; N32fSendIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
+        (phase 4; N32fRecvIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
+        (phase 4; N32fSendIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
+        (phase 4; N32fRecvIpxR1(ipx_a_id, ipx_a_privkey, modp_a)) |
+        (phase 4; N32fSendIpxR1(ipx_a_id, ipx_a_privkey, modp_r1)) |
+        (phase 4; N32fRecvIpxR2(ipx_r2_id, ipx_r2_privkey, modp_a)) |
+        (phase 4; N32fSendIpxR2(ipx_r2_id, ipx_r2_privkey, modp_a)) |
+        (phase 4; N32fRecvIpxR3()) |
+
+        (phase 5; N32fRecvSeppA(sepp_a_addr)) |
+        (phase 5; N32fRecvSeppB(sepp_b_addr)) |
+        (phase 5; NfAResponse(nf_a_addr, nf_b_addr)) |
+        (phase 5; NfBResponse(nf_b_addr, nf_a_addr)) |
+        (phase 5; N32cSendErrorSeppA(sepp_a_addr)) |
+        (phase 5; N32cRecvErrorSeppA(sepp_a_addr)) |
+        (phase 5; N32cSendErrorSeppB(sepp_b_addr)) |
+        (phase 5; N32cRecvErrorSeppB(sepp_b_addr))
     )
