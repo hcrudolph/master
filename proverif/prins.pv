@@ -1,8 +1,6 @@
 set privateCommOnPublicFreeNames = false.
 set preciseActions = false.
-set verboseTerm = true.
 set selFun = TermMaxsize.
-set simplifyDerivation = true.
 set redundancyElim = best.
 set redundantHypElim = true.
 
@@ -17,13 +15,14 @@ type prins.                         (* prins message *)
 type modprins.                      (* modified prins message w/ patches *)
 type aad.                           (* additional authenticated data *)
 type ipxmod.                        (* json patch / ipx modifications *)
+type bset.                          (* set of bitstrings *)
 
 (* channels *)
 
 free plmn_a: channel [private].     (* PLMN A internal channel *)
 free plmn_b: channel [private].     (* PLMN B internal channel *)
 free n32f_a: channel.               (* Channel between SEPP A and IPX A *)
-free n32f_i: channel.               (* Channel between IPX A and IPX B *)
+free n32f_i: channel.               (* Channel between IPX Providers *)
 free n32f_b: channel.               (* Channel between IPX B and SEPP B *)
 free n32c: channel [private].       (* Channel between SEPP A and SEPP B *)
 free err_a: channel [private].      (* Internal error signalling Sepp A *)
@@ -38,6 +37,7 @@ const SEND: bitstring.              (* sending flag *)
 const RECV: bitstring.              (* receiving flag *)
 const REQ: bitstring.               (* HTTP Request *)
 const RES: bitstring.               (* HTTP Response *)
+const emptyset: bset [data].        (* empty set of bitstrings *)
 
 (* tables *)
 
@@ -45,7 +45,7 @@ table storeSeppA(
     bitstring,                      (* SEPP B PLMN ID *)
     bitstring,                      (* SEPP B Address *)
     bitstring,                      (* N32-f Context ID *)
-    nat,                            (* N32-f Message Counter *)
+    bset,                           (* N32-f Message Counter *)
     key,                            (* parallel request key *)
     key,                            (* parallel response key *)
     key,                            (* reverse request key *)
@@ -67,7 +67,7 @@ table storeSeppB(
     bitstring,                      (* SEPP A PLMN ID *)
     bitstring,                      (* SEPP A Address *)
     bitstring,                      (* N32-f Context ID *)
-    nat,                            (* N32-f Message Counter *)
+    bset,                           (* N32-f Message Counter *)
     key,                            (* parallel request key *)
     key,                            (* parallel response key *)
     key,                            (* reverse request key *)
@@ -96,7 +96,7 @@ fun combineAAD(bitstring,           (* HTTP Soure Address *)
     bitstring,                      (* HTTP Dest Address *)
     bitstring,                      (* HTTP Msg Type *)
     bitstring,                      (* HTTP Body *)
-    nat,                            (* Message ID *)
+    bitstring,                      (* Message ID *)
     bitstring,                      (* Authorized IPX *)
     bitstring): aad [data].         (* N32f Context Id *)
 
@@ -122,10 +122,10 @@ fun prins''(bitstring,              (* JWE Headers *)
 (* custom functions *)
 
 fun deriveContextId(bitstring, bitstring): bitstring.
-fun deriveMasterKey(bitstring, nat): key [private].
+fun deriveMasterKey(bitstring): key [private].
 fun deriveSessionKey(bitstring, bitstring, key): key.
 fun deriveIV(bitstring, bitstring, key): bitstring.
-fun deriveNonce(bitstring, nat): bitstring.
+fun deriveNonce(bitstring, bitstring): bitstring.
 fun applyPatches(bitstring, bitstring, bitstring): bitstring.
 
 (* mac *)
@@ -136,6 +136,12 @@ fun getConf(bitstring, bitstring): bitstring.
 fun getNonconf(bitstring, bitstring): bitstring.
 reduc forall m: bitstring, p: bitstring;
     policyValidation(getNonconf(m, p), p) = true.
+
+fun consset(bitstring , bset): bset [data].
+pred mem(bitstring , bset).
+clauses
+    forall x: bitstring, y: bset; mem(x , consset(x, y));
+    forall x: bitstring, y: bset, z: bitstring ; mem(x, y) -> mem(x ,consset(z, y)).
 
 (* signatures *)
 fun pk(privkey): pubkey.
@@ -192,30 +198,33 @@ event recvHttpMsgSeppA(bitstring, bitstring).
 event sentHttpMsgSeppB(bitstring, bitstring).
 event recvHttpMsgSeppB(bitstring, bitstring).
 
-event sentN32fMsgSeppA(bitstring, nat, bitstring, bitstring).
-event recvN32fMsgSeppA(bitstring, nat, bitstring, bitstring).
-event sentN32fMsgSeppB(bitstring, nat, bitstring, bitstring).
-event recvN32fMsgSeppB(bitstring, nat, bitstring, bitstring).
+event sentN32fMsgSeppA(bitstring, bitstring, bitstring, bitstring).
+event recvN32fMsgSeppA(bitstring, bitstring, bitstring, bitstring).
+event sentN32fMsgSeppB(bitstring, bitstring, bitstring, bitstring).
+event recvN32fMsgSeppB(bitstring, bitstring, bitstring, bitstring).
 
-event recvValidIpxPatchSeppA(bitstring, bitstring, nat, mac, ipxmod).
-event recvValidIpxPatchSeppB(bitstring, bitstring, nat, mac, ipxmod).
-event recvInvalIpxPatchSeppA(bitstring, bitstring, nat, mac, ipxmod).
-event recvInvalIpxPatchSeppB(bitstring, bitstring, nat, mac, ipxmod).
+event recvValidIpxPatchSeppA(bitstring, bitstring, bitstring, mac, ipxmod).
+event recvValidIpxPatchSeppB(bitstring, bitstring, bitstring, mac, ipxmod).
+event recvInvalIpxPatchSeppA(bitstring, bitstring, bitstring, mac, ipxmod).
+event recvInvalIpxPatchSeppB(bitstring, bitstring, bitstring, mac, ipxmod).
 
-event sentErrorSeppA(bitstring, nat, bitstring).
-event sentErrorSeppB(bitstring, nat, bitstring).
-event recvErrorSeppA(bitstring, nat, bitstring).
-event recvErrorSeppB(bitstring, nat, bitstring).
+event sentErrorSeppA(bitstring, bitstring, bitstring).
+event sentErrorSeppB(bitstring, bitstring, bitstring).
+event recvErrorSeppA(bitstring, bitstring, bitstring).
+event recvErrorSeppB(bitstring, bitstring, bitstring).
 
-event ipxRecvA(bitstring, nat, mac, ipxmod).
-event ipxSendA(bitstring, nat, mac, ipxmod).
-event ipxRecvB(bitstring, nat, mac, ipxmod).
-event ipxSendB(bitstring, nat, mac, ipxmod).
-event ipxRecvR1(bitstring, nat, mac, ipxmod).
-event ipxSendR1(bitstring, nat, mac, ipxmod).
-event ipxRecvR2(bitstring, nat, mac, ipxmod).
-event ipxSendR2(bitstring, nat, mac, ipxmod).
-event ipxRecvR3(bitstring, nat, mac, ipxmod).
+event ipxRecvA(bitstring, bitstring, mac, ipxmod).
+event ipxSendA(bitstring, bitstring, mac, ipxmod).
+event ipxRecvB(bitstring, bitstring, mac, ipxmod).
+event ipxSendB(bitstring, bitstring, mac, ipxmod).
+event ipxRecvR1(bitstring, bitstring, mac, ipxmod).
+event ipxSendR1(bitstring, bitstring, mac, ipxmod).
+event ipxRecvR2(bitstring, bitstring, mac, ipxmod).
+event ipxSendR2(bitstring, bitstring, mac, ipxmod).
+event ipxRecvR3(bitstring, bitstring, mac, ipxmod).
+
+event validMsgSeppA().
+event validMsgSeppB().
 
 
 (* secrecy queries *)
@@ -245,13 +254,24 @@ query secret master_key_a [reachability];
 (* sec property 7: message confidentiality *)
 query secret conf [reachability].
 
+(* sec property 5: strong secrecy of master/session keys *)
+noninterf master_key_a.
+noninterf master_key_b.
+noninterf par_req_key_a.
+noninterf par_res_key_a.
+noninterf rev_req_key_a.
+noninterf rev_res_key_a.
+noninterf par_req_key_b.
+noninterf par_res_key_b.
+noninterf rev_req_key_b.
+noninterf rev_res_key_b.
 
 (* Debugging queries *)
+query event(validMsgSeppA); event(validMsgSeppB).
+
 query msg: bitstring;
     event(sentHttpMsgNfA(REQ, msg));
-    event(sentHttpMsgNfA(RES, msg));
     event(sentHttpMsgNfB(REQ, msg));
-    event(sentHttpMsgNfB(RES, msg));
     event(recvHttpMsgNfA(REQ, msg));
     event(recvHttpMsgNfA(RES, msg));
     event(recvHttpMsgNfB(REQ, msg));
@@ -267,28 +287,28 @@ query msg: bitstring;
     event(recvHttpMsgSeppB(REQ, msg));
     event(recvHttpMsgSeppB(RES, msg)).
 
-query n32f_context: bitstring, msg_id: nat, jwe_tag: mac, ipx_mods: ipxmod;
+query n32f_context: bitstring, msg_id: bitstring, jwe_tag: mac, ipx_mods: ipxmod;
     event(ipxSendR1(n32f_context, msg_id, jwe_tag, ipx_mods));
     event(ipxRecvR1(n32f_context, msg_id, jwe_tag, ipx_mods));
     event(ipxSendR2(n32f_context, msg_id, jwe_tag, ipx_mods));
     event(ipxRecvR2(n32f_context, msg_id, jwe_tag, ipx_mods));
     event(ipxRecvR3(n32f_context, msg_id, jwe_tag, ipx_mods)).
 
-query n32f_context: bitstring, msg_id: nat,
+query n32f_context: bitstring, msg_id: bitstring,
     msg_conf: bitstring, msg_nonconf: bitstring;
     event(sentN32fMsgSeppA(n32f_context, msg_id, msg_conf, msg_nonconf));
     event(sentN32fMsgSeppB(n32f_context, msg_id, msg_conf, msg_nonconf));
     event(recvN32fMsgSeppA(n32f_context, msg_id, msg_conf, msg_nonconf));
     event(recvN32fMsgSeppB(n32f_context, msg_id, msg_conf, msg_nonconf)).
 
-query ipx_id: bitstring, n32f_context: bitstring, msg_id: nat,
+query ipx_id: bitstring, n32f_context: bitstring, msg_id: bitstring,
     jwe_tag: mac, ipx_mods: ipxmod;
     event(recvValidIpxPatchSeppA(
         ipx_id, n32f_context, msg_id, jwe_tag, ipx_mods));
     event(recvValidIpxPatchSeppB(
         ipx_id, n32f_context, msg_id, jwe_tag, ipx_mods)).
 
-query n32f_context: bitstring, msg_id: nat, status_code: bitstring;
+query n32f_context: bitstring, msg_id: bitstring, status_code: bitstring;
     event(sentErrorSeppA(n32f_context, msg_id, status_code));
     event(recvErrorSeppA(n32f_context, msg_id, status_code));
 
@@ -302,7 +322,7 @@ query n32f_context: bitstring, msg_id: nat, status_code: bitstring;
     event(recvErrorSeppB(n32f_context, msg_id, status_code)).
 
 query ipx_id: bitstring, jwe_tag: mac, ipx_mods: ipxmod,
-    n32f_context: bitstring, msg_id: nat, status_code: bitstring;
+    n32f_context: bitstring, msg_id: bitstring, status_code: bitstring;
     event(sentErrorSeppA(n32f_context, msg_id, status_code));
     event(recvInvalIpxPatchSeppA(ipx_id, n32f_context, msg_id, jwe_tag, ipx_mods));
 
@@ -350,14 +370,14 @@ query sepp_a_addr: bitstring, sepp_b_addr: bitstring, n32f_cid: bitstring,
 
 (* sec property 12: rejecting unknown ipx providers *)
 query ipx_a_id: bitstring, n32f_context: bitstring,
-    msg_id: nat, jwe_tag: mac, ipx_a_mods: ipxmod;
+    msg_id: bitstring, jwe_tag: mac, ipx_a_mods: ipxmod;
 
     event(recvValidIpxPatchSeppA(
         ipx_a_id, n32f_context, msg_id, jwe_tag, ipx_a_mods)) &&
     event(ipxRecvR2(n32f_context, msg_id, jwe_tag, ipx_a_mods)).
 
 query ipx_a_id: bitstring, n32f_context: bitstring,
-    msg_id: nat, jwe_tag: mac, ipx_a_mods: ipxmod;
+    msg_id: bitstring, jwe_tag: mac, ipx_a_mods: ipxmod;
 
     event(recvValidIpxPatchSeppB(
         ipx_a_id, n32f_context, msg_id, jwe_tag, ipx_a_mods)) &&
@@ -365,7 +385,7 @@ query ipx_a_id: bitstring, n32f_context: bitstring,
 
 (* sec property 13: rejecting unknown message modifications *)
 query ipx_a_id: bitstring, n32f_context: bitstring,
-    msg_id: nat, jwe_tag: mac, ipx_mods: ipxmod;
+    msg_id: bitstring, jwe_tag: mac, ipx_mods: ipxmod;
 
     event(recvValidIpxPatchSeppB(
         ipx_a_id, n32f_context, msg_id, jwe_tag, ipx_mods)) &&
@@ -373,7 +393,7 @@ query ipx_a_id: bitstring, n32f_context: bitstring,
 
 (* sec property 8: removing previous message modifications *)
 query ipx_b_id: bitstring, n32f_context: bitstring,
-    msg_id: nat, jwe_tag: mac, ipx_a_mods: ipxmod, ipx_b_mods: ipxmod;
+    msg_id: bitstring, jwe_tag: mac, ipx_a_mods: ipxmod, ipx_b_mods: ipxmod;
 
     event(recvValidIpxPatchSeppA(
         ipx_b_id, n32f_context, msg_id, jwe_tag, ipx_b_mods)) &&
@@ -381,14 +401,14 @@ query ipx_b_id: bitstring, n32f_context: bitstring,
 
 (* sec property 10: rejecting replayed json patches *)
 query ipx_a_id: bitstring, n32f_context: bitstring,
-    msg_id: nat, jwe_tag: mac, ipx_mods: ipxmod;
+    msg_id: bitstring, jwe_tag: mac, ipx_mods: ipxmod;
 
     event(recvValidIpxPatchSeppA(
         ipx_a_id, n32f_context, msg_id, jwe_tag, ipx_mods)) &&
     event(ipxRecvR3(n32f_context, msg_id, jwe_tag, ipx_mods)).
 
 (* sec property 6/7/11: integrity protection / authentication *)
-query msg_id: nat, n32f_context: bitstring,
+query msg_id: bitstring, n32f_context: bitstring,
     msg_conf: bitstring, msg_nonconf: bitstring;
     event(sentN32fMsgSeppB(n32f_context, msg_id, msg_conf, msg_nonconf)) &&
     event(recvN32fMsgSeppA(n32f_context, msg_id, msg_conf, msg_nonconf));
@@ -396,7 +416,7 @@ query msg_id: nat, n32f_context: bitstring,
     event(recvN32fMsgSeppA(n32f_context, msg_id, msg_conf, msg_nonconf)) ==>
     event(sentN32fMsgSeppB(n32f_context, msg_id, msg_conf, msg_nonconf)).
 
-query msg_id: nat, n32f_context: bitstring,
+query msg_id: bitstring, n32f_context: bitstring,
     msg_conf: bitstring, msg_nonconf: bitstring;
     event(sentN32fMsgSeppA(n32f_context, msg_id, msg_conf, msg_nonconf)) &&
     event(recvN32fMsgSeppB(n32f_context, msg_id, msg_conf, msg_nonconf));
@@ -406,7 +426,7 @@ query msg_id: nat, n32f_context: bitstring,
 
 (* sec property 9: json patch authentication/integrity protection *)
 query n32f_context: bitstring, ipx_a_id: bitstring, ipx_b_id: bitstring,
-    msg_id: nat, jwe_tag: mac, ipx_a_mods: ipxmod, ipx_b_mods: ipxmod,
+    msg_id: bitstring, jwe_tag: mac, ipx_a_mods: ipxmod, ipx_b_mods: ipxmod,
     http_method: bitstring, msg_body: bitstring;
 
     event(
@@ -429,7 +449,7 @@ query n32f_context: bitstring, ipx_a_id: bitstring, ipx_b_id: bitstring,
     ))).
 
 query n32f_context: bitstring, ipx_a_id: bitstring, ipx_b_id: bitstring,
-    msg_id: nat, jwe_tag: mac, ipx_a_mods: ipxmod, ipx_b_mods: ipxmod,
+    msg_id: bitstring, jwe_tag: mac, ipx_a_mods: ipxmod, ipx_b_mods: ipxmod,
     http_method: bitstring, msg_body: bitstring;
 
     event(
@@ -470,7 +490,6 @@ let NfAResponse(nf_a_addr: bitstring, nf_b_addr: bitstring)=
     if msg_type = REQ then
     (
         event recvHttpMsgNfA(REQ, msg_body);
-        event sentHttpMsgNfA(RES, msg_body);
         out(plmn_a, createHttp(nf_a_addr, nf_b_addr, RES, msg_body))
     )
     else
@@ -511,8 +530,9 @@ let N32cSendHandshakeSeppA(sepp_a_plmn: bitstring, sepp_a_addr: bitstring,
 
     (* key derivation *)
     if sepp_a_addr' = sepp_a_addr && n32f_cid' = n32f_cid then
-    let msg_cnt_a = 0 in
-    let master_key_a = deriveMasterKey(n32f_cid, msg_cnt_a) in
+    new msg_id: bitstring;
+    let msg_cnt_a = consset(msg_id, emptyset) in
+    let master_key_a = deriveMasterKey(n32f_cid) in
     event sentMasterKey(sepp_a_addr, n32f_cid, master_key_a);
     let par_req_key_a = deriveSessionKey(SEND, REQ, master_key_a) in
     let rev_req_key_a = deriveSessionKey(RECV, REQ, master_key_a) in
@@ -565,8 +585,9 @@ let N32cRecvHandshakeSeppA(sepp_a_plmn: bitstring, sepp_a_addr: bitstring,
     out(n32c, (sepp_b_addr, n32f_cid, ipx_a_id, ipx_a_key));
 
     (* key derivation *)
-    let msg_cnt_a = 0 in
-    let master_key_a = deriveMasterKey(n32f_cid, msg_cnt_a) in
+    new msg_id: bitstring;
+    let msg_cnt_a = consset(msg_id, emptyset) in
+    let master_key_a = deriveMasterKey(n32f_cid) in
     event recvMasterKey(sepp_a_addr, n32f_cid, master_key_a);
     let par_req_key_a = deriveSessionKey(RECV, REQ, master_key_a) in
     let rev_req_key_a = deriveSessionKey(SEND, REQ, master_key_a) in
@@ -586,7 +607,7 @@ let N32cRecvHandshakeSeppA(sepp_a_plmn: bitstring, sepp_a_addr: bitstring,
     ).
 
 let N32cSendErrorSeppA(sepp_a_addr: bitstring)=
-    in(err_a, (n32f_context': bitstring, msg_id: nat));
+    in(err_a, (n32f_context': bitstring, msg_id: bitstring));
     get storeSeppA(
         sepp_b_plmn, sepp_b_addr, n32f_context, msg_cnt_a, par_req_key_a,
         par_res_key_a, rev_req_key_a, rev_res_key_a, par_req_iv_a,
@@ -599,7 +620,7 @@ let N32cSendErrorSeppA(sepp_a_addr: bitstring)=
 
     (* receive confirmation *)
     in(n32c, (
-        sepp_a_addr': bitstring, n32f_context': bitstring, msg_id': nat,
+        sepp_a_addr': bitstring, n32f_context': bitstring, msg_id': bitstring,
         status_code: bitstring
     ));
     if sepp_a_addr' = sepp_a_addr &&
@@ -609,7 +630,7 @@ let N32cSendErrorSeppA(sepp_a_addr: bitstring)=
 
 let N32cRecvErrorSeppA(sepp_a_addr: bitstring)=
     in(n32c, (
-        sepp_a_addr': bitstring, n32f_context': bitstring, msg_id: nat
+        sepp_a_addr': bitstring, n32f_context': bitstring, msg_id: bitstring
     ));
     if sepp_a_addr' = sepp_a_addr then
     get storeSeppA(
@@ -620,7 +641,7 @@ let N32cRecvErrorSeppA(sepp_a_addr: bitstring)=
     ) suchthat n32f_context' = n32f_context in
 
     (* send confirmation *)
-    if msg_id <= msg_cnt_a then
+    if mem(msg_id, msg_cnt_a) then
     (
         out(n32c, (sepp_b_addr, n32f_context, msg_id, SUCC));
         event recvErrorSeppA(n32f_context, msg_id, SUCC)
@@ -650,7 +671,6 @@ let NfBResponse(nf_b_addr: bitstring, nf_a_addr: bitstring)=
     if msg_type = REQ then
     (
         event recvHttpMsgNfB(REQ, msg_body);
-        event sentHttpMsgNfB(RES, msg_body);
         out(plmn_b, createHttp(nf_b_addr, nf_a_addr, RES, msg_body))
     )
     else
@@ -691,8 +711,9 @@ let N32cSendHandshakeSeppB(sepp_b_plmn: bitstring, sepp_b_addr: bitstring,
 
     (* key derivation *)
     if sepp_b_addr' = sepp_b_addr && n32f_cid' = n32f_cid then
-    let msg_cnt_b = 0 in
-    let master_key_b = deriveMasterKey(n32f_cid, msg_cnt_b) in
+    new msg_id: bitstring;
+    let msg_cnt_b = consset(msg_id, emptyset) in
+    let master_key_b = deriveMasterKey(n32f_cid) in
     event sentMasterKey(sepp_b_addr, n32f_cid, master_key_b);
     let par_req_key_b = deriveSessionKey(SEND, REQ, master_key_b) in
     let rev_req_key_b = deriveSessionKey(RECV, REQ, master_key_b) in
@@ -745,8 +766,9 @@ let N32cRecvHandshakeSeppB(sepp_b_plmn: bitstring, sepp_b_addr: bitstring,
     out(n32c, (sepp_a_addr, n32f_cid, ipx_b_id, ipx_b_key));
 
     (* key derivation *)
-    let msg_cnt_b = 0 in
-    let master_key_b = deriveMasterKey(n32f_cid, msg_cnt_b) in
+    new msg_id: bitstring;
+    let msg_cnt_b = consset(msg_id, emptyset) in
+    let master_key_b = deriveMasterKey(n32f_cid) in
     event recvMasterKey(sepp_b_addr, n32f_cid, master_key_b);
     let par_req_key_b = deriveSessionKey(RECV, REQ, master_key_b) in
     let rev_req_key_b = deriveSessionKey(SEND, REQ, master_key_b) in
@@ -766,7 +788,7 @@ let N32cRecvHandshakeSeppB(sepp_b_plmn: bitstring, sepp_b_addr: bitstring,
     ).
 
 let N32cSendErrorSeppB(sepp_b_addr: bitstring)=
-    in(err_b, (n32f_context': bitstring, msg_id: nat));
+    in(err_b, (n32f_context': bitstring, msg_id: bitstring));
     get storeSeppB(
         sepp_a_plmn, sepp_a_addr, n32f_context, msg_cnt_b, par_req_key_b,
         par_res_key_b, rev_req_key_b, rev_res_key_b, par_req_iv_b,
@@ -779,7 +801,7 @@ let N32cSendErrorSeppB(sepp_b_addr: bitstring)=
 
     (* receive confirmation *)
     in(n32c, (
-        sepp_b_addr': bitstring, n32f_context': bitstring, msg_id': nat,
+        sepp_b_addr': bitstring, n32f_context': bitstring, msg_id': bitstring,
         status_code: bitstring
     ));
     if sepp_b_addr' = sepp_b_addr &&
@@ -789,7 +811,7 @@ let N32cSendErrorSeppB(sepp_b_addr: bitstring)=
 
 let N32cRecvErrorSeppB(sepp_b_addr: bitstring)=
     in(n32c, (
-        sepp_b_addr': bitstring, n32f_context': bitstring, msg_id: nat
+        sepp_b_addr': bitstring, n32f_context': bitstring, msg_id: bitstring
     ));
     if sepp_b_addr' = sepp_b_addr then
     get storeSeppB(
@@ -800,7 +822,7 @@ let N32cRecvErrorSeppB(sepp_b_addr: bitstring)=
     ) suchthat n32f_context' = n32f_context in
 
     (* send confirmation *)
-    if msg_id <= msg_cnt_b then
+    if mem(msg_id, msg_cnt_b) then
     (
         out(n32c, (sepp_a_addr, n32f_context, msg_id, SUCC));
         event recvErrorSeppB(n32f_context, msg_id, SUCC)
@@ -832,7 +854,8 @@ let N32fSendSeppA(sepp_b_addr': bitstring)=
     let conf: bitstring = getConf(msg_body, encp_a) in
     let nonconf: bitstring = getNonconf(msg_body, encp_a) in
 
-    let msg_id: nat = msg_cnt_a + 1 in
+    new msg_id: bitstring;
+    let msg_cnt_a = consset(msg_id, msg_cnt_a) in
     let associated_data = combineAAD(
         source_addr, destination_addr, msg_type,
         nonconf, msg_id, ipx_a_id, n32f_context
@@ -884,7 +907,7 @@ let N32fRecvSeppA(sepp_a_addr: bitstring)=
         destination_addr: bitstring,
         msg_type: bitstring,
         nonconf: bitstring,
-        msg_id: nat,
+        msg_id: bitstring,
         auth_ipx_id: bitstring,
         n32f_context': bitstring
     ) = dataToIntegrityProtect in
@@ -988,7 +1011,8 @@ let N32fSendSeppB(sepp_a_addr': bitstring)=
     let conf: bitstring = getConf(msg_body, encp_b) in
     let nonconf: bitstring = getNonconf(msg_body, encp_b) in
 
-    let msg_id: nat = msg_cnt_b + 1 in
+    new msg_id: bitstring;
+    let msg_cnt_b = consset(msg_id, msg_cnt_b) in
     let associated_data = combineAAD(
         source_addr, destination_addr, msg_type,
         nonconf, msg_id, ipx_b_id, n32f_context
@@ -1040,7 +1064,7 @@ let N32fRecvSeppB(sepp_b_addr: bitstring)=
         destination_addr: bitstring,
         msg_type: bitstring,
         nonconf: bitstring,
-        msg_id: nat,
+        msg_id: bitstring,
         auth_ipx_id: bitstring,
         n32f_context': bitstring
     ) = dataToIntegrityProtect in
@@ -1149,7 +1173,7 @@ let N32fSendIpxA(id: bitstring, privkey_ipx_a: privkey, ops: bitstring)=
         destination_addr: bitstring,
         msg_type: bitstring,
         nonconf: bitstring,
-        msg_id: nat,
+        msg_id: bitstring,
         auth_ipx_id : bitstring,
         n32f_context: bitstring
     ) = dataToIntegrityProtect in
@@ -1192,7 +1216,7 @@ let N32fRecvIpxA(id: bitstring, privkey_ipx_a: privkey, ops: bitstring)=
         destination_addr: bitstring,
         msg_type: bitstring,
         nonconf: bitstring,
-        msg_id: nat,
+        msg_id: bitstring,
         auth_ipx_id : bitstring,
         n32f_context: bitstring
     ) = dataToIntegrityProtect in
@@ -1236,7 +1260,7 @@ let N32fSendIpxB(id: bitstring, privkey_ipx_b: privkey, ops: bitstring)=
         destination_addr: bitstring,
         msg_type: bitstring,
         nonconf: bitstring,
-        msg_id: nat,
+        msg_id: bitstring,
         auth_ipx_id : bitstring,
         n32f_context: bitstring
     ) = dataToIntegrityProtect in
@@ -1280,7 +1304,7 @@ let N32fRecvIpxB(id: bitstring, privkey_ipx_b: privkey, ops: bitstring)=
         destination_addr: bitstring,
         msg_type: bitstring,
         nonconf: bitstring,
-        msg_id: nat,
+        msg_id: bitstring,
         auth_ipx_id : bitstring,
         n32f_context: bitstring
     ) = dataToIntegrityProtect in
@@ -1327,7 +1351,7 @@ let N32fSendIpxR1(id: bitstring, privkey: privkey, ops: bitstring)=
         destination_addr: bitstring,
         msg_type: bitstring,
         nonconf: bitstring,
-        msg_id: nat,
+        msg_id: bitstring,
         auth_ipx_id : bitstring,
         n32f_context: bitstring
     ) = dataToIntegrityProtect in
@@ -1370,7 +1394,7 @@ let N32fRecvIpxR1(id: bitstring, privkey: privkey, ops: bitstring)=
         destination_addr: bitstring,
         msg_type: bitstring,
         nonconf: bitstring,
-        msg_id: nat,
+        msg_id: bitstring,
         auth_ipx_id : bitstring,
         n32f_context: bitstring
     ) = dataToIntegrityProtect in
@@ -1414,7 +1438,7 @@ let N32fSendIpxR2(id: bitstring, privkey: privkey, ops: bitstring)=
         destination_addr: bitstring,
         msg_type: bitstring,
         nonconf: bitstring,
-        msg_id: nat,
+        msg_id: bitstring,
         auth_ipx_id : bitstring,
         n32f_context: bitstring
     ) = dataToIntegrityProtect in
@@ -1457,7 +1481,7 @@ let N32fRecvIpxR2(id: bitstring, privkey: privkey, ops: bitstring)=
         destination_addr: bitstring,
         msg_type: bitstring,
         nonconf: bitstring,
-        msg_id: nat,
+        msg_id: bitstring,
         auth_ipx_id : bitstring,
         n32f_context: bitstring
     ) = dataToIntegrityProtect in
@@ -1499,7 +1523,7 @@ let N32fRecvIpxR3()=
         destination_addr: bitstring,
         msg_type: bitstring,
         nonconf: bitstring,
-        msg_id: nat,
+        msg_id: bitstring,
         auth_ipx_id : bitstring,
         n32f_context: bitstring
     ) = dataToIntegrityProtect in
@@ -1561,25 +1585,19 @@ process
         (!N32cRecvHandshakeSeppA(
             sepp_a_plmn, sepp_a_addr, sepp_b_plmn, sepp_b_addr,
             ciphersuites, encp, modp_a, ipx_a_id, ipx_a_pubkey)) |
-        (sync 1; NfARequest(nf_a_addr, nf_b_addr)) |
-        (sync 1; !NfAResponse(nf_a_addr, nf_b_addr)) |
-        (sync 1; NfBRequest(nf_b_addr, nf_a_addr)) |
-        (sync 1; !NfBResponse(nf_b_addr, nf_a_addr)) |
-        (sync 1; !N32fSendSeppA(sepp_b_addr)) |
-        (sync 1; !N32fSendSeppB(sepp_a_addr)) |
-        (sync 1; !N32fRecvSeppA(sepp_a_addr)) |
-        (sync 1; !N32fRecvSeppB(sepp_b_addr)) |
-        (sync 1; !N32cSendErrorSeppA(sepp_a_addr)) |
-        (sync 1; !N32cRecvErrorSeppA(sepp_a_addr)) |
-        (sync 1; !N32cSendErrorSeppB(sepp_b_addr)) |
-        (sync 1; !N32cRecvErrorSeppB(sepp_b_addr)) |
-        (sync 1; !N32fRecvIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
-        (sync 1; !N32fSendIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
-        (sync 1; !N32fRecvIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
-        (sync 1; !N32fSendIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
-        (sync 1; !N32fRecvIpxR1(ipx_a_id, ipx_a_privkey, modp_a)) |
-        (sync 1; !N32fSendIpxR1(ipx_a_id, ipx_a_privkey, modp_r1)) |
-        (sync 1; !N32fRecvIpxR2(ipx_r2_id, ipx_r2_privkey, modp_a)) |
-        (sync 1; !N32fSendIpxR2(ipx_r2_id, ipx_r2_privkey, modp_a)) |
-        (sync 1; !N32fRecvIpxR3())
+
+        (phase 1; NfARequest(nf_a_addr, nf_b_addr)) |
+        (phase 1; NfBRequest(nf_b_addr, nf_a_addr)) |
+        (phase 1; N32fSendSeppA(sepp_b_addr)) |
+        (phase 1; N32fSendSeppB(sepp_a_addr)) |
+
+        (phase 2; !N32fRecvIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
+        (phase 2; !N32fSendIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
+        (phase 2; !N32fRecvIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
+        (phase 2; !N32fSendIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
+
+        (phase 3; !N32fRecvSeppA(sepp_a_addr)) |
+        (phase 3; !N32fRecvSeppB(sepp_b_addr)) |
+        (phase 3; NfAResponse(nf_a_addr, nf_b_addr)) |
+        (phase 3; NfBResponse(nf_b_addr, nf_a_addr))
     )
