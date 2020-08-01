@@ -1213,7 +1213,8 @@ let N32fSendIpxB(id: bitstring, privkey_ipx_b: privkey, ops: bitstring)=
         EMPTY
     ) in
     event ipxSendB(n32f_context, msg_id, jwe_tag, modifications);
-    out(n32f_i, (sepp_a_addr, modified_message)).
+    out(n32f_i, (sepp_a_addr, modified_message));
+    out(n32f_i, modifications).
 
 let N32fRecvIpxB(id: bitstring, privkey_ipx_b: privkey, ops: bitstring)=
     in(n32f_i, (sepp_b_addr: bitstring, prins_message: modprins));
