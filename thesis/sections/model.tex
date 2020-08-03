@@ -40,7 +40,7 @@ type pubkey.                        (* asymmetric public key *)
 type prins.                         (* prins message *)
 type modprins.                      (* modified prins message w/ patches *)
 type aad.                           (* additional authenticated data *)
-type ipxmod.                        (* json patch / ipx modifications *)
+type ipxmod.                        (* ipx json patch *)
 \end{lstlisting}
 
 Listing~\ref{lst:channels} shows the defined channels used to transport messages between processes.
@@ -60,12 +60,14 @@ Since the protection of N32-c traffic completely relies on \gls{tls}, the protoc
 The two remaining channels {\sffamily err\_a} and {\sffamily err\_b} are used internally to the two participants, \gls{sepp}~A and \gls{sepp}~B, to pass information about errors in N32-f messages from the receiving N32-f process to the process handling error signaling via N32-c.
 
 \begin{lstlisting}[caption={Custom channel declarations},label={lst:channels},firstnumber=15]
-free n32f_a: channel.             (* Channel between SEPP A and IPX A *)
-free n32f_i: channel.             (* Channel between IPX A and IPX B *)
-free n32f_b: channel.             (* Channel between IPX B and SEPP B *)
-free n32c: channel [private].     (* Channel between SEPP A and SEPP B *)
-free err_a: channel [private].    (* Internal error signalling Sepp A *)
-free err_b: channel [private].    (* Internal error signalling Sepp B *)
+free plmn_a: channel [private].     (* PLMN A internal channel *)
+free plmn_b: channel [private].     (* PLMN B internal channel *)
+free n32f_a: channel.               (* Channel between SEPP A and IPX A *)
+free n32f_i: channel.               (* Channel between IPX Providers *)
+free n32f_b: channel.               (* Channel between IPX B and SEPP B *)
+free n32c: channel [private].       (* Channel between SEPP A and SEPP B *)
+free err_a: channel [private].      (* Internal error signalling Sepp A *)
+free err_b: channel [private].      (* Internal error signalling Sepp B *)
 \end{lstlisting}
 
 Listing~\ref{lst:constants} provides an overview of global constants used by the protocol model.
@@ -75,11 +77,13 @@ An empty \gls{json} patch written by \gls{ipx} providers is modelled by the {\sf
 {\sffamily SUCC} and {\sffamily FAIL} are constants representing the status code for success or failure in error signaling procedures (see listing~\ref{lst:n32c-error-send} and \ref{lst:n32c-error-recv})
 
 \begin{lstlisting}[caption={Global constant declarations},label={lst:constants},firstnumber=24]
-const EMPTY: ipxmod.              (* the empty ipx patch *)
-const SEND: bitstring.            (* sending flag *)
-const RECV: bitstring.            (* receiving flag *)
-const SUCC: bitstring.            (* success flag *)
-const FAIL: bitstring.            (* failure flag *)
+const EMPTY: ipxmod.                (* the empty ipx patch *)
+const SUCC: bitstring.              (* success flag *)
+const FAIL: bitstring.              (* failure flag *)
+const SEND: bitstring.              (* sending flag *)
+const RECV: bitstring.              (* receiving flag *)
+const REQ: bitstring.               (* HTTP Request *)
+const RES: bitstring.               (* HTTP Response *)
 \end{lstlisting}
 
 \textsc{ProVerif}'s tables are used to model each \gls{sepp}'s local storage for N32-f context information.
@@ -94,22 +98,26 @@ Secondly, it is assumed \gls{prins} is exclusively used to carry N32-f messages.
 
 \begin{lstlisting}[caption={Declaration of local SEPP storage using tables},label={lst:tables},firstnumber=32]
 table storeSeppA(
-    bitstring,                    (* SEPP B PLMN ID *)
-    bitstring,                    (* SEPP B Address *)
-    bitstring,                    (* N32-f Context ID *)
-    nat,                          (* N32-f Message Counter *)
-    key,                          (* parallel request key *)
-    key,                          (* reverse request key *)
-    bitstring,                    (* parallel request IV *)
-    bitstring,                    (* reverse request IV *)
-    bitstring,                    (* JWE Ciphersuite *)
-    bitstring,                    (* Data-type encryption policy *)
-    bitstring,                    (* SEPP A modification policy *)
-    bitstring,                    (* SEPP B modification policy *)
-    bitstring,                    (* IPX A id *)
-    pubkey,                       (* IPX A public key *)
-    bitstring,                    (* IPX B id *)
-    pubkey).                      (* IPX B public key *)
+    bitstring,                      (* SEPP B PLMN ID *)
+    bitstring,                      (* SEPP B Address *)
+    bitstring,                      (* N32-f Context ID *)
+    nat,                            (* N32-f Message Counter *)
+    key,                            (* parallel request key *)
+    key,                            (* parallel response key *)
+    key,                            (* reverse request key *)
+    key,                            (* reverse response key *)
+    bitstring,                      (* parallel request IV *)
+    bitstring,                      (* parallel response IV *)
+    bitstring,                      (* reverse request IV *)
+    bitstring,                      (* reverse response IV *)
+    bitstring,                      (* JWE Ciphersuite *)
+    bitstring,                      (* Data-type encryption policy *)
+    bitstring,                      (* SEPP A modification policy *)
+    bitstring,                      (* SEPP B modification policy *)
+    bitstring,                      (* IPX A id *)
+    pubkey,                         (* IPX A public key *)
+    bitstring,                      (* IPX B id *)
+    pubkey).                        (* IPX B public key *)
 \end{lstlisting}
 
 Data constructors are used to model type transformations in \textsc{ProVerif}.
@@ -119,10 +127,10 @@ Fundamentally, this follows the same syntax as other \textsc{ProVerif} funtions.
 However, the {\sffamily [data]} annotation has the effect that the adversary is able to deconstruct the resulting data type into its original subcomponents at any time (c.f. \cite{blanchet2020proverif}, p. 37).
 
 \begin{lstlisting}[caption={Definition of custom data constructor},label={lst:constructor},firstnumber=75]
-fun jsonPatch(bitstring,          (* Operations *)
-    bitstring,                    (* IPX Id *)
-    mac,                          (* JWE Tag *)
-    bitstring): ipxmod [data].    (* JWS Signature *)
+fun jsonPatch(bitstring,            (* Operations *)
+    bitstring,                      (* IPX Id *)
+    mac,                            (* JWE Tag *)
+    bitstring): ipxmod [data].      (* JWS Signature *)
 \end{lstlisting}
 
 Listing~\ref{lst:functions} shows an example of custom functions being used in the \gls{prins} model.
@@ -137,9 +145,11 @@ Section \ref{sec:issues} further describes the benefits and drawbacks of modelli
 
 \begin{lstlisting}[caption={Definition of custom one-way functions},label={lst:functions},firstnumber=96]
 fun deriveContextId(bitstring, bitstring): bitstring.
-fun deriveMasterKey(bitstring, nat): key [private].
-fun deriveSessionKey(bitstring, key): key.
-fun deriveIV(bitstring, key): bitstring.
+fun deriveMasterKey(bitstring): key [private].
+fun deriveSessionKey(bitstring, bitstring, key): key.
+fun deriveIV(bitstring, bitstring, key): bitstring.
+fun deriveNonce(bitstring, nat): bitstring.
+fun applyPatches(bitstring, bitstring, bitstring): bitstring.
 \end{lstlisting}
 
 In contrast to the functions displayed above, there are other constructors defined with one or more related deconstructors, reversing a particular operation.
@@ -193,46 +203,51 @@ let N32cSendHandshakeSeppA(sepp_a_plmn: bitstring, sepp_a_addr: bitstring,
 
     (* derive N32-f context id & validate ciphersuites *)
     new n32f_pid: bitstring;
+    (* msg 1: Sec_Param_Ex_Req *)
     out(n32c, (sepp_b_addr, ciphers_a, n32f_pid));
+    (* msg 2: Sec_Param_Ex_Resp *)
     in(n32c, (
-        sepp_a_addr': bitstring, ciphers_b: bitstring, n32f_pid_b: bitstring
+        =sepp_a_addr, ciphers_b: bitstring, n32f_pid_b: bitstring
     ));
-    if sepp_a_addr' = sepp_a_addr then
     let n32f_cid = deriveContextId(n32f_pid, n32f_pid_b) in
-    event sentN32fContextSeppA(n32f_cid);
+    event sendN32fContext(sepp_a_addr, n32f_pid, n32f_pid_b, n32f_cid);
 
     (* verify matching encryption policies *)
+    (* msg 3: Sec_Param_Ex_Req *)
     out(n32c, (sepp_b_addr, n32f_cid, encp_a, modp_a));
-    in(n32c, (sepp_a_addr': bitstring, n32f_cid': bitstring,
-        encp_b: bitstring, modp_b: bitstring
+    (* msg 4: Sec_Param_Ex_Resp *)
+    in(n32c, (
+        =sepp_a_addr, =n32f_cid, =encp_a, modp_b: bitstring
     ));
-    if sepp_a_addr' = sepp_a_addr &&
-        n32f_cid' = n32f_cid &&
-        encp_b = encp_a then
-    event agreedEncPolicySend(sepp_a_addr, n32f_cid, encp_a);
 
     (* exchange ipx information *)
+    (* msg 5: Sec_Param_Ex_Req *)
     out(n32c, (sepp_b_addr, n32f_cid, ipx_a_id, ipx_a_key));
+    (* msg 6: Sec_Param_Ex_Resp *)
     in(n32c, (
-        sepp_a_addr': bitstring, n32f_cid': bitstring, ipx_b_id: bitstring,
-        ipx_b_key: pubkey
+        =sepp_a_addr, =n32f_cid, ipx_b_id: bitstring, ipx_b_key: pubkey
     ));
+    (* bidirectional n32c channel remains open *)
 
     (* key derivation *)
-    if sepp_a_addr' = sepp_a_addr && n32f_cid' = n32f_cid then
-    let msg_cnt = 0 in
-    let master_key_a = deriveMasterKey(n32f_cid, msg_cnt) in
-    event sentMasterKey(sepp_a_addr, n32f_cid, master_key_a);
-    let par_key_a = deriveSessionKey(SEND, master_key_a) in
-    let rev_key_a = deriveSessionKey(RECV, master_key_a) in
-    let par_iv_a = deriveIV(SEND, master_key_a) in
-    let rev_iv_a = deriveIV(RECV, master_key_a) in
+    let msg_cnt_a = 0 in
+    let master_key_a = deriveMasterKey(n32f_cid) in
+    event sendMasterKey(sepp_a_addr, n32f_cid, master_key_a);
+    let par_req_key_a = deriveSessionKey(SEND, REQ, master_key_a) in
+    let rev_req_key_a = deriveSessionKey(RECV, REQ, master_key_a) in
+    let par_res_key_a = deriveSessionKey(SEND, RES, master_key_a) in
+    let rev_res_key_a = deriveSessionKey(RECV, RES, master_key_a) in
+    let par_req_iv_a = deriveIV(SEND, REQ, master_key_a) in
+    let rev_req_iv_a = deriveIV(RECV, REQ, master_key_a) in
+    let par_res_iv_a = deriveIV(SEND, RES, master_key_a) in
+    let rev_res_iv_a = deriveIV(RECV, RES, master_key_a) in
 
     (* store session parameters *)
     insert storeSeppA(
-        sepp_b_plmn, sepp_b_addr, n32f_cid, msg_cnt, par_key_a, rev_key_a,
-        par_iv_a, rev_iv_a, ciphers_a, encp_a, modp_a, modp_b, ipx_a_id,
-        ipx_a_key, ipx_b_id, ipx_b_key
+        sepp_b_plmn, sepp_b_addr, n32f_cid, msg_cnt_a, par_req_key_a,
+        par_res_key_a, rev_req_key_a, rev_res_key_a, par_req_iv_a,
+        par_res_iv_a, rev_req_iv_a, rev_res_iv_a, ciphers_a, encp_a,
+        modp_a, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
     ).
 \end{lstlisting}
 
@@ -260,46 +275,51 @@ let N32cRecvHandshakeSeppA(sepp_a_plmn: bitstring, sepp_a_addr: bitstring,
 
     (* derive N32-f context id & validate ciphersuites *)
     new n32f_pid: bitstring;
+    (* msg 1: Sec_Param_Ex_Req *)
     in(n32c, (
-        sepp_a_addr': bitstring, ciphers_b: bitstring, n32f_pid_b: bitstring
+        =sepp_a_addr, =ciphers_a, n32f_pid_b: bitstring
     ));
-    if sepp_a_addr' = sepp_a_addr && ciphers_a = ciphers_b then
+    (* msg 2: Sec_Param_Ex_Resp *)
     out(n32c, (sepp_b_addr, ciphers_a, n32f_pid));
     let n32f_cid = deriveContextId(n32f_pid_b, n32f_pid) in
-    event recvN32fContextSeppA(n32f_cid);
+    event recvN32fContext(sepp_a_addr, n32f_pid_b, n32f_pid, n32f_cid);
 
     (* verify matching encryption policies *)
-    in(n32c, (sepp_a_addr': bitstring, n32f_cid': bitstring,
-        encp_b: bitstring, modp_b: bitstring
+    (* msg 3: Sec_Param_Ex_Req *)
+    in(n32c, (
+        =sepp_a_addr, =n32f_cid, =encp_a, modp_b: bitstring
     ));
-    if sepp_a_addr' = sepp_a_addr &&
-        n32f_cid' = n32f_cid &&
-        encp_b = encp_a then
+    (* msg 4: Sec_Param_Ex_Resp *)
     out(n32c, (sepp_b_addr, n32f_cid, encp_a, modp_a));
-    event agreedEncPolicyRecv(sepp_a_addr, n32f_cid, encp_a);
 
     (* exchange ipx information *)
-    in(n32c, (sepp_a_addr': bitstring, n32f_cid': bitstring,
-        ipx_b_id: bitstring, ipx_b_key: pubkey
+    (* msg 5: Sec_Param_Ex_Req *)
+    in(n32c, (
+        =sepp_a_addr, =n32f_cid, ipx_b_id: bitstring, ipx_b_key: pubkey
     ));
-    if sepp_a_addr' = sepp_a_addr && n32f_cid' = n32f_cid then
+    (* msg 6: Sec_Param_Ex_Resp *)
     out(n32c, (sepp_b_addr, n32f_cid, ipx_a_id, ipx_a_key));
+    (* bidirectional n32c channel remains open *)
 
     (* key derivation *)
-    if sepp_a_addr' = sepp_a_addr && n32f_cid' = n32f_cid then
-    let msg_cnt = 0 in
-    let master_key_a = deriveMasterKey(n32f_cid, msg_cnt) in
+    let msg_cnt_a = 0 in
+    let master_key_a = deriveMasterKey(n32f_cid) in
     event recvMasterKey(sepp_a_addr, n32f_cid, master_key_a);
-    let par_key_a = deriveSessionKey(RECV, master_key_a) in
-    let rev_key_a = deriveSessionKey(SEND, master_key_a) in
-    let par_iv_a = deriveIV(RECV, master_key_a) in
-    let rev_iv_a = deriveIV(SEND, master_key_a) in
+    let par_req_key_a = deriveSessionKey(RECV, REQ, master_key_a) in
+    let rev_req_key_a = deriveSessionKey(SEND, REQ, master_key_a) in
+    let par_res_key_a = deriveSessionKey(RECV, RES, master_key_a) in
+    let rev_res_key_a = deriveSessionKey(SEND, RES, master_key_a) in
+    let par_req_iv_a = deriveIV(RECV, REQ, master_key_a) in
+    let rev_req_iv_a = deriveIV(SEND, REQ, master_key_a) in
+    let par_res_iv_a = deriveIV(RECV, RES, master_key_a) in
+    let rev_res_iv_a = deriveIV(SEND, RES, master_key_a) in
 
     (* store session parameters *)
     insert storeSeppA(
-        sepp_b_plmn, sepp_b_addr, n32f_cid, msg_cnt, par_key_a, rev_key_a,
-        par_iv_a, rev_iv_a, ciphers_a, encp_a, modp_a, modp_b, ipx_a_id,
-        ipx_a_key, ipx_b_id, ipx_b_key
+        sepp_b_plmn, sepp_b_addr, n32f_cid, msg_cnt_a, par_req_key_a,
+        par_res_key_a, rev_req_key_a, rev_res_key_a, par_req_iv_a,
+        par_res_iv_a, rev_req_iv_a, rev_res_iv_a, ciphers_a, encp_a,
+        modp_a, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
     ).
 \end{lstlisting}
 
@@ -315,9 +335,10 @@ How the contents of this response are determined is shown in the next listing~\r
 let N32cSendErrorSeppA(sepp_a_addr: bitstring)=
     in(err_a, (n32f_context': bitstring, msg_id: nat));
     get storeSeppA(
-        sepp_b_plmn, sepp_b_addr, n32f_context, msg_cnt, par_key_a,
-        rev_key_a, par_iv_a, rev_iv_a, ciphers_a, encp_a, modp_a,
-        modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
+        sepp_b_plmn, sepp_b_addr, n32f_context, msg_cnt_a, par_req_key_a,
+        par_res_key_a, rev_req_key_a, rev_res_key_a, par_req_iv_a,
+        par_res_iv_a, rev_req_iv_a, rev_res_iv_a, ciphers_a, encp_a,
+        modp_a, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
     ) suchthat n32f_context' = n32f_context in
 
     (* send error notification *)
@@ -325,13 +346,9 @@ let N32cSendErrorSeppA(sepp_a_addr: bitstring)=
 
     (* receive confirmation *)
     in(n32c, (
-        sepp_a_addr': bitstring, n32f_context': bitstring, msg_id': nat,
-        status_code: bitstring
+        =sepp_a_addr, =n32f_context, =msg_id, status_code: bitstring
     ));
-    if sepp_a_addr' = sepp_a_addr &&
-        n32f_context' = n32f_context &&
-        msg_id' = msg_id then
-    event errorSignalingSend(sepp_a_addr, n32f_context, msg_id, status_code).
+    event sendErrorSeppA(n32f_context, msg_id, status_code).
 \end{lstlisting}
 
 Listing~\ref{lst:n32c-error-recv} contains the receiving part of the error signaling procedure.
@@ -345,25 +362,25 @@ If above-mentioned check was successful, this status code is the constant {\sffa
 \begin{lstlisting}[caption={Definition of the receiving error signaling process},label={lst:n32c-error-recv},firstnumber=427]
 let N32cRecvErrorSeppA(sepp_a_addr: bitstring)=
     in(n32c, (
-        sepp_a_addr': bitstring, n32f_context': bitstring, msg_id: nat
+        =sepp_a_addr, n32f_context': bitstring, msg_id: nat
     ));
-    if sepp_a_addr' = sepp_a_addr then
     get storeSeppA(
-        sepp_b_plmn, sepp_b_addr, n32f_context, msg_cnt, par_key_a,
-        rev_key_a, par_iv_a, rev_iv_a, ciphers_a, encp_a, modp_a,
-        modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
+        sepp_b_plmn, sepp_b_addr, n32f_context, msg_cnt_a, par_req_key_a,
+        par_res_key_a, rev_req_key_a, rev_res_key_a, par_req_iv_a,
+        par_res_iv_a, rev_req_iv_a, rev_res_iv_a, ciphers_a, encp_a,
+        modp_a, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
     ) suchthat n32f_context' = n32f_context in
 
     (* send confirmation *)
-    if msg_id <= msg_cnt then
+    if msg_id <= msg_cnt_a then
     (
         out(n32c, (sepp_b_addr, n32f_context, msg_id, SUCC));
-        event errorSignalingRecv(sepp_a_addr, n32f_context, msg_id, SUCC)
+        event recvErrorSeppA(n32f_context, msg_id, SUCC)
     )
     else
     (
         out(n32c, (sepp_b_addr, n32f_context, msg_id, FAIL));
-        event errorSignalingRecv(sepp_a_addr, n32f_context, msg_id, FAIL)
+        event recvErrorSeppA(n32f_context, msg_id, FAIL)
     ).
 \end{lstlisting}
 
@@ -383,32 +400,53 @@ These information are combined with further supplementary information as shown i
 Lastly, the local N32-f context is updated to reflect the incremented message counter.
 
 \begin{lstlisting}[caption={Definition of the sending N32-f signaling transmission process},label={lst:n32f-send},firstnumber=595]
-let N32fSendSeppA(sepp_b_addr: bitstring)=
-    new msg: http;
+let N32fSendSeppA()=
+    in(plmn_a, (=SEND, http_message: http));
     get storeSeppA(
-        sepp_b_plmn, sepp_b_addr', n32f_context, msg_cnt_a, par_key_a,
-        rev_key_a, par_iv_a, rev_iv_a, cipher_suite, encp, modp_a,
-        modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
-    ) suchthat sepp_b_addr' = sepp_b_addr in
-    let (conf: bitstring, nonconf: bitstring) = reformatHttp(msg, encp) in
+        sepp_b_plmn, sepp_b_addr, n32f_context, msg_cnt_a, par_req_key_a,
+        par_res_key_a, rev_req_key_a, rev_res_key_a, par_req_iv_a,
+        par_res_iv_a, rev_req_iv_a, rev_res_iv_a, ciphers_a, encp_a,
+        modp_a, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
+    ) in
+
+    (* rewrite http message *)
+    let createHttp(source_addr: bitstring,
+        destination_addr: bitstring,
+        msg_type: bitstring,
+        msg_body: bitstring) = http_message in
+    event recvHttpMsgSeppA(msg_type, msg_body);
+    let conf: bitstring = getConf(msg_body, encp_a) in
+    let nonconf: bitstring = getNonconf(msg_body, encp_a) in
+
     let msg_id: nat = msg_cnt_a + 1 in
     let associated_data = combineAAD(
+        source_addr, destination_addr, msg_type,
         nonconf, msg_id, ipx_a_id, n32f_context
     ) in
+
+    (* determine session key & nonce *)
+    let key = (if msg_type = REQ then
+        par_req_key_a else
+        par_res_key_a) in
+    let nonce = (if msg_type = REQ then
+        deriveNonce(par_req_iv_a, msg_id) else
+        deriveNonce(par_res_iv_a, msg_id)) in
+
     let (payload: bitstring, jwe_tag: mac) = aeadEncrypt(
-        par_key_a,
-        par_iv_a,
+        key,
+        nonce,
         conf,
         associated_data
     ) in
+    event sendN32fMsgSeppA(n32f_context, msg_id, conf, nonconf);
     out(n32f_a, (sepp_b_addr, prins'(
-        cipher_suite, par_iv_a, associated_data, payload, jwe_tag
+        ciphers_a, nonce, associated_data, payload, jwe_tag
     )));
-    event sendN32fMsgSeppA(n32f_context, conf, nonconf);
     insert storeSeppA(
-        sepp_b_plmn, sepp_b_addr', n32f_context, msg_id, par_key_a,
-        rev_key_a, par_iv_a, rev_iv_a, cipher_suite, encp, modp_a,
-        modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
+        sepp_b_plmn, sepp_b_addr, n32f_context, msg_cnt_a, par_req_key_a,
+        par_res_key_a, rev_req_key_a, rev_res_key_a, par_req_iv_a,
+        par_res_iv_a, rev_req_iv_a, rev_res_iv_a, ciphers_a, encp_a,
+        modp_a, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
     ).
 \end{lstlisting}
 
@@ -431,13 +469,12 @@ Any subsequent actions, such as reformatting the N32-f message to an \gls{http} 
 \lstset{escapeinside=~~}
 \begin{lstlisting}[caption={Definition of the receiving N32-f signaling transmission process},label={lst:n32f-recv},firstnumber=623]
 let N32fRecvSeppA(sepp_a_addr: bitstring)=
-    in(n32f_a, (sepp_a_addr': bitstring, prins_messsage: modprins));
-    if sepp_a_addr' = sepp_a_addr then
+    in(n32f_a, (=sepp_a_addr, prins_messsage: modprins));
 
     (* decompose prins message *)
     let prins''(
         jwe_headers: bitstring,
-        rev_iv_a': bitstring,
+        nonce: bitstring,
         dataToIntegrityProtect: aad,
         dataToIntegrityProtectAndCipher: bitstring,
         jwe_tag: mac,
@@ -447,6 +484,9 @@ let N32fRecvSeppA(sepp_a_addr: bitstring)=
 
     (* decompose aad *)
     let combineAAD(
+        source_addr: bitstring,
+        destination_addr: bitstring,
+        msg_type: bitstring,
         nonconf: bitstring,
         msg_id: nat,
         auth_ipx_id: bitstring,
@@ -454,46 +494,63 @@ let N32fRecvSeppA(sepp_a_addr: bitstring)=
     ) = dataToIntegrityProtect in
 
     get storeSeppA(
-        sepp_b_plmn, sepp_b_addr, n32f_context, msg_cnt_a, par_key_a,
-        rev_key_a, par_iv_a, rev_iv_a, cipher_suite, encp, modp_a,
-        modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
+        sepp_b_plmn, sepp_b_addr, n32f_context, msg_cnt_a, par_req_key_a,
+        par_res_key_a, rev_req_key_a, rev_res_key_a, par_req_iv_a,
+        par_res_iv_a, rev_req_iv_a, rev_res_iv_a, ciphers_a, encp_a,
+        modp_a, modp_b, ipx_a_id, ipx_a_key, ipx_b_id, ipx_b_key
     ) suchthat n32f_context' = n32f_context in
 
+    (* determine session key & nonce *)
+    let key = (if msg_type = REQ then
+        rev_req_key_a else
+        rev_res_key_a) in
+    let nonce = (if msg_type = REQ then
+        deriveNonce(rev_req_iv_a, msg_id) else
+        deriveNonce(rev_res_iv_a, msg_id)) in
+
     let conf = aeadDecrypt(
-        rev_key_a,
-        rev_iv_a,
+        key,
+        nonce,
         (dataToIntegrityProtectAndCipher, jwe_tag),
         dataToIntegrityProtect
     ) in
+    event recvN32fMsgSeppA(n32f_context', msg_id, conf, nonconf);
 
     (* verify ipx b json patch *)
     let jsonPatch(
-        ipx_b_ops: bitstring,
-        ipx_b_id': bitstring,
-        jwe_tag_b: mac,
+        =modp_b,
+        =auth_ipx_id,
+        =jwe_tag,
         ipx_b_jws: bitstring
     ) = ipx_b_mods in
-    if checkPrinsSign(ipx_b_jws, ipx_b_key) &&
-        auth_ipx_id = ipx_b_id' &&
-        ipx_b_ops = modp_b &&
-        jwe_tag_b = jwe_tag
-    then
+    if not(validPrinsSign(ipx_b_jws, ipx_b_key)) then
     (
-        let valid_patch_b: bool = true in
-        event recvValidIpxPatch(
-            sepp_a_addr, auth_ipx_id, n32f_context, jwe_tag, ipx_b_mods
-        )
+        event recvInvalIpxPatchSeppA(
+            auth_ipx_id, n32f_context, msg_id, jwe_tag, ipx_b_mods
+        );
+        out(err_a, (n32f_context, msg_id))
     )
     else
-        let valid_patch_b: bool = false in
-        out(err_a, (n32f_context, msg_id));
+        event recvValidIpxPatchSeppA(
+            auth_ipx_id, n32f_context, msg_id, jwe_tag, ipx_b_mods
+        );
     ~\Suppressnumber~
 
     (* validation of second patch omitted *)
     ~\Reactivatenumber{703}~
+
     (* all patches valid *)
-    if valid_patch_a && valid_patch_b then
-    event recvN32fMsg(sepp_a_addr, n32f_context, conf, nonconf).
+    if validPrinsModSign(ipx_a_jws, ipx_a_key) &&
+        validPrinsSign(ipx_b_jws, ipx_b_key) &&
+        policyValidation(nonconf, encp_a) then
+    let msg_body = applyPatches((conf, nonconf), modp_b, modp_a) in
+    let http_message = createHttp(
+        source_addr,
+        destination_addr,
+        msg_type,
+        msg_body) in
+    event sendHttpMsgSeppA(msg_type, msg_body);
+    out(plmn_a, (RECV, http_message)).
 \end{lstlisting}
 
 \subsection{IPX Processes}
@@ -513,7 +570,7 @@ This is done to simplify the model by not creating a separate data-type for a mo
 Finally, the modified message is sent towards the next \gls{ipx} provider.
 
 \begin{lstlisting}[caption={Definition of the sending IPX process},label={lst:ipx-send},firstnumber=825]
-let N32fSendIpxA(id: bitstring, privkey: privkey, ops: bitstring)=
+let N32fSendIpxA(id: bitstring, privkey_ipx_a: privkey, ops: bitstring)=
     in(n32f_a, (sepp_b_addr: bitstring, prins_message: prins));
 
     (* decompose prins message *)
@@ -527,14 +584,17 @@ let N32fSendIpxA(id: bitstring, privkey: privkey, ops: bitstring)=
 
     (* compose ipx patch *)
     let modifications = jsonPatch(ops, id, jwe_tag,
-        signPrins(prins_message, ops, id, jwe_tag, privkey)
+        signPrins(prins_message, ops, id, jwe_tag, privkey_ipx_a)
     ) in
 
     (* decompose aad *)
     let combineAAD(
+        source_addr: bitstring,
+        destination_addr: bitstring,
+        msg_type: bitstring,
         nonconf: bitstring,
         msg_id: nat,
-        auth_ipx_id : bitstring,
+        =id,
         n32f_context: bitstring
     ) = dataToIntegrityProtect in
 
@@ -548,8 +608,8 @@ let N32fSendIpxA(id: bitstring, privkey: privkey, ops: bitstring)=
         modifications,
         EMPTY
     ) in
-    out(n32f_i, (sepp_b_addr, modified_message));
-    event ipxSendA(n32f_context, jwe_tag, modifications).
+    event ipxSendA(n32f_context, msg_id, jwe_tag, modifications);
+    out(n32f_i, (sepp_b_addr, modified_message)).
 \end{lstlisting}
 
 Listing~\ref{lst:ipx-recv} shows the process of \gls{ipx} A receiving a N32-f message from the \gls{ipx} network that is to be forwarded to its directly connected \gls{sepp}.
@@ -557,7 +617,7 @@ The actions performed are largely the same as in the sending process above, the 
 Further, the empty \gls{json} patch inserted by the previous \gls{ipx} provider is replaced before forwarding the updated message to the receiving \gls{sepp}.
 
 \begin{lstlisting}[caption={Definition of the receiving IPX process},label={lst:ipx-recv},firstnumber=863]
-let N32fRecvIpxA(id: bitstring, privkey: privkey, ops: bitstring)=
+let N32fRecvIpxA(id: bitstring, privkey_ipx_a: privkey, ops: bitstring)=
     in(n32f_i, (sepp_a_addr: bitstring, prins_message: modprins));
 
     (* decompose prins message *)
@@ -568,16 +628,19 @@ let N32fRecvIpxA(id: bitstring, privkey: privkey, ops: bitstring)=
         dataToIntegrityProtectAndCipher: bitstring,
         jwe_tag: mac,
         ipx_b_mods: ipxmod,
-        EMPTY: ipxmod
+        =EMPTY
     ) = prins_message in
 
     (* compose ipx patch *)
     let modifications = jsonPatch(ops, id, jwe_tag,
-        signPrinsMod(prins_message, ops, id, jwe_tag, privkey)
+        signPrinsMod(prins_message, ops, id, jwe_tag, privkey_ipx_a)
     ) in
 
     (* decompose aad *)
     let combineAAD(
+        source_addr: bitstring,
+        destination_addr: bitstring,
+        msg_type: bitstring,
         nonconf: bitstring,
         msg_id: nat,
         auth_ipx_id : bitstring,
@@ -594,8 +657,8 @@ let N32fRecvIpxA(id: bitstring, privkey: privkey, ops: bitstring)=
         ipx_b_mods,
         modifications
     ) in
-    out(n32f_a, (sepp_a_addr, modified_message));
-    event ipxRecvA(n32f_context, jwe_tag, modifications).
+    event ipxRecvA(n32f_context, msg_id, jwe_tag, modifications);
+    out(n32f_a, (sepp_a_addr, modified_message)).
 \end{lstlisting}
 
 \subsection{Main process}
