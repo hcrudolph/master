@@ -604,65 +604,100 @@ Listing~\ref{lst:main-proc} shows how the main process of the \textsc{ProVerif} 
 This is where the previously described processes are combined in a way that models the overall protocol flow.
 For brevity, the definition of variables, such as idientifiers for \gls{sepp} and \gls{ipx} nodes, cryptographic keys, and protection policies, have been omitted.
 
-The execution is structured into two separate phases using {\sffamily sync}.
+The execution is structured into six separate phases using the keyword {\sffamily sync}.
 As noted in section~\ref{sec:formal}, \textsc{ProVerif} synchronization points ensure that processes are executed in a particular order -- according to the integer specified behind the {\sffamily sync} keyword.
 Beyond that, all individual processes are combined using the pipe operator ,,~{\sffamily |}~'', denoting parallel execution.
-Hence, processes in one synchronization group will be run together and have to terminate successfully before the process continues with the next synchronization group.
+Hence, processes in one synchronization group are run together and have to terminate successfully before the process continues with the next synchronization group.
 Processes are not forcefully terminated preemptively.
-Each process is denoted with a preceeding exclamation mark operator ,,~{\sffamily !}~''.
-This tells \textsc{ProVerif} that multiple instances of a process shall be spawned.
-By doing so, the tool is able to check for potential security flaws due to confusion of N32 sessions by any of the legitimate participants.
 
-By default, processes that are not specifically marked run in synchronization group~0.
-In the created \gls{prins} model this group comprises all N32-c processes of the two communicating \glspl{sepp}.
-Both attempt to initiate multiple N32-c sessions in parallel and are also listening to multiple incoming requests.
+Processes that are not specifically marked with {\sffamily sync} run in the default synchronization group~0.
+In the created \gls{prins} model this group comprises all N32-c processes necessary to establish a connection between the two \glspl{sepp}.
 Information passed to these processes include \gls{plmn} IDs, \gls{sepp} addresses as well as the session parameters ciphersuites, protection policies and \gls{ipx} provider information.
 All of these information are expected to be preconfigured and remain unchanged in communication with one peer \gls{sepp} over one particular \gls{ipx} provider.
+In contrast to the rest of the model, the subprocesses comprising the initial N32-c handshake is executed only once by each communicating party.
+This is to ensure each possible role of a \gls{sepp} --i.e. initiating and responding to a N32-c session establishment-- is covered, while simultaneously reducing complexity for the rest of the verification by ensuring there is at most two active sessions stored in each of the \glspl{sepp}.
 
-Synchronization group~1 contains the complete set of processes relevant during \mbox{N32-f} communication.
-That is, processes of sending and receiving \glspl{sepp}, error signalling processes in case a flaw is detected by one of the \glspl{sepp} as well as both directly connected \gls{ipx} providers.
-Similar to the preceeding synchronization group, multiple process instances are executed in parallel to test for accidental session mix-ups.
+Synchronization group~1 (lines TODO) contains the set of processes relevant for creating a new \gls{http} Request in each of the \glspl{plmn} any sending it via N32-f.
+That is, processes of sending \glspl{nf} and sending \glspl{sepp} on both sides of the inter-operator communication.
+The \gls{nf} processes {\sffamily NfARequest} and {\sffamily NfBRequest} each consume the source and destination address of the message to be created.
+While in real world deloyments, operators would likely choose to not reveal the \gls{ip} addresses of their Network Functions and instead provide their partner networks with \glspl{fqdn}, this does not make a difference for the purposes of the \gls{prins} verification.
+The \gls{sepp} processes {\sffamily N32fSendSeppA} and {\sffamily N32fSendSeppB} do not consume any parameters, instead retrieving all necessary information from the previously established N32-f process.
+Starting from this synchronization group, each process is denoted with a preceeding exclamation mark operator ,,~{\sffamily !}~''.
+This instructs \textsc{ProVerif} to spawn multiple instances of a given process.
+By doing so, it is ensured more than one \gls{prins} message can be transferred between the two networks.
+Furthermore, the tool is able to check for potential security flaws due to confusion of N32 sessions by any of the legitimate participants.
 
-The sending N32-f processes {\sffamily N32fSendSeppA} and {\sffamily N32fSendSeppB} each consume the address of the peer a message should be sent to.
-The receiving process on the other hand, such as {\sffamily N32fRecvSeppA}, expects to receive it's own \gls{sepp} address in order to validate the target address of incoming messages against it.
-The same applies to both of the error signaling processes of each \gls{sepp}.
-Since the initiating end (e.g. {\sffamily N32cSendErrorSeppA}) as well as the responding end (e.g. {\sffamily N32cRecvErrorSeppA}) receive messages on N32-c, they require their own \gls{sepp} address for validating them.
+Synchronization group~2 (lines TODO) comprises all \gls{ipx} processes to transport the previously created N32-f messages.
+This includes sending and receiving processes by both well-behaving \gls{ipx} providers A and B as well as \gls{ipx} providers R1 and R2 intentionally violating the protocol.
+Chapter \ref{chap:verification} further explains how these processes are used to explicitly check some security properties of \gls{prins}.
+Each of these processes consumes an \gls{ipx} provider ID and a private key, required to create and sign \gls{json} patches for message modifications as well as the modifications itself.
+The model assumes that information about the modifications to be performed has been exchanged between the \gls{ipx} provider and its directly connected \gls{sepp} out of band before session establishment and thus, is provided directly to the \gls{ipx} processes.
 
-As far as the \gls{ipx} providers are concerned, the information passed to these processes are the \gls{ipx} identifiers, the private key used to sign N32-f message modifications, and the list of legitimate modifications, i.e. the modification policy, defined by the \gls{mno} the \gls{ipx} provider has a direct relation with.
-The model assumes that this information has been exchanged between the parties previously and thus, is provided directly to the \gls{ipx} processes.
-Lines 1209-1212 show that the model also includes two rouge \gls{ipx} providers, {\sffamily R1} and {\sffamily R2}, that are intentionally violating the protocol.
-Chapter \ref{chap:verification} further explains how these processes are used to verify security properties of \gls{prins}.
+Synchronization group~3 (lines TODO) captures the receiving processes of \glspl{sepp} and \glspl{nf}, sending processes of both \glspl{sepp} in order to transmit responses to the incoming requests, as well as N32-c error handling processes.
+The receiving \gls{sepp} processes {\sffamily N32fRecvSeppA} and {\sffamily N32fRecvSeppB} consume their own address in order to identify incoming N32-f messages directed at them from other messages sent by the same \gls{sepp}.
+The same applies to the error handling processes {\sffamily N32cSendErrorSeppA} and {\sffamily N32cSendErrorSeppB} as well as {\sffamily N32cRecvErrorSeppA} and {\sffamily N32cRecvErrorSeppB}.
+The \gls{nf} processes {\sffamily NfAResponse} and {\sffamily NfBResponse}, just as the request processes, consume source and destination addresses of the message to be created in response.
+
+Synchronization group~4 and 5 mirror groups 2 and 3 in that the response messages created during the previous phase are transmitted via the \gls{ipx} providers and received by the peer elements.
+The only exception in synchronization group~5 is that no response is being sent following the receipt of a response message. Hence, sending \gls{sepp} processes are omitted.
 
 \begin{lstlisting}[caption={Definition of the main process},label={lst:main-proc},firstnumber=1183]
     (* process execution *)
     (
-        (!N32cSendHandshakeSeppA(
+        (N32cSendHandshakeSeppA(
             sepp_a_plmn, sepp_a_addr, sepp_b_plmn, sepp_b_addr,
             ciphersuites, encp, modp_a, ipx_a_id, ipx_a_pubkey)) |
-        (!N32cRecvHandshakeSeppA(
+        (N32cRecvHandshakeSeppB(
+            sepp_b_plmn, sepp_b_addr, sepp_a_plmn, sepp_a_addr,
+            ciphersuites, encp, modp_b, ipx_b_id, ipx_b_pubkey)) |
+        (N32cSendHandshakeSeppB(
+            sepp_b_plmn, sepp_b_addr, sepp_a_plmn, sepp_a_addr,
+            ciphersuites, encp, modp_b, ipx_b_id, ipx_b_pubkey)) |
+        (N32cRecvHandshakeSeppA(
             sepp_a_plmn, sepp_a_addr, sepp_b_plmn, sepp_b_addr,
             ciphersuites, encp, modp_a, ipx_a_id, ipx_a_pubkey)) |
-        (!N32cSendHandshakeSeppB(
-            sepp_b_plmn, sepp_b_addr, sepp_a_plmn, sepp_a_addr,
-            ciphersuites, encp, modp_b, ipx_b_id, ipx_b_pubkey)) |
-        (!N32cRecvHandshakeSeppB(
-            sepp_b_plmn, sepp_b_addr, sepp_a_plmn, sepp_a_addr,
-            ciphersuites, encp, modp_b, ipx_b_id, ipx_b_pubkey)) |
-        (sync 1; !N32fSendSeppA(sepp_b_addr)) |
-        (sync 1; !N32fSendSeppB(sepp_a_addr)) |
-        (sync 1; !N32fRecvSeppA(sepp_a_addr)) |
-        (sync 1; !N32fRecvSeppB(sepp_b_addr)) |
-        (sync 1; !N32cSendErrorSeppA(sepp_a_addr)) |
-        (sync 1; !N32cRecvErrorSeppA(sepp_a_addr)) |
-        (sync 1; !N32cSendErrorSeppB(sepp_b_addr)) |
-        (sync 1; !N32cRecvErrorSeppB(sepp_b_addr)) |
-        (sync 1; !N32fRecvIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
-        (sync 1; !N32fSendIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
-        (sync 1; !N32fRecvIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
-        (sync 1; !N32fSendIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
-        (sync 1; !N32fRecvIpxR1(ipx_a_id, ipx_a_privkey, modp_a)) |
-        (sync 1; !N32fSendIpxR1(ipx_a_id, ipx_a_privkey, modp_r1)) |
-        (sync 1; !N32fRecvIpxR2(ipx_r2_id, ipx_r2_privkey, modp_a)) |
-        (sync 1; !N32fSendIpxR2(ipx_r2_id, ipx_r2_privkey, modp_a))
+
+        (sync 1; !NfARequest(nf_a_addr, nf_b_addr)) |
+        (sync 1; !NfBRequest(nf_b_addr, nf_a_addr)) |
+        (sync 1; !N32fSendSeppA()) |
+        (sync 1; !N32fSendSeppB()) |
+
+        (sync 2; !N32fRecvIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
+        (sync 2; !N32fSendIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
+        (sync 2; !N32fRecvIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
+        (sync 2; !N32fSendIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
+        (sync 2; !N32fRecvIpxR1(ipx_a_id, ipx_a_privkey, modp_a)) |
+        (sync 2; !N32fSendIpxR1(ipx_a_id, ipx_a_privkey, modp_r1)) |
+        (sync 2; !N32fRecvIpxR2(ipx_r2_id, ipx_r2_privkey, modp_a)) |
+        (sync 2; !N32fSendIpxR2(ipx_r2_id, ipx_r2_privkey, modp_a)) |
+
+        (sync 3; !N32fRecvSeppA(sepp_a_addr)) |
+        (sync 3; !N32fRecvSeppB(sepp_b_addr)) |
+        (sync 3; !NfAResponse(nf_a_addr, nf_b_addr)) |
+        (sync 3; !NfBResponse(nf_b_addr, nf_a_addr)) |
+        (sync 3; !N32cSendErrorSeppA(sepp_a_addr)) |
+        (sync 3; !N32cRecvErrorSeppA(sepp_a_addr)) |
+        (sync 3; !N32cSendErrorSeppB(sepp_b_addr)) |
+        (sync 3; !N32cRecvErrorSeppB(sepp_b_addr)) |
+        (sync 3; !N32fSendSeppA()) |
+        (sync 3; !N32fSendSeppB()) |
+
+        (sync 4; !N32fRecvIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
+        (sync 4; !N32fSendIpxA(ipx_a_id, ipx_a_privkey, modp_a)) |
+        (sync 4; !N32fRecvIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
+        (sync 4; !N32fSendIpxB(ipx_b_id, ipx_b_privkey, modp_b)) |
+        (sync 4; !N32fRecvIpxR1(ipx_a_id, ipx_a_privkey, modp_a)) |
+        (sync 4; !N32fSendIpxR1(ipx_a_id, ipx_a_privkey, modp_r1)) |
+        (sync 4; !N32fRecvIpxR2(ipx_r2_id, ipx_r2_privkey, modp_a)) |
+        (sync 4; !N32fSendIpxR2(ipx_r2_id, ipx_r2_privkey, modp_a)) |
+
+        (sync 5; !N32fRecvSeppA(sepp_a_addr)) |
+        (sync 5; !N32fRecvSeppB(sepp_b_addr)) |
+        (sync 5; !NfAResponse(nf_a_addr, nf_b_addr)) |
+        (sync 5; !NfBResponse(nf_b_addr, nf_a_addr)) |
+        (sync 5; !N32cSendErrorSeppA(sepp_a_addr)) |
+        (sync 5; !N32cRecvErrorSeppA(sepp_a_addr)) |
+        (sync 5; !N32cSendErrorSeppB(sepp_b_addr)) |
+        (sync 5; !N32cRecvErrorSeppB(sepp_b_addr))
     )
 \end{lstlisting}
