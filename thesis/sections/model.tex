@@ -386,6 +386,44 @@ let N32cRecvErrorSeppA(sepp_a_addr: bitstring)=
 
 \subsection{N32-f Processes}
 
+Prior to any inter-operator signaling, an \gls{nf} has to initiate an \gls{http} request towards a recipient in a foreign network.
+Listing \ref{lst:nf-request} shows the process of an \gls{nf} in \gls{plmn} A creating a fresh message, compiling it into an \gls{http} request including source address, destination address, and message type ({\sffamily REQ}) before sending it to its local \gls{sepp} over the {\sffamily plmn\_a} channel.
+The actual information sent to the \gls{sepp} is a tuple of the message direction ({\sffamily SEND}) and the \gls{http} message itself.
+While the former is not necessary in real-world implementations, it prevents messages being erroneously consumed from the \gls{nf} response process displayed in the next listing.
+
+\begin{lstlisting}[caption={Definition of the requesting NF process},label={lst:nf-request},firstnumber=595]
+let NfARequest(nf_a_addr: bitstring, nf_b_addr: bitstring)=
+    new msg_body: bitstring;
+    let http_message =
+        createHttp(nf_a_addr, nf_b_addr, REQ, msg_body) in
+    event sendHttpMsgNfA(REQ, msg_body);
+    out(plmn_a, (SEND, http_message)).
+\end{lstlisting}
+
+The \gls{nf} response process shown in listing \ref{lst:nf-respond} expects an incoming \gls{http} message.
+The equality sign before the constant {\sffamily RECV} is a shorthand for the validation of the message direction parameter.
+In this case, only tuples consisting of the constant {\sffamily RECV} and a variable of type {\sffamily http} will be consumed by the process.
+
+Subsequently, the \gls{http} message is deconstructed into its original components.
+The action of the \gls{nf} varies depending on the contained message type.
+If the message received is a request, a response is being sent that contains the same message body.
+Otherwise, only an event is triggered indicating the receipt of an \gls{http} response.
+
+\begin{lstlisting}[caption={Definition of the responding NF process},label={lst:nf-respond},firstnumber=595]
+let NfAResponse(nf_a_addr: bitstring, nf_b_addr: bitstring)=
+    in(plmn_a, (=RECV, msg: http));
+    let createHttp(nf_b_addr: bitstring,
+        =nf_a_addr,
+        msg_type: bitstring,
+        msg_body: bitstring) = msg in
+    if msg_type = REQ then
+    (
+        event sendHttpMsgNfA(RES, msg_body);
+        out(plmn_a, (SEND, createHttp(nf_a_addr, nf_b_addr, RES,msg_body)))
+    )
+    else event recvHttpMsgNfA(RES, msg_body).
+\end{lstlisting}
+
 Listing~\ref{lst:n32f-send} shows the sending N32-f process, i.e. the process in which signaling data is actually transferred.
 For the purpose of formal verification, the exact contents of said signaling messages do are of no concern.
 Hence, the sending \gls{sepp} initial creates a fresh messages of type {\sffamily http}.
