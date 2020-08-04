@@ -864,45 +864,55 @@ let N32fRecvSeppA(sepp_a_addr: bitstring)=
 
     (* verify ipx b json patch *)
     let jsonPatch(
-        =modp_b,
-        =auth_ipx_id,
-        =jwe_tag,
+        modp_b': bitstring,
+        auth_ipx_id': bitstring,
+        jwe_tag': mac,
         ipx_b_jws: bitstring
     ) = ipx_b_mods in
-    if not(validPrinsSign(ipx_b_jws, ipx_b_key)) then
+    if not(validPrinsSign(ipx_b_jws, ipx_b_key)) ||
+        modp_b' <> modp_b ||
+        auth_ipx_id' <> auth_ipx_id ||
+        jwe_tag' <> jwe_tag then
     (
+        let valid_patch_b = false in
         event recvInvalIpxPatchSeppA(
             auth_ipx_id, n32f_context, msg_id, jwe_tag, ipx_b_mods
         );
         out(err_a, (n32f_context, msg_id))
     )
     else
+        let valid_patch_b = true in
         event recvValidIpxPatchSeppA(
             auth_ipx_id, n32f_context, msg_id, jwe_tag, ipx_b_mods
         );
 
     (* verify ipx a json patch *)
     let jsonPatch(
-        =modp_a,
-        =ipx_a_id,
-        =jwe_tag,
+        modp_a': bitstring,
+        ipx_a_id': bitstring,
+        jwe_tag': mac,
         ipx_a_jws: bitstring
     ) = ipx_a_mods in
-    if not(validPrinsModSign(ipx_a_jws, ipx_a_key)) then
+    if not(validPrinsModSign(ipx_a_jws, ipx_a_key)) ||
+        modp_a' <> modp_a ||
+        ipx_a_id' <> ipx_a_id ||
+        jwe_tag' <> jwe_tag then
     (
+        let valid_patch_a = false in
         event recvInvalIpxPatchSeppA(
             ipx_a_id, n32f_context, msg_id, jwe_tag, ipx_a_mods
         );
         out(err_a, (n32f_context, msg_id))
     )
     else
+        let valid_patch_a = true in
         event recvValidIpxPatchSeppA(
             ipx_a_id, n32f_context, msg_id, jwe_tag, ipx_a_mods
         );
 
     (* all patches valid *)
-    if validPrinsModSign(ipx_a_jws, ipx_a_key) &&
-        validPrinsSign(ipx_b_jws, ipx_b_key) &&
+    if valid_patch_b &&
+        valid_patch_a &&
         policyValidation(nonconf, encp_a) then
     let msg_body = applyPatches((conf, nonconf), modp_b, modp_a) in
     let http_message = createHttp(
@@ -1015,45 +1025,55 @@ let N32fRecvSeppB(sepp_b_addr: bitstring)=
 
     (* verify ipx a json patch *)
     let jsonPatch(
-        =modp_a,
-        =auth_ipx_id,
-        =jwe_tag,
+        modp_a': bitstring,
+        auth_ipx_id': bitstring,
+        jwe_tag': mac,
         ipx_a_jws: bitstring
     ) = ipx_a_mods in
-    if not(validPrinsSign(ipx_a_jws, ipx_a_key)) then
+    if not(validPrinsSign(ipx_a_jws, ipx_a_key)) ||
+        modp_a' <> modp_a ||
+        auth_ipx_id' <> auth_ipx_id ||
+        jwe_tag' <> jwe_tag then
     (
+        let valid_patch_a = false in
         event recvInvalIpxPatchSeppB(
             auth_ipx_id, n32f_context, msg_id, jwe_tag, ipx_a_mods
         );
         out(err_b, (n32f_context, msg_id))
     )
     else
+        let valid_patch_a = true in
         event recvValidIpxPatchSeppB(
             auth_ipx_id, n32f_context, msg_id, jwe_tag, ipx_a_mods
         );
 
     (* verify ipx b json patch *)
     let jsonPatch(
-        =modp_b,
-        =ipx_b_id,
-        =jwe_tag,
+        modp_b': bitstring,
+        ipx_b_id': bitstring,
+        jwe_tag': mac,
         ipx_b_jws: bitstring
     ) = ipx_b_mods in
-    if not(validPrinsModSign(ipx_b_jws, ipx_b_key)) then
+    if not(validPrinsModSign(ipx_b_jws, ipx_b_key)) ||
+        modp_b' <> modp_b ||
+        ipx_b_id' <> ipx_b_id ||
+        jwe_tag' <> jwe_tag then
     (
+        let valid_patch_b = false in
         event recvInvalIpxPatchSeppB(
             ipx_b_id, n32f_context, msg_id, jwe_tag, ipx_b_mods
         );
         out(err_b, (n32f_context, msg_id))
     )
     else
+        let valid_patch_b = true in
         event recvValidIpxPatchSeppB(
             ipx_b_id, n32f_context, msg_id, jwe_tag, ipx_b_mods
         );
 
     (* all patches valid *)
-    if validPrinsSign(ipx_a_jws, ipx_a_key) &&
-        validPrinsModSign(ipx_b_jws, ipx_b_key) &&
+    if valid_patch_a &&
+        valid_patch_b &&
         policyValidation(nonconf, encp_b) then
     let msg_body = applyPatches((conf, nonconf), modp_a, modp_b) in
     let http_message = createHttp(
