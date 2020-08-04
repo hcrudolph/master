@@ -20,22 +20,22 @@ type ipxmod.                        (* ipx json patch *)
 
 (* channels *)
 
-free plmn_a: channel [private].     (* PLMN A internal channel *)
-free plmn_b: channel [private].     (* PLMN B internal channel *)
 free n32f_a: channel.               (* Channel between SEPP A and IPX A *)
 free n32f_i: channel.               (* Channel between IPX Providers *)
 free n32f_b: channel.               (* Channel between IPX B and SEPP B *)
 free n32c: channel [private].       (* Channel between SEPP A and SEPP B *)
+free plmn_a: channel [private].     (* PLMN A internal channel *)
+free plmn_b: channel [private].     (* PLMN B internal channel *)
 free err_a: channel [private].      (* Internal error signalling Sepp A *)
 free err_b: channel [private].      (* Internal error signalling Sepp B *)
 
 (* global constants *)
 
 const EMPTY: ipxmod.                (* the empty ipx patch *)
-const SUCC: bitstring.              (* success flag *)
-const FAIL: bitstring.              (* failure flag *)
 const SEND: bitstring.              (* sending flag *)
 const RECV: bitstring.              (* receiving flag *)
+const SUCC: bitstring.              (* success flag *)
+const FAIL: bitstring.              (* failure flag *)
 const REQ: bitstring.               (* HTTP Request *)
 const RES: bitstring.               (* HTTP Response *)
 
@@ -122,11 +122,11 @@ fun prins''(bitstring,              (* JWE Headers *)
 (* custom functions / destructors *)
 
 fun deriveContextId(bitstring, bitstring): bitstring.
-fun deriveMasterKey(bitstring): key [private].
 fun deriveSessionKey(bitstring, bitstring, key): key.
 fun deriveIV(bitstring, bitstring, key): bitstring.
 fun deriveNonce(bitstring, nat): bitstring.
 fun applyPatches(bitstring, bitstring, bitstring): bitstring.
+fun deriveMasterKey(bitstring): key [private].
 
 (* mac *)
 fun macf(bitstring, key): mac.
