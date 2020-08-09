@@ -1,9 +1,20 @@
-- debugging difficult due to
-    - missing information about rule execution
-    - unclear what rules may be blocking
-    - erroneous results when rules are not executed
-    - little indication about termination / non termination
-- questionable results of the verification, even when terminating
-- strong secrecy not provable, due to natural numbers / predicates
-- trace visualization can be bottleneck
-- breaking changes in minor versions
+Firstly, one of the most challenging aspects of the verification with \textsc{ProVerif} is the lack of built-in debug capabilities.
+The reason why the debug queries in section \ref{ssec:debug} are introduced to the verification is that without them, there is no indication when specified events cannot be reached individually.
+Instead, complex reachability queries or correspondence assertions that incorporate these events are likely to provide erroneous results.
+Without being aware of this behavior and explicitly testing the reachability of every event itself, may at times lead to a false confidence into the security of the protocol.
+Thankfully, the \textsc{ProVerif} user manual does mention using simple reachability queries to prevent exactly that (c.f. \cite{blanchet2020proverif}, p. 52).
+
+Secondly, ensuring termination of the model checker is all but trivial and the tools little insights into situations that may lead to non-termination.
+The issue commonly encountered during the verification of \gls{prins}, such as in the case of the query in listing \ref{lst:query-sec-6}, is the program inserting an increasing number of rules during the resolution process, i.e. when trying to prove a given fact is derivable from available clauses, but never succeeding to do so.
+As termination analysis is generally an undecidable problem, \textsc{ProVerif} can offer little support to prevent these situations from happening.
+The configuration flag {\sffamily verboseTerm} which is supposed to enable a more detailed output with termination warnings does not yield any helpful results for the problematic queries.
+Different built-in resolution strategies do not solve the problem either.
+
+Thirdly, even if \textsc{ProVerif} itself successfully terminates and finds and attack, there is no guarantee the related trace can be exported in form of a visual graph.
+By default, the program creates files of type \textit{dot} that can subsequently be consumed by the software Graphviz to draw a directed graph.
+With large protocol models such as the one created for \gls{prins}, the latter is quickly overwhelmed by the number of nodes representing key protocol events and edges representing their relation as well as message flows.
+Ommitting all replications in the main process of the model, denoted by an exclamation mark, does not result in a noticable improvement.
+Even after multiple hours of execution, Graphviz is unable to completely render an attack trace from any of the disproven queries described in the previous sections.
+The lack of a visual representation of the traces severely complicates validation of the discovered attacks.
+
+
