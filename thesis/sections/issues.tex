@@ -1,4 +1,5 @@
 \subsection{Deliberate Abstractions}
+\label{ssec:abstractions}
 
 The \textsc{ProVerif} model of \gls{prins} described in the previous section necessarily abstracts away a number of details that have to be considered by real-world implementations.
 In the following, these intentional abstractions and their implications on the verification of security properties are discussed.
@@ -17,7 +18,7 @@ The model's N32-c channel being inherently secure by assumption, it is not possi
 This issue is being addressed, by the private constructor {\sffamily deriveMasterKey}, consuming the N32-f context ID.
 This input parameter ensures that the resulting master key is unique to a specific N32-f session.
 The attribute {\sffamily private} guarantees that this function is not be accessible to adversaries, so that even with possession of the N32-f context ID, it is not possible to derive the same cryptographic key.
-This kind of substitution for the \gls{tls} export function is incorrect in two ways. Firstly, it relies on the secrecy of the derivation function iteslf, rather than the secrecy of the input parameters.
+This kind of substitution for the \gls{tls} export function is flawed in two ways. Firstly, it relies on the secrecy of the derivation function iteslf, rather than the secrecy of the input parameter.
 Secondly, the attribute {\sffamily private} still allows the function to be used by all legitimate protocol participants.
 In the created model, this also includes the \gls{ipx} processes.
 However, these points do not impact verification of the protocol, as private \textsc{ProVerif} functions cannot be leaked and the honest \gls{ipx} processes do not make use of the function either.
@@ -47,11 +48,12 @@ To substitute this check at the receiving end, the locally stored and the receiv
 This check ensures that both \glspl{sepp} shall apply consistent ciphering of information elements on N32-f.
 
 \begin{lstlisting}[caption={N32-f message rewriting},label={lst:n32f-rewriting},firstnumber=105]
-fun reformatN32f(bitstring, bitstring, bitstring): http.
-reduc forall c: bitstring, n: bitstring, p: bitstring;
-    reformatHttp(reformatN32f(c, n, p), p) = (c, n).
-reduc forall c: bitstring, n: bitstring, p: bitstring;
-    reformatHttp'(reformatN32f(c, n, p)) = (c, n).
+(* data-type encryption policy application *)
+fun policyApplication(bitstring, bitstring): n32.
+reduc forall m: bitstring, p: bitstring;
+    policyValidation(policyApplication(m, p), p)) = true
+otherwise forall m: bitstring, p: bitstring, p': bitstring;
+    policyValidation(policyApplication(m, p), p')) = false
 \end{lstlisting}
 
 The bitstrings modelling the modification policies represent both the policies defined by either of the \gls{sepp} operators as well as the actual modifications written by intermediaty \gls{ipx} providers.

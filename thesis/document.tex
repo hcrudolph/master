@@ -113,13 +113,22 @@ Functions, constructors, destructors, and events are written in camel case (e.g.
 \chapter{Verifying the PRINS Protocol}
 \label{chap:verification}
 
-\section{Critical Analysis}
-\label{sec:analysis}
-\import{sections/}{analysis.tex}
+The following part details the verification performed on the \gls{prins} model described in the preceeding chapter.
+Section \ref{sec:verification} describes the formalization of security properties outlined in \ref{ssec:prins-sequence}.
+Section \ref{sec:gaps} summarizes gaps and inconsistencies noticable during modelling and verification.
+Section \ref{sec:implications} elaborates on what the \textsc{ProVerif} execution results and specification gaps mean for the practical security of the  \gls{prins} protocol.
 
-\section{Security Implications}
-\label{sec:implications}
-\import{sections/}{recommendations.tex}
+\section{ProVerif Queries}
+\label{sec:verification}
+\import{sections/}{verification.tex}
+
+\section{ProVerif Verification Experience}
+\label{sec:lessons}
+\import{sections/}{lessons.tex}
+
+\section{Specification Gaps}
+\label{sec:gaps}
+\import{sections/}{gaps.tex}
 
 \clearpage
 
