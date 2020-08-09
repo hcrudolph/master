@@ -318,16 +318,13 @@ Therefore, a distinction is made between security properties which are explicitl
     \item Similar to step 4, the second \gls{ipx} provider determines the changes necssary and adds appropriate \gls{json} patches to the existing \textit{modifiedDataToIntegrityProtect} object.
     \item The second \gls{ipx} provider signs the complete \textit{modifiedDataToIntegrityProtect} object and appends the resulting signature to the message.
     \item The modified message is embedded into the body of a new \gls{http} request and sent to the receiving \gls{sepp}.
-    \item After receving an N32-f message, a \gls{sepp} first verifies the authenticity of the original message contents, i.e. the \textit{dataToIntegrityProtectAndCipher} and \textit{dataToIntegrityProtect} object, using its peer \gls{sepp}'s raw public key or certificate.
-    \asgoal{
-        Security property 11: The source of N32-f messages shall be authenticated by the receiving \gls{sepp}.
-    }
-    \item Afterwards, the \gls{sepp} verifies all \gls{ipx} modifications by checking the contained \gls{jws} signatures and comparing the patch operations to the modification policies of both roaming partners.
+    \item After receving an N32-f message, a \gls{sepp} first verifies the integrity of the original message contents, i.e. the \textit{dataToIntegrityProtectAndCipher} and \textit{dataToIntegrityProtect} object by deciphering the confidential part using an \gls{aead} decryption. This step only succeeds if both objects have not been modified.
+    \item Next, the \gls{sepp} verifies all \gls{ipx} modifications by checking the contained \gls{jws} signatures and comparing the patch operations to the modification policies of both roaming partners.
     \sgoal{
-        Security property 12: Only IPX providers referenced in one of the \gls{sepp} operator's IPX security information lists shall be able to perform message modifications. (c.f. \cite{3gpp.33.501}, p. 127)
+        Security property 11: Only IPX providers referenced in one of the \gls{sepp} operator's IPX security information lists shall be able to perform message modifications. (c.f. \cite{3gpp.33.501}, p. 127)
     }
     \sgoal{
-        Security property 13: Only message modifications referenced in one of the \gls{sepp} operator's modification policies shall be possible. (c.f. \cite{3gpp.33.501}, p. 127)
+        Security property 12: Only message modifications referenced in one of the \gls{sepp} operator's modification policies shall be possible. (c.f. \cite{3gpp.33.501}, p. 127)
     }
     \item Lastly, the signaling message is reassembled while applying all legitimate modifications successfully verified in the previous step. The resulting message is sent to its final destination.
 \end{enumerate}
