@@ -31,7 +31,7 @@ Other types are supposed to resemble data with specific characteristics.
 A \gls{mac}, for example, is modelled by the type {\sffamily mac} that cannot be transformed back into its original components.
 Data of type {\sffamily pubkey} on the other hand, can only be derived from a related {\sffamily privkey}.
 
-\begin{lstlisting}[caption={Custom type definitions},label={lst:types},firstnumber=3]
+\begin{lstlisting}[caption={Custom type definitions},label={lst:types},firstnumber=11]
 type key.                           (* symmetric key *)
 type mac.                           (* message authentication code *)
 type http.                          (* http message *)
@@ -61,11 +61,12 @@ The remaining channels transport messages within the \glspl{sepp} themselves or 
 {\sffamily err\_a} and {\sffamily err\_b} are used internally to the two peers, \gls{sepp}~A and \gls{sepp}~B, to pass information about errors in N32-f messages from the receiving N32-f processes to the those handling error signaling via N32-c.
 {\sffamily plmn\_a} and {\sffamily plmn\_b} connect the \gls{nf} in each of the networks to its local \gls{sepp}.
 
-\begin{lstlisting}[caption={Custom channel declarations},label={lst:channels},firstnumber=15]
+\begin{lstlisting}[caption={Custom channel declarations},label={lst:channels},firstnumber=23]
 free n32f_a: channel.               (* Channel between SEPP A and IPX A *)
 free n32f_i: channel.               (* Channel between IPX Providers *)
 free n32f_b: channel.               (* Channel between IPX B and SEPP B *)
-free n32c: channel [private].       (* Channel between SEPP A and SEPP B *)
+free n32c_a: channel [private].     (* Channel between SEPP A and SEPP B *)
+free n32c_b: channel [private].     (* Channel between SEPP A and SEPP B *)
 free plmn_a: channel [private].     (* PLMN A internal channel *)
 free plmn_b: channel [private].     (* PLMN B internal channel *)
 free err_a: channel [private].      (* Internal error signalling Sepp A *)
@@ -79,7 +80,7 @@ An empty \gls{json} patch written by \gls{ipx} providers is modelled by the {\sf
 {\sffamily SUCC} and {\sffamily FAIL} are constants representing the status code for success or failure in error signaling procedures (see listing~\ref{lst:n32c-error-send} and \ref{lst:n32c-error-recv})
 Lastly, {\sffamily REQ} and {\sffamily RES} indicate the type of \gls{http} message being exchanged between the two \glspl{nf} communicating via the inter-operator interface.
 
-\begin{lstlisting}[caption={Global constant declarations},label={lst:constants},firstnumber=24]
+\begin{lstlisting}[caption={Global constant declarations},label={lst:constants},firstnumber=35]
 const EMPTY: ipxmod.                (* the empty ipx patch *)
 const SEND: bitstring.              (* sending flag *)
 const RECV: bitstring.              (* receiving flag *)
@@ -99,7 +100,7 @@ The model assumes there is only a single instance in each network.
 Firstly, the session key lifetime cannot be verified using formal methods, due to the lack of appropriate temporal constructs.
 Secondly, it is assumed \gls{prins} is exclusively used to carry N32-f messages.
 
-\begin{lstlisting}[caption={Declaration of local SEPP storage using tables},label={lst:tables},firstnumber=32]
+\begin{lstlisting}[caption={Declaration of local SEPP storage using tables},label={lst:tables},firstnumber=45]
 table storeSeppA(
     bitstring,                      (* SEPP B PLMN ID *)
     bitstring,                      (* SEPP B Address *)
@@ -129,7 +130,7 @@ This particular constructor takes four information elements of type {\sffamily b
 Fundamentally, this follows the same syntax as ordinary \textsc{ProVerif} constructors.
 However, the {\sffamily [data]} annotation has the effect that the adversary is able to deconstruct the resulting data type into its original subcomponents at any time (c.f. \cite{blanchet2020proverif}, p. 37), even without a related deconstructor explicitly defined.
 
-\begin{lstlisting}[caption={Definition of custom data constructor},label={lst:constructor},firstnumber=75]
+\begin{lstlisting}[caption={Definition of custom data constructor},label={lst:constructor},firstnumber=104]
 fun jsonPatch(bitstring,            (* Operations *)
     bitstring,                      (* IPX Id *)
     mac,                            (* JWE Tag *)
@@ -146,7 +147,7 @@ According to the \gls{3gpp} specification, the N32-f master key is derived from 
 Since the \gls{tls} protocol is not modelled in detail, the {\sffamily deriveMasterKey} function is defined as a substitue not available to the Dolev-Yao adversary.
 Section \ref{sec:issues} further describes the benefits and drawbacks of modelling the key derivation in this way.
 
-\begin{lstlisting}[caption={Definition of custom one-way functions},label={lst:functions},firstnumber=96]
+\begin{lstlisting}[caption={Definition of custom one-way functions},label={lst:functions},firstnumber=125]
 fun deriveContextId(bitstring, bitstring): bitstring.
 fun deriveSessionKey(bitstring, bitstring, key): key.
 fun deriveIV(bitstring, bitstring, key): bitstring.
@@ -162,7 +163,7 @@ The related deconstructor {\sffamily checkSign} takes two arguments of type {\sf
 This operation only succeeds with the public key belonging to the private key that was previously used for signing the message, i.e. if the signature is valid.
 The second deconstructor depicted in the listing below is provided to allow the adversary to retrieve signed message contents without possessing the public key for validation, as suggested by the official \textsc{ProVerif} user's manual (c.f. \cite{blanchet2020proverif}, p. 14).
 
-\begin{lstlisting}[caption={Definition of custom constructors and destructors},label={lst:destructors},firstnumber=112]
+\begin{lstlisting}[caption={Definition of custom constructors and destructors},label={lst:destructors},firstnumber=142]
 fun pk(privkey): pubkey.
 fun sign(bitstring, privkey): bitstring.
 reduc forall m: bitstring, k: privkey;
@@ -196,7 +197,7 @@ Based on this master key, the complete hierarchy of session keys and initializat
 Since the protocol distinguishes session keys and initialization vectors to be used based on the \gls{sepp}'s role in the N32-c communication as well as the type of \gls{http} message transported, the functions {\sffamily deriveSessionKey} and {\sffamily deriveIV} consume a flag indicating whether the \gls{sepp} initiated the N32-c session ({\sffamily SEND}) or not ({\sffamily RECV}) and a flag indicating its use for \gls{http} requests or responses, in addition to the master key itself.
 Lastly, the agreed session parameters are stored in the \gls{sepp}'s local storage table.
 
-\begin{lstlisting}[caption={Definition of the sending N32-c handshake process},label={lst:n32c-handshake-send},firstnumber=307]
+\begin{lstlisting}[caption={Definition of the sending N32-c handshake process},label={lst:n32c-handshake-send},firstnumber=434]
 let N32cSendHandshakeSeppA(sepp_a_plmn: bitstring, sepp_a_addr: bitstring,
     sepp_b_plmn: bitstring, sepp_b_addr: bitstring, ciphers_a: bitstring,
     encp_a: bitstring, modp_a: bitstring, ipx_a_id: bitstring,
@@ -268,7 +269,7 @@ In the listing below, the parallel session key and \gls{iv} are derived with the
 In contrast, the function {\sffamily deriveSessionKey} uses parameter {\sffamily SEND} for the reverse session key in initialization vector.
 Lastly, all session parameters are stored in the \gls{sepp}'s local storage.
 
-\begin{lstlisting}[caption={Definition of the receiving N32-c handshake process},label={lst:n32c-handshake-recv},firstnumber=356]
+\begin{lstlisting}[caption={Definition of the receiving N32-c handshake process},label={lst:n32c-handshake-recv},firstnumber=488]
 let N32cRecvHandshakeSeppA(sepp_a_plmn: bitstring, sepp_a_addr: bitstring,
     sepp_b_plmn: bitstring, sepp_b_addr: bitstring, ciphers_a: bitstring,
     encp_a: bitstring, modp_a: bitstring, ipx_a_id: bitstring,
@@ -333,7 +334,7 @@ The \gls{sepp} then awaits a response from its peer, confirming the receipt of s
 The related input operation validates the correct \gls{sepp} address, matching N32-f context ID and message ID in order to ensure different error messages are not mixed up.
 How the contents of this response are determined by the \gls{sepp} responding to such error signaling is shown in the next listing~\ref{lst:n32c-error-recv}.
 
-\begin{lstlisting}[caption={Definition of the sending error signaling process},label={lst:n32c-error-send},firstnumber=406]
+\begin{lstlisting}[caption={Definition of the sending error signaling process},label={lst:n32c-error-send},firstnumber=542]
 let N32cSendErrorSeppA(sepp_a_addr: bitstring)=
     in(err_a, (n32f_context': bitstring, msg_id: nat));
     get storeSeppA(
@@ -361,7 +362,7 @@ This ensures a previous message with the same id has indeed been sent previously
 A confirmation message including status code is signaled back to the peer \gls{sepp} over N32-c.
 If above-mentioned check is successful, this status code is the constant {\sffamily SUCC}, else {\sffamily FAIL}.
 
-\begin{lstlisting}[caption={Definition of the receiving error signaling process},label={lst:n32c-error-recv},firstnumber=427]
+\begin{lstlisting}[caption={Definition of the receiving error signaling process},label={lst:n32c-error-recv},firstnumber=560]
 let N32cRecvErrorSeppA(sepp_a_addr: bitstring)=
     in(n32c, (
         =sepp_a_addr, n32f_context': bitstring, msg_id: nat
@@ -393,7 +394,7 @@ Listing \ref{lst:nf-request} shows the process of an \gls{nf} in \gls{plmn} A cr
 The actual information sent to the \gls{sepp} is a tuple of the message direction ({\sffamily SEND}) and the \gls{http} message itself.
 While the former is not necessary in real-world implementations, it prevents messages being erroneously consumed from the \gls{nf} response process displayed in the next listing.
 
-\begin{lstlisting}[caption={Definition of the requesting NF process},label={lst:nf-request},firstnumber=595]
+\begin{lstlisting}[caption={Definition of the requesting NF process},label={lst:nf-request},firstnumber=738]
 let NfARequest(nf_a_addr: bitstring, nf_b_addr: bitstring)=
     new msg_body: bitstring;
     let http_message =
@@ -411,7 +412,7 @@ The action of the \gls{nf} varies depending on the contained message type.
 If the message received is a request, a response is being sent that contains the same message body.
 Otherwise, only an event is triggered indicating the receipt of an \gls{http} response.
 
-\begin{lstlisting}[caption={Definition of the responding NF process},label={lst:nf-respond},firstnumber=595]
+\begin{lstlisting}[caption={Definition of the responding NF process},label={lst:nf-respond},firstnumber=745]
 let NfAResponse(nf_a_addr: bitstring, nf_b_addr: bitstring)=
     in(plmn_a, (=RECV, msg: http));
     let createHttp(nf_b_addr: bitstring,
@@ -439,7 +440,7 @@ The encryption function {\sffamily aeadEncrypt} uses the session key, the nonce,
 These information are supplemented by the destination address of the receiving \gls{sepp} as shown in figure \ref{fig:n32f-message} and then sent on the public N32-f channel.
 Lastly, the locally stored N32-f context is updated to reflect the incremented message counter.
 
-\begin{lstlisting}[caption={Definition of the sending N32-f signaling transmission process},label={lst:n32f-send},firstnumber=595]
+\begin{lstlisting}[caption={Definition of the sending N32-f signaling transmission process},label={lst:n32f-send},firstnumber=784]
 let N32fSendSeppA()=
     in(plmn_a, (=SEND, http_message: http));
     get storeSeppA(
@@ -514,7 +515,7 @@ In this case, the constructor {\sffamily applyPatches} is used to incorporate th
 The updated message contents are rewritten into a new \gls{http} message and sent towards the receiving \gls{nf} in the \gls{sepp}'s own \gls{plmn}.
 
 \lstset{escapeinside=~~}
-\begin{lstlisting}[caption={Definition of the receiving N32-f signaling transmission process},label={lst:n32f-recv},firstnumber=623]
+\begin{lstlisting}[caption={Definition of the receiving N32-f signaling transmission process},label={lst:n32f-recv},firstnumber=833]
 let N32fRecvSeppA(sepp_a_addr: bitstring)=
     in(n32f_a, (=sepp_a_addr, prins_messsage: modprins));
 
@@ -616,7 +617,7 @@ Note, that there is an additional, empty \gls{json} patch written by this first 
 This is done to simplify the model by not creating a separate data-type for a modified \gls{prins} message with a single \gls{json} patch.
 Finally, the modified message is sent towards the next \gls{ipx} provider.
 
-\begin{lstlisting}[caption={Definition of the sending IPX process},label={lst:ipx-send},firstnumber=825]
+\begin{lstlisting}[caption={Definition of the sending IPX process},label={lst:ipx-send},firstnumber=1088]
 let N32fSendIpxA(id: bitstring, privkey_ipx_a: privkey, ops: bitstring)=
     in(n32f_a, (sepp_b_addr: bitstring, prins_message: prins));
 
@@ -663,7 +664,7 @@ Listing~\ref{lst:ipx-recv} shows the process of \gls{ipx} A receiving a N32-f me
 The actions performed are largely the same as in the sending process above, the difference being that this time, an already modified \gls{prins} message is received on the interface between \gls{ipx} providers.
 Further, the empty \gls{json} patch inserted by the previous \gls{ipx} provider is replaced before forwarding the updated message to the receiving \gls{sepp}.
 
-\begin{lstlisting}[caption={Definition of the receiving IPX process},label={lst:ipx-recv},firstnumber=863]
+\begin{lstlisting}[caption={Definition of the receiving IPX process},label={lst:ipx-recv},firstnumber=1129]
 let N32fRecvIpxA(id: bitstring, privkey_ipx_a: privkey, ops: bitstring)=
     in(n32f_i, (sepp_a_addr: bitstring, prins_message: modprins));
 
@@ -751,7 +752,7 @@ The \gls{nf} processes {\sffamily NfAResponse} and {\sffamily NfBResponse}, just
 Synchronization group~4 and 5 mirror groups 2 and 3 in that the response messages created during the previous phase are transmitted via the \gls{ipx} providers and received by the peer elements.
 The only exception in synchronization group~5 is that no response is being sent following the receipt of a response message. Hence, sending \gls{sepp} processes are omitted.
 
-\begin{lstlisting}[caption={Definition of the main process},label={lst:main-proc},firstnumber=1183]
+\begin{lstlisting}[caption={Definition of the main process},label={lst:main-proc},firstnumber=1508]
     (* process execution *)
     (
         (N32cSendHandshakeSeppA(
@@ -780,6 +781,7 @@ The only exception in synchronization group~5 is that no response is being sent 
         (sync 2; !N32fSendIpxR1(ipx_a_id, ipx_a_privkey, modp_r1)) |
         (sync 2; !N32fRecvIpxR2(ipx_r2_id, ipx_r2_privkey, modp_a)) |
         (sync 2; !N32fSendIpxR2(ipx_r2_id, ipx_r2_privkey, modp_a)) |
+        (sync 2; !N32fRecvIpxR3()) |
 
         (sync 3; !N32fRecvSeppA(sepp_a_addr)) |
         (sync 3; !N32fRecvSeppB(sepp_b_addr)) |
@@ -800,6 +802,7 @@ The only exception in synchronization group~5 is that no response is being sent 
         (sync 4; !N32fSendIpxR1(ipx_a_id, ipx_a_privkey, modp_r1)) |
         (sync 4; !N32fRecvIpxR2(ipx_r2_id, ipx_r2_privkey, modp_a)) |
         (sync 4; !N32fSendIpxR2(ipx_r2_id, ipx_r2_privkey, modp_a)) |
+        (sync 4; !N32fRecvIpxR3()) |
 
         (sync 5; !N32fRecvSeppA(sepp_a_addr)) |
         (sync 5; !N32fRecvSeppB(sepp_b_addr)) |
