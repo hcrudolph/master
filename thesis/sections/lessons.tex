@@ -2,19 +2,27 @@ Firstly, one of the most challenging aspects of the verification with \textsc{Pr
 The reason why the debug queries in section \ref{ssec:debug} are introduced to the verification is that without them, there is no indication when specified events cannot be reached individually.
 Instead, complex reachability queries or correspondence assertions that incorporate these events are likely to provide erroneous results.
 Without being aware of this behavior and explicitly testing the reachability of every event itself, may at times lead to a false confidence into the security of the protocol.
-Thankfully, the \textsc{ProVerif} user manual does mention using simple reachability queries to prevent exactly that (c.f. \cite{blanchet2020proverif}, p. 52).
+Thankfully, the \textsc{ProVerif} user manual does mention using simple reachability queries to prevent exactly that (see \cite{blanchet2020proverif}, p. 52).
+A lesson learned from facing the issue of certain protocol branches being unreachable is to add said debug queries from the very beginning of the modelling process each time a new event is specified.\medskip
 
-Secondly, ensuring termination of the model checker is all but trivial and the tools little insights into situations that may lead to non-termination.
-The issue commonly encountered during the verification of \gls{prins}, such as in the case of the query in listing \ref{lst:query-sec-6}, is the program inserting an increasing number of rules during the resolution process, i.e. when trying to prove a given fact is derivable from available clauses, but never succeeding to do so.
-As termination analysis is generally an undecidable problem, \textsc{ProVerif} can offer little support to prevent these situations from happening.
+Secondly, ensuring termination of the model checker is all but trivial and the tool provides little insights into situations that may lead to non-termination.
+One commonly encountered issue during the verification of \gls{prins}, such as in the case of the query in listing \ref{lst:query-sec-6}, is the program inserting an increasing number of rules during the resolution process, when trying to prove a given fact is derivable from available clauses, but never succeeding to do so.
+Another source of this problem during verification was the confusion of sent and received messages between processes, leading to loops within th protocol.
+As soon as the types of a \textsc{ProVerif} function match those of avilable names, the tool will attempt to apply the function.
+One way to avoid such mix-ups is tagging the protocol using defined constants to guide the execution of honest protocol participants, as explained in the user manual on an example of a cryptographic constructor (see \cite{blanchet2020proverif}, p. 114).
+Key takeaway from the modelling experience of \gls{prins} is to add tags to every single input/output function and any custom functions that may be ambiguous based on the type of their input arguments.
+
+Beyond general best practices like the one mentioned above, \textsc{ProVerif} can offer little support to prevent these situations from happening, as termination analysis is generally an undecidable problem.
 The configuration flag {\sffamily verboseTerm} which is supposed to enable a more detailed output with termination warnings does not yield any helpful results for the problematic queries.
-Different built-in resolution strategies do not solve the problem either.
+Different built-in resolution strategies do not solve the problem either.\medskip
 
-Thirdly, even if \textsc{ProVerif} itself successfully terminates and finds and attack, there is no guarantee the related trace can be exported in form of a visual graph.
+Thirdly, even if \textsc{ProVerif} itself successfully terminates and finds an attack, there is no guarantee the related trace can be exported in form of a visual graph.
 By default, the program creates files of type \textit{dot} that can subsequently be consumed by the software Graphviz to draw a directed graph.
-With large protocol models such as the one created for \gls{prins}, the latter is quickly overwhelmed by the number of nodes representing key protocol events and edges representing their relation as well as message flows.
+With large protocol models such as the one created for \gls{prins}, the latter is quickly overburdened by the number of nodes representing key protocol events and edges representing their relation as well as message flows.
 Ommitting all replications in the main process of the model, denoted by an exclamation mark, does not result in a noticable improvement.
 Even after multiple hours of execution, Graphviz is unable to completely render an attack trace from any of the disproven queries described in the previous sections.
 The lack of a visual representation of the traces severely complicates validation of the discovered attacks.
+It should be noted that \textsc{ProVerif} still prints a text-based description of the attack trace on the standard output, which itself is quickly becoming unmanagable for complex protocols as well.\medskip
 
-
+Lastly, with verification times of large models exceeding several hours, splitting up the \textsc{ProVerif} file along different queries lends itself as a crude method of parallelization.
+Given that the software is not optimized for multi-core environments and only ever makes use of a single thread at once, reducing the time to produce a verification result is especially cruicial in later stages of the process, when the protocol under test has already reached a sizable complexity.
