@@ -1475,21 +1475,21 @@ let N32fRecvIpxR3()=
 process
     (* protection policies *)
     new ciphersuites: bitstring;
-    new encp: bitstring;
-    new modp_a: bitstring;
-    new modp_b: bitstring;
-    new modp_r1: bitstring;
+    new encp: bitstring; out(n32f_i, encp);
+    new modp_a: bitstring; out(n32f_i, modp_a);
+    new modp_b: bitstring; out(n32f_i, modp_b);
+    new modp_r1: bitstring; out(n32f_i, modp_r1);
 
     (* participant addresses and ids *)
-    new nf_a_addr: bitstring;
-    new nf_b_addr: bitstring;
-    new sepp_a_plmn: bitstring;
-    new sepp_b_plmn: bitstring;
-    new sepp_a_addr: bitstring;
-    new sepp_b_addr: bitstring;
-    new ipx_a_id: bitstring;
-    new ipx_b_id: bitstring;
-    new ipx_r2_id: bitstring;
+    new nf_a_addr: bitstring; out(n32f_i, nf_a_addr);
+    new nf_b_addr: bitstring; out(n32f_i, nf_b_addr);
+    new sepp_a_plmn: bitstring; out(n32f_i, sepp_a_plmn);
+    new sepp_b_plmn: bitstring; out(n32f_i, sepp_b_plmn);
+    new sepp_a_addr: bitstring; out(n32f_i, sepp_a_addr);
+    new sepp_b_addr: bitstring; out(n32f_i, sepp_b_addr);
+    new ipx_a_id: bitstring; out(n32f_i, ipx_a_id);
+    new ipx_b_id: bitstring; out(n32f_i, ipx_b_id);
+    new ipx_r2_id: bitstring; out(n32f_i, ipx_r2_id);
 
     (* ipx cryptographic keys *)
     new ipx_a_privkey: privkey;
