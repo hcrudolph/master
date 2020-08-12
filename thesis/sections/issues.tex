@@ -37,62 +37,52 @@ If, for example, one of the processes in section \ref{sec:model} were to expose 
 Both types of protection policies are abstracted to single bitstrings in order to simplify related operations.
 
 The data-type encryption policy plays a key role in rewriting \gls{http} messages received from \glspl{nf} in the \gls{sepp}'s own \gls{plmn}.
-In the model, an \gls{http} message is split into a confidential and non-confidential message part using the deconstructor {\sffamily reformatHttp}, displayed in listing \ref{lst:n32f-rewriting}.
-Using an encryption policy as a second argument, it enables honest participants to identify the information to be ciphered.
-The alternative deconstructor {\sffamily reformatHttp'} is provided for completeness sake:
-Given an \gls{http} message, adversaries are able to access both confidential and non-confidential message parts as well, without knowledge of the related encryption policy.
+In the model, confidential and non-confidential message parts are extracted from an \gls{http} message body using the constructors {\sffamily getConf} and {\sffamily getNonconf}, displayed in listing \ref{lst:n32f-rewriting}.
+Using an encryption policy as a second argument, they enable honest participants to identify those information elements only requiring integrity protection and those additionally requiring confidentialiy.
+Note, that since the model does not consider protection policies confidential information and makes them publicly available, a flawed representation is avoided in which the adversary would not be able to retrieve sensitive information from the body of an \gls{http} message without the related encryption policy.
 
-The the constructor {\sffamily reformatN32f} is used by the receiving \gls{sepp} to compile the individual parts back to an \gls{http} message.
-This function on its own is unable to verify that the same data-type encryption policy has been used by the sending \gls{sepp}, as is required by the specification.
-To substitute this check at the receiving end, the locally stored and the received data-type encryption policies are compared for equality during the initial N32-c handshake procedure.
-This check ensures that both \glspl{sepp} shall apply consistent ciphering of information elements on N32-f.
+Before the receiving \gls{sepp} compiles the resulting \gls{http}message, it uses the {\sffamily policyValidation} deconstructor to verify whether the sending peer actually applied the previously agreed encryption policy or whether sensitive elements are actually contained in non-confidential parts of the N32-f message.
+This is in addition to the equality check of both locally stored and received encryption policies during the initial N32-c handshake.
+
+Finally, the the constructor {\sffamily applyPatches} is used by the receiving side to combine the individual message parts back to an \gls{http} message under consideration of the intermediary changes.
 
 \begin{lstlisting}[caption={N32-f message rewriting},label={lst:n32f-rewriting},firstnumber=105]
 (* data-type encryption policy application *)
-fun policyApplication(bitstring, bitstring): n32.
+fun getConf(bitstring, bitstring): bitstring.
+fun getNonconf(bitstring, bitstring): bitstring.
 reduc forall m: bitstring, p: bitstring;
-    policyValidation(policyApplication(m, p), p)) = true
-otherwise forall m: bitstring, p: bitstring, p': bitstring;
-    policyValidation(policyApplication(m, p), p')) = false
+    policyValidation(getNonconf(m, p), p) = true.
 \end{lstlisting}
 
-The bitstrings modelling the modification policies represent both the policies defined by either of the \gls{sepp} operators as well as the actual modifications written by intermediaty \gls{ipx} providers.
+The bitstrings modelling the modification policies represent both the policies defined by either of the \gls{sepp} operators as well as the actual modifications written by intermediary \gls{ipx} providers.
 This allows a simple comparison of the operation contained inside the \gls{json} patch and the related policy itself to determine whether or not a given message modification is legitimate.
 This does not impact the verification result, as it is logically the same as a policy containing exactly one entry.
 If the protocol behaves as intended using this examplary modification policy, it behaves similarly for more complex examples.
-
-\subsubsection{Message Rewriting}
-
-The final step of \gls{prins} message rewriting, i.e. the application of the validated \gls{jose} patches is omitted from the model.
-Since this procedure is performed internally to the receiving \gls{sepp}, i.e. no communication with other participants is required, there is no possibility of revealing any confidential information.
-Related checks that do impact security properties of the protocol, such as the authentication of \gls{jose} patches and comparison with the modification policy, are validate prior to this step.
-Hence, this protocol aspect can safely be omitted without compromising the verification result.
 
 \subsubsection{Message Routing}
 
 As mentioned in the previous section, inter-\gls{plmn} message routing, which would utilize \gls{ip} routing in real-world implementations, is simplified greatly by use of dedicated N32-c and N32-f channels.
 Processes of sending \glspl{sepp} specify their communication peer by its address in outgouing messages.
 This information is provided to avoid trivial loops between sending and receiving processes of the same \gls{sepp}:
-Without any attribute identifying either part of the communication, an outgoing message could be consumed by the same \gls{sepp}'s receiving process without noticing that the message is its own.
-Hence, in this model receiving \glspl{sepp} verify whether the identity specified in incoming messages matches their own and only proceed with processing the message if this condition is met.
-Note that this does not preclude the verification of potential authentication flaws.
-An adversary is, of course, still able to spoof the \gls{sepp} address value.
+Without any attribute identifying either part of the communication, an outgoing message could be consumed by an instance of the same \gls{sepp}'s receiving process without noticing the message is in fact its own.
+Hence, in the model receiving both \glspl{sepp} verify whether the identity specified in incoming messages matches their own and only proceed with processing the message if this condition is met.
+Note that this does not preclude the verification of potential authentication flaws -- an adversary is, of course, still able to spoof the \gls{sepp} address value.
 The check merely prevents the confusion of messages by honest \gls{sepp} processes.
 
-Beyond that, the model does not consider any information identifying the source a message.
-That is, at least on the N32-c channel, which is considered authenticated and confidential as explained previously.
-As far as N32-f communication is concerned, the receiving \gls{sepp} is able to correlate an incoming message by its N32-f context ID to related information, such as session keys.
-During the validation of the \gls{aad} contained in the message, the \gls{sepp} is able to implicitly verify the original message source.
+Beyond that, the model does not consider any information identifying the source of a message.
+That is, at least on the N32-c channel, which is considered mutually authenticated as explained previously.
+As far as N32-f communication is concerned, the receiving \gls{sepp} is able to correlate an incoming message by its N32-f context ID to the locally stored session parameters, such as session keys.
+By validating the \gls{aad} contained in the message, the \gls{sepp} is able to implicitly verify the authenticity of the original message contents.
 
 \subsubsection{IPX Provider Internals}
 
-Similarly to message routing from and to communicating \glspl{sepp}, message handling by \gls{ipx} providers is reduced to the bare minimum.
+Similarly to message routing from and to communicating \glspl{sepp}, the message handling by \gls{ipx} providers is reduced to the bare minimum.
 Each \gls{ipx} process utilizes two distinct N32-f channels, one towards its directly connected \gls{sepp} and another towards the second \gls{ipx} provider.
 Every message received on one of these interfaces is forwarded on the other one after internal processing.
 
 Modifications are signed using raw private keys, one of two options specified by the \gls{3gpp} specification for this purpose.
 The alternative, i.e. a digital certificate issued by the operator of the directly connected \gls{sepp}, as well as the possibility for \gls{ipx} providers to use multiple cryptographic identities is not considered in the model.
-Since there is no fundamental difference between the use of one or multiple keys and the asymmetric cryptography used in digital certificated is just the same as for raw private/public key pairs, this abstraction does not negatively impact the verification result.
+Since there is no fundamental difference between the use of one or more keys and the asymmetric cryptography used in digital certificates is the same as for raw private/public key pairs, this abstraction does not negatively impact the verification result.
 
 \subsubsection{Parameter Renegotiation}
 
@@ -116,4 +106,18 @@ At some point during protocol execution, session parameters have to be refreshed
 Lastly, \textsc{ProVerif} tables, which represent a convenient way of modelling local \gls{sepp} storage as shown in the previous sections, do not offer the possibility of deleting records.
 While real-world implementations would invalidate N32-f contexts at certain events or specific points in time, the model is not able to reproduce this behavior.
 
-\subsubsection{to be expanded...}
+\subsubsection{Behavior of N32-c Channels}
+
+According to the specification, the N32-c is unidirectional with regards to the initiation of a message exchange.
+While a peer may respond on the same logical channel, only the initiating \gls{sepp} can actively issue requests.
+This is due to the nature of the underlying \gls{http} protocol, which follows a client-server model.
+The initiating \gls{sepp} takes on the role of the client, the responding \gls{sepp} that of the server.
+In order to enable the responding end to initiate requests as well, for example to perform error signaling, a second N32-c connection in the inverse direction is established at the end of the initial handshake.
+
+\textsc{ProVerif} channels, no matter if private or not, are always bidirectional.
+While this fails to restrict messages being sent in either direction, one can work around this limitation during the modelling phase by letting sending and responding processes of both \glspl{sepp} use separate N32-c channels.
+Since private channels, unlike public ones, cannot be created ad hoc during the protocol execution, both N32-c channels have to be declared in advance.
+
+An additional characteristic of private channels that does not mirror a real-world \gls{tls} connection is that every information sent over them can be received by any of the listening participants at any time.
+As the user manual explains, ,,ProVerif just computes a set of messages sent on a private channel, and considers that any input on that private channel can receive any of these messages (independently of the order in which
+they are sent)'' (\cite{blanchet2020proverif}, p. 119).
