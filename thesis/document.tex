@@ -113,10 +113,10 @@ Functions, constructors, destructors, and events are written in camel case (e.g.
 \chapter{Verifying the PRINS Protocol}
 \label{chap:verification}
 
-The following part details the verification performed on the \gls{prins} model described in the preceeding chapter.
-Section \ref{sec:verification} describes the formalization of security properties outlined in \ref{ssec:prins-sequence}.
-Section \ref{sec:gaps} summarizes gaps and inconsistencies noticable during modelling and verification.
-Section \ref{sec:implications} elaborates on what the \textsc{ProVerif} execution results and specification gaps mean for the practical security of the  \gls{prins} protocol.
+The following chapter details the verification performed on the \gls{prins} model described in the preceeding chapter.
+Section \ref{sec:verification} describes the formalization of security properties outlined in \ref{ssec:prins-sequence} and the results \textsc{ProVerif} produces.
+Section \ref{sec:lessons} describes challenges faced during the verification process and lessons learned.
+Section \ref{sec:gaps} summarizes gaps and inconsistencies discovered during modelling and verification of \gls{prins} and what they mean for the security of the protocol.
 
 \section{ProVerif Queries}
 \label{sec:verification}
@@ -151,15 +151,15 @@ Section \ref{sec:implications} elaborates on what the \textsc{ProVerif} executio
 
 \clearpage
 
-\begin{appendices}
+%\begin{appendices}
 
 % redefine figure numbering
-\renewcommand\thefigure{\thechapter.\arabic{figure}}
+%\renewcommand\thefigure{\thechapter.\arabic{figure}}
 
-\chapter{PRINS Protocol Details}
+%\chapter{PRINS Protocol Details}
 
-\input{appendix_a.tex}
+%\input{appendix_a.tex}
 
-\end{appendices}
+%\end{appendices}
 
 \end{document}
