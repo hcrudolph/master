@@ -7,14 +7,17 @@ A lesson learned from facing the issue of certain protocol branches being unreac
 
 Secondly, ensuring termination of the model checker is all but trivial and the tool provides little insights into situations that may lead to non-termination.
 One commonly encountered issue during the verification of \gls{prins}, such as in the case of the query in listing \ref{lst:query-sec-6}, is the program inserting an increasing number of rules during the resolution process, when trying to prove a given fact is derivable from available clauses, but never succeeding to do so.
-Another source of this problem during verification was the confusion of sent and received messages between processes, leading to loops within th protocol.
+In other scenarios the program does not print out any indication of progress anymore and seemingly halts.
+Yet another source of this problem during verification was the confusion of sent and received messages between processes, leading to loops within the protocol.
 As soon as the types of a \textsc{ProVerif} function match those of avilable names, the tool will attempt to apply the function.
 One way to avoid such mix-ups is tagging the protocol using defined constants to guide the execution of honest protocol participants, as explained in the user manual on an example of a cryptographic constructor (see \cite{blanchet2020proverif}, p. 114).
 Key takeaway from the modelling experience of \gls{prins} is to add tags to every single input/output function and any custom functions that may be ambiguous based on the type of their input arguments.
 
 Beyond general best practices like the one mentioned above, \textsc{ProVerif} can offer little support to prevent these situations from happening, as termination analysis is generally an undecidable problem.
 The configuration flag {\sffamily verboseTerm} which is supposed to enable a more detailed output with termination warnings does not yield any helpful results for the problematic queries.
-Different built-in resolution strategies do not solve the problem either.\medskip
+Different built-in resolution strategies do not solve the problem either.
+With verification times of large models exceeding several hours, even with the protocol partially tagged, splitting up the \textsc{ProVerif} file along different queries lends itself as a crude method of parallelization.
+Given that the software is not optimized for multi-core environments and only ever makes use of a single thread at once, reducing the time to produce a verification result is especially cruicial in later stages of the process, when the protocol under test has already reached a sizable complexity.\medskip
 
 Thirdly, even if \textsc{ProVerif} itself successfully terminates and finds an attack, there is no guarantee the related trace can be exported in form of a visual graph.
 By default, the program creates files of type \textit{dot} that can subsequently be consumed by the software Graphviz to draw a directed graph.
@@ -24,5 +27,8 @@ Even after multiple hours of execution, Graphviz is unable to completely render 
 The lack of a visual representation of the traces severely complicates validation of the discovered attacks.
 It should be noted that \textsc{ProVerif} still prints a text-based description of the attack trace on the standard output, which itself is quickly becoming unmanagable for complex protocols as well.\medskip
 
-Lastly, with verification times of large models exceeding several hours, splitting up the \textsc{ProVerif} file along different queries lends itself as a crude method of parallelization.
-Given that the software is not optimized for multi-core environments and only ever makes use of a single thread at once, reducing the time to produce a verification result is especially cruicial in later stages of the process, when the protocol under test has already reached a sizable complexity.
+All in all, the above issues related to the reporting of internal progress during verification, program non-termination, and the visualization of discovered attack traces render the obtained results vague at best.
+Without a practical way to retrace the executed procotol flow, verifying \textsc{ProVerif}'s findings, let alone deriving improvements for the protocol based on them, is simply unfeasible.
+The program's interactive mode is aimed at addressing this requirement, but handicaped by limited feature support as well, since it only allows structuring protocols using phases, not synchronozation groups as employed by the created model.
+However, it has to be acknowledged that the underlying problem, that is verifying the models correctness in terms of accurately representing the specification, is something that the tool itself cannot provide unless the specification is not written in a formal way in the first place.
+This is not the case with the 5G security specification \gls{ts} 33.501 or any other \gls{3gpp} document.
