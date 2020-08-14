@@ -23,14 +23,6 @@ Secondly, the attribute {\sffamily private} still allows the function to be used
 In the created model, this also includes the \gls{ipx} processes.
 However, these points do not impact verification of the protocol, as private \textsc{ProVerif} functions cannot be leaked and the honest \gls{ipx} processes do not make use of the function either.
 
-Furthermore, the the model does not mirror the complete key hierarchy of the protocol
-As noted in section \ref{sec:n32}, \gls{prins} distinguishes session keys based on the \gls{sepp}'s role during the initial N32-c handshake --parallel (i.e. initiating) or reverse (i.e. responding)-- and based on the nature of the transported signaling message -- \gls{http} request or response.
-The model described in the previous chapter does not consider the contents of a signaling message.
-It only distinguishes confidential and non-confidential information in an incoming \gls{http} message, regardless of it being a request or a response.
-Hence, each \gls{sepp} only handles one parallel key, one reverse key ({\sffamily par\_key}, {\sffamily rev\_key}), one parallel \gls{iv} and one reverse \gls{iv} ({\sffamily par\_iv}, {\sffamily rev\_iv}).
-This, too, does not impact the verification result, since the various session keys are merely used in different message contexts in the same processes.
-If, for example, one of the processes in section \ref{sec:model} were to expose the session key for an outbound N32-f message containing an \gls{http} response, this would also be discovered in the case of an outbound N32-f message containing an \gls{http} request.
-
 \subsubsection{Protection Policies}
 
 \gls{prins} protection policies control what data-types are to be ciphered before being sent over the N32-f channel and which authenticated modifications may be performed on them.
