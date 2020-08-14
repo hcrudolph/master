@@ -36,16 +36,6 @@ Note, that since the model does not consider protection policies confidential in
 Before the receiving \gls{sepp} compiles the resulting \gls{http}message, it uses the {\sffamily policyValidation} deconstructor to verify whether the sending peer actually applied the previously agreed encryption policy or whether sensitive elements are actually contained in non-confidential parts of the N32-f message.
 This is in addition to the equality check of both locally stored and received encryption policies during the initial N32-c handshake.
 
-Finally, the the constructor {\sffamily applyPatches} is used by the receiving side to combine the individual message parts back to an \gls{http} message under consideration of the intermediary changes.
-
-\begin{lstlisting}[caption={N32-f message rewriting},label={lst:n32f-rewriting},firstnumber=105]
-(* data-type encryption policy application *)
-fun getConf(bitstring, bitstring): bitstring.
-fun getNonconf(bitstring, bitstring): bitstring.
-reduc forall m: bitstring, p: bitstring;
-    policyValidation(getNonconf(m, p), p) = true.
-\end{lstlisting}
-
 The bitstrings modelling the modification policies represent both the policies defined by either of the \gls{sepp} operators as well as the actual modifications written by intermediary \gls{ipx} providers.
 This allows a simple comparison of the operation contained inside the \gls{json} patch and the related policy itself to determine whether or not a given message modification is legitimate.
 This does not impact the verification result, as it is logically the same as a policy containing exactly one entry.
@@ -63,7 +53,7 @@ The check merely prevents the confusion of messages by honest \gls{sepp} process
 
 Beyond that, the model does not consider any information identifying the source of a message.
 That is, at least on the N32-c channel, which is considered mutually authenticated as explained previously.
-As far as N32-f communication is concerned, the receiving \gls{sepp} is able to correlate an incoming message by its N32-f context ID to the locally stored session parameters, such as session keys.
+As far as N32-f communication is concerned, the receiving \gls{sepp} is able to correlate an incoming message by its N32-f context ID to the locally stored session parameters.
 By validating the \gls{aad} contained in the message, the \gls{sepp} is able to implicitly verify the authenticity of the original message contents.
 
 \subsubsection{IPX Provider Internals}
