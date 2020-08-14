@@ -1,22 +1,22 @@
-Looking back at section \ref{sec:goal}, the work done as part of this thesis successfully manages to address the objectives initially outlined.
-The three reasearch questions can be answered as follows.\bigskip
+Looking back at section~\ref{sec:goal}, the work done as part of this thesis successfully manages to address the objectives initially outlined.
+The three research questions can be answered as follows.\bigskip
 
 \noindent
 (1) Is it possible to comprehensively describe the 5G inter-operator signaling protocol with existing modeling techniques?
 
 Yes, with a number of abstractions.
 The created model does incorporate all key characteristics of the \gls{prins} protocol, including multi-channel communication, separation of protocol phases, multiple active participants, intermediary message modifications, and all necessary cryptographic operations (i.e. signatures, \glspl{mac}, and \gls{aead} encrytion).
-Minor aspects are abstracted away, such as the detailed structure of protection policies, the \gls{tls} key export, and the invalidation of N32-f sessions as described in section \ref{sec:issues}.
+Minor aspects are abstracted away, such as the detailed structure of protection policies, the \gls{tls} key export, and the invalidation of N32-f sessions as described in section~\ref{sec:issues}.
 However, given their impact on the security properties to be verified, these do not have an impact on the verification result.
 
 That said, a degree of uncertainty about the model's correctness persists, due to the problems encoutered during verification.
-Although most of the debug queries succeed and thereby greatly increase the confidence in the model, for the reasons layed out in section \ref{sec:lessons}, there is still a chance \textsc{ProVerif}'s execution actually diverges from the intended protocol behavior.\bigskip
+Although all debug queries succeed and thereby greatly increase the confidence in the model, for the reasons layed out in section~\ref{sec:lessons}, there is still a chance \textsc{ProVerif}'s execution actually diverges from the intended protocol behavior.\bigskip
 
 \noindent
 (2) Does modeling \gls{prins} in a formal grammar reveal any inconsistencies that should be addressed by the \gls{3gpp} specification?
 
 Yes, the previous section contains a summary of several areas that were either ambiguous or completely missing from the specifications \gls{ts} 33.501 and \gls{ts} 29.573.
-Some of these should be addressable by ensuring a uniform naming scheme between the two documents or minor additions of missing procedures.
+Some of these should be amendable by ensuring a uniform naming scheme between the two documents or minor additions of missing procedures.
 Other aspects, such as a clearly defined threat model and security requirements, are more fundamental in nature and likely require comprehensive revision of the specification.
 While the authors of the main security specification \gls{ts} 33.501 might have a comprehensive view of these aspects, they are not explicitly captured in the document or any related \gls{3gpp} study documents.
 Not only does this impede a clear understanding for implementers and mobile operators of what the protocol is supposed to deliver and what might be necessary to address by additional, non-standard controls.
@@ -32,7 +32,7 @@ Yes, partially.
 Section \ref{sec:verification} shows that confidentiality protection for all sensitive information is indeed ensured if the protocol is implemented according to the specification.
 Moreover, message modifications by unknown \gls{ipx} providers or modifications not captured in the modification policy are never accepted by the receiving party.
 
-Properties that were disproven include the rejection of replayed message modifications, rejection of the removal of previously added message modifications, as well as the integrity protection of \gls{json} patches.
-While the respective queries leave some margin of error for potential false attacks to be found by \textsc{ProVerif}, as outlined in section \ref{sec:verification}, there is no way to tell without the discovered attack traces available.
+Properties that were disproven include the rejection of replayed message modifications, detection of the removal of previously added message modifications, as well as the integrity protection of \gls{json} patches.
+While the respective queries leave some margin of error for potential false attacks to be found by \textsc{ProVerif}, as outlined in section~\ref{sec:verification}, there is no way to tell without the discovered attack traces available.
 
 What is more, the authentication of N32-f messages itself could not be proven, as it resulted in the non-termination of \textsc{ProVerif}.

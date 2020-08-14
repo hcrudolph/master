@@ -307,7 +307,7 @@ Therefore, a distinction is made between security properties which are explicitl
     \sgoal{
         Security property 8: Intermediaries in the path shall not be able to remove message modifications previously added by \gls{ipx} providers. (c.f. \cite{3gpp.33.501}, p. 135)
     }
-    \item The \gls{json} object created in the previous step is fed into the \gls{jws} algorithm, and appended to the original message together with the signature.
+    \item The \gls{json} object created in the previous step is fed into the \gls{jws} algorithm, and appended to the original message together with the cryptographic signature over the whole message.
     \asgoal{
         Security property 9: Message modifications by \gls{ipx} providers shall be authenticated and integrity protected.
     }
@@ -331,4 +331,4 @@ Therefore, a distinction is made between security properties which are explicitl
 
 Due to the nature of formal protocol verification, not all of the outlined security properties may be effectively verifiable using this method.
 The following section details what formal methods are generally able to prove and what not.
-Section \ref{sec:model} then goes on to discuss above properties in context and formalizes them, if possible.
+Section \ref{chap:verification} then goes on to discuss above properties in context and formalizes them, if possible.

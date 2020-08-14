@@ -1,18 +1,19 @@
-Based on the lessons learned during by modelling and formally verifying of the \gls{prins} protocol, a number of gaps and inconsistencies in the \gls{3gpp} specification have been identified.
-When addressed, these points can facilitate a more coherent specification, less ambiguity during implementation, and by that a more sound protocol as a whole.
+Based on the lessons learned during modelling and formally verifying of the \gls{prins} protocol, a number of gaps and inconsistencies in the \gls{3gpp} specification have been identified.
+When addressed, these points can facilitate a more coherent specification, a reduction of potential ambiguity during implementation, and by that a more sound protocol as a whole.
 
-On of the first observations when analyzing the specification \gls{ts} 33.501 is the absence of an explicitly defined threat model and security requirements derived from it.
-Previous research on another component of the 5G system has highlighted this as an issue (see \cite{basin2018model}) and it holds true for the decription of the inter-operator protocol as well.
-In fact, merely half of the security properties outlined in section \ref{ssec:prins-sequence} are explicitly spelled out in the \gls{3gpp} document.
+One of the first observations when analyzing the specification \gls{ts} 33.501 is the absence of an explicitly defined threat model and security requirements derived from it.
+Previous research on another component of the 5G system highlighted this as an issue (see \cite{basin2018model}) and it holds true for the decription of the inter-operator protocol as well.
+In fact, merely half of the security properties outlined in section \ref{ssec:prins-sequence} are explicitly spelled out in \gls{3gpp}'s document.
 The lack of a clear description of what properties the protocol is supposed to achieve not only impedes the creation of related queries for a formal verification, it is also likely to cause issues during implementation.
 
 Additionally, \gls{3gpp} documents \gls{ts} 33.501 and \gls{ts} 29.573 describing the \gls{prins} protocol in different levels of detail are misaligned in several locations.
 
 \begin{enumerate}[label=--]
-\item While  \gls{ts} 33.501 only refers to an {\sffamily authorized IPX ID} (\cite{3gpp.33.501}, p. 139), \gls{ts} 29.573 mentions both a {\sffamily authorized IPX ID} and a {\sffamily next hop ID} in multiple locations (\cite{3gpp.29.573}, p. 65-66). Based on their location in the N32-f message, it can to be assumed that these paramters actually refer to the same information.
+\item While \gls{ts} 33.501 only refers to an {\sffamily authorized IPX ID} (\cite{3gpp.33.501}, p. 139), \gls{ts} 29.573 mentions both a {\sffamily authorized IPX ID} and a {\sffamily next hop ID} in multiple locations (\cite{3gpp.29.573}, p. 65-66). Based on their placement within the N32-f message, it can be assumed that these parameters actually refer to the same information.
 
-\item \gls{ts} 33.501 specifies the {\sffamily PLMN ID} is supposed to be validated by the receiving \gls{sepp} (\cite{3gpp.33.501}, p. 143). However, it does not detail where in the N32-f message the parameter is transferred. \gls{ts} 29.573 cites an authorization header containing this information (\cite{3gpp.29.573}, p. 19).
+\item \gls{ts} 33.501 specifies that the {\sffamily PLMN ID} is supposed to be validated by the receiving \gls{sepp} (\cite{3gpp.33.501}, p. 143). However, it does not detail where in the N32-f message the parameter is transferred. \gls{ts} 29.573 cites an authorization header containing this information (\cite{3gpp.29.573}, p. 19).
 
-\item Although \gls{ts} 33.501 defines a validity parameter as part of the N32-f context information (\cite{3gpp.33.501}, p. 134), it does not clearly specify to what exactly this parameter applies -- the whole context including protection policies or just the cryptographic material. Neither \gls{ts} 33.501 nor \gls{ts} 29.573 specify the intended behavior of a \gls{sepp} once this validity has expired.
+\item Although \gls{ts} 33.501 defines a validity parameter as part of the N32-f context information (\cite{3gpp.33.501}, p. 134), it does not clearly specify to what exactly this parameter applies -- the whole context including protection policies or just the cryptographic material.
+
+\item Neither \gls{ts} 33.501 nor \gls{ts} 29.573 specify the intended behavior of a \gls{sepp} once the above-mentioned validity has expired. While the latter contains a descriiption of a N32-f Context Termination Procedure (\cite{3gpp.29.573}, p. 17), it is unclear whether that is automatically triggered when the end of the context validity is reached or if some parameter renegotiation should be performed instead.
 \end{enumerate}
-
