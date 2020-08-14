@@ -147,12 +147,24 @@ reduc forall m: bitstring, k: privkey;
     getMess(sign(m, k)) = m.
 
 fun signPrins(prins, bitstring, bitstring, mac, privkey): bitstring.
+
+fun validPrinsSign(bitstring, pubkey): bool
 reduc forall p: prins, ops: bitstring, id: bitstring, tag: mac, k: privkey;
-    validPrinsSign(signPrins(p, ops, id, tag, k), pk(k)) = true.
+    validPrinsSign(signPrins(p, ops, id, tag, k), pk(k)) = true
+otherwise forall p: prins, ops: bitstring, id: bitstring, tag: mac, k: privkey, k': privkey;
+    validPrinsSign(signPrins(p, ops, id, tag, k'), pk(k)) = false
+otherwise forall k: privkey;
+    validPrinsSign(fail, pk(k)) = false.
 
 fun signPrinsMod(modprins, bitstring, bitstring, mac, privkey): bitstring.
+
+fun validPrinsModSign(bitstring, pubkey): bool
 reduc forall p: modprins, m: bitstring, i: bitstring, t: mac, k: privkey;
-    validPrinsModSign(signPrinsMod(p, m, i, t, k), pk(k)) = true.
+    validPrinsModSign(signPrinsMod(p, m, i, t, k), pk(k)) = true
+otherwise forall p: modprins, ops: bitstring, id: bitstring, tag: mac, k: privkey, k': privkey;
+    validPrinsModSign(signPrinsMod(p, ops, id, tag, k'), pk(k)) = false
+otherwise forall k: privkey;
+    validPrinsModSign(fail, pk(k)) = false.
 
 (* aead encryption / decryption *)
 fun encrypt(bitstring, key, bitstring): bitstring.
@@ -1473,7 +1485,7 @@ let N32fRecvIpxR3()=
         modifications
     ) in
     event ipxRecvR3(n32f_context, msg_id, jwe_tag, modifications);
-    out(n32f_a, (sepp_a_addr, modified_message)).
+    out(n32f_a, (RECV, sepp_a_addr, modified_message)).
 
 
 (* Main Process *)
