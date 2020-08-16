@@ -151,15 +151,16 @@ Section \ref{sec:gaps} summarizes gaps and inconsistencies discovered during mod
 
 \clearpage
 
-%\begin{appendices}
+\begin{appendices}
+\renewcommand\thechapter{}
+\renewcommand\thesection{\arabic{section}}
+\renewcommand\thesubsection{\thesection.\arabic{subsection}}
+\renewcommand\thefigure{\arabic{figure}}
+\renewcommand\thetable{\arabic{table}}
+\chapter{}
 
-% redefine figure numbering
-%\renewcommand\thefigure{\thechapter.\arabic{figure}}
+\input{appendix_a.tex}
 
-%\chapter{PRINS Protocol Details}
-
-%\input{appendix_a.tex}
-
-%\end{appendices}
+\end{appendices}
 
 \end{document}
