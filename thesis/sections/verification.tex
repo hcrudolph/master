@@ -34,7 +34,7 @@ Listing \ref{lst:functions} below shows all secrecy queries defined for the \gls
 Initially, the above-mentioned information elements are defined as global variables assumed to be private, i.e. not available to the adversary.
 It should be noted that although this property is assumed to be true, \textsc{ProVerif} does verify the secrecy of these names and fails with an error message should it be able to disprove the assumption (\cite{blanchet2020proverif}, p. 111).
 
-\begin{lstlisting}[caption={Definition of custom one-way functions},label={lst:functions},firstnumber=224]
+\begin{lstlisting}[caption={Secrecy Queries},label={lst:functions},firstnumber=224]
 free privkey_ipx_a, privkey_ipx_b: privkey [private].
 free par_req_key_a, par_res_key_a, rev_req_key_a, rev_res_key_a,
     par_req_key_b, par_res_key_b, rev_req_key_b, rev_res_key_b,
