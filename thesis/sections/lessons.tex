@@ -21,16 +21,17 @@ Beyond general best practices like the one above, \textsc{ProVerif} can offer li
 The configuration flag {\sffamily verboseTerm} which is supposed to enable a more detailed output with termination warnings does not yield any helpful results for the problematic queries.
 Different built-in resolution strategies do not solve the problem either.\medskip
 
-Given that the software is not optimized for multi-core environments and only ever makes use of a single thread at once, reducing the time to produce a verification result is especially cruicial in later stages of the process, when the protocol under test has already reached a sizable complexity.
-With verification times of large models exceeding several hours, even with the protocol partially tagged, splitting up the \textsc{ProVerif} file along different queries lends itself as a crude method of parallelization.\medskip
-
 Thirdly, even if \textsc{ProVerif} itself successfully terminates and finds an attack, there is no guarantee the related trace can be exported in form of a visual graph.
-By default, the program creates files of type \textit{dot} that can subsequently be consumed by the software Graphviz to draw a directed graph.
-With large protocol models such as the one created for \gls{prins}, the latter is quickly overburdened by the number of nodes representing key protocol events and edges representing their relation as well as message flows.
-Ommitting all replications in the main process of the model, denoted by an exclamation mark, does not result in a noticable improvement.
+By default, the program creates files of type \textit{dot} that can be consumed by the software Graphviz to draw a directed graph into several different output formats, such as pdf, png, or svg.
+With large protocol models such as the one created for \gls{prins}, Graphviz's \textit{dot} utility is quickly overburdened by the number of nodes representing key protocol events and edges representing their relation as well as message flows.
 Even after multiple hours of execution, Graphviz is unable to completely render an attack trace from any of the disproven queries described in the previous sections.
-The lack of a visual representation of the traces severely complicates validation of the discovered attacks.
-It should be noted that \textsc{ProVerif} still prints a text-based description of the attack trace on the standard output, which itself is quickly becoming unmanagable for complex protocols as well.\medskip
+Ommitting all replications in the main process of the model, denoted by an exclamation mark, does not result in a noticable improvement either.
+Hence, the only result provided for queries 8, 9, and 10 is the textual representation of the attack trace by \textsc{ProVerif} and the raw \textit{dot} files.
+
+Since \textit{dot} is the only supported output for a visual representation of the discovered attack traces, \textsc{ProVerif} is necessarily limited by the issues with the handling of this file format.
+The lack of such visualization severely complicates validation of the discovered attacks.
+It should be noted that \textsc{ProVerif} still prints a text-based description of the attack trace on the standard output.
+However, given the large amounts of system states this representation is quickly becoming unmanagable for complex protocols itself.\medskip
 
 Fourthly, unlike in many popular programming languages, the behavior of constructurs and destructors within an if-then-else clause is such that they do not produce a boolean negative return value in case of failure, but the special value {\sffamily fail}.
 This can easily lead to unintended behavior as neither of the branches of the logic tree are executed and instead the process as a whole fails.
@@ -53,6 +54,17 @@ otherwise forall p: prins, ops: bitstring, id: bitstring, tag: mac,
 otherwise forall k: privkey;
     validPrinsSign(fail, pk(k)) = false.
 \end{lstlisting}
+
+
+Lastly, \textsc{ProVerif}'s lack of support for multi-threaded execution can become a bottleneck when verifying larger systems.
+Given that the software only ever makes use of a single thread at once, each query is executed sequentially and a blocking query will block all remain ones indefinitely.
+This is especially problematic when the protocol under test has reached a sizable complexity and existing queries are modified or new queries are added in later stages.
+
+In these situations, splitting up the set of queries into different \textsc{ProVerif} files lends itself as a crude method of macro-parallelization.
+While effective, this practice is tedious and time-consuming.
+Ideally, \textsc{ProVerif} would add a command line option that would allow to distribute queries across several threads.
+Likewise, a simple optimization related to the generation of attack traces explained above, would be spawning the \textit{dot} process in parallel to \textsc{ProVerif} itself.
+That way, in contrast to the current implementation, the time-consuming rendering of these graphs would not block the verification as a whole.\medskip
 
 All in all, the above issues related to the reporting of warnings and internal progress during verification, program non-termination, and the visualization of discovered attack traces render the obtained results vague at best.
 Without a practical way to retrace the executed procotol flow, verifying \textsc{ProVerif}'s findings, let alone deriving improvements for the protocol based on them, is simply unfeasible.
