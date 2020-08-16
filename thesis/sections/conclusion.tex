@@ -5,7 +5,10 @@ The three research questions can be answered as follows.\bigskip
 (1) Is it possible to comprehensively describe the 5G inter-operator signaling protocol with existing modeling techniques?
 
 Yes, with a number of abstractions.
-The created model does incorporate all key characteristics of the \gls{prins} protocol, including multi-channel communication, separation of protocol phases, multiple active participants, intermediary message modifications, and all necessary cryptographic operations (i.e. signatures, \glspl{mac}, and \gls{aead} encrytion).
+The high-level comparison between \textsc{Tamarin} and \textsc{ProVerif} shows that both tools should in theory be able to express and validate important aspects of the \gls{prins} protocol.
+Only a few useful modelling constructs in \textsc{ProVerif}, such as tables, synchronization, and better support for observational equivalence proofs, favor this tool.
+
+The created model successfully incorporates all key characteristics of the \gls{prins} protocol, including multi-channel communication, separation of protocol phases, multiple active participants, intermediary message modifications, and all necessary cryptographic operations (i.e. signatures, \glspl{mac}, and \gls{aead} encrytion).
 Minor aspects are abstracted away, such as the detailed structure of protection policies, the \gls{tls} key export, and the invalidation of N32-f sessions as described in section~\ref{sec:issues}.
 However, given their impact on the security properties to be verified, these do not have an impact on the verification result.
 
@@ -23,7 +26,7 @@ Not only does this impede a clear understanding for implementers and mobile oper
 But also, it inhibits security research to properly verify these protocols against their intended properties.
 
 The author argues that, given the importance of secure and reliable communication for some of the mission critical use cases 5G is supposed to address, specifying a concrete threat model and security requirements derived from it is indispensable.
-More so than a formal verification, which proved rather fragile and vague in practice, a precise definition of the requirements would greatly facilitate the development of a secure protocol.\bigskip
+More so than a formal verification, which proved rather fragile in practice, a precise definition of the requirements would greatly facilitate the development of a secure protocol.\bigskip
 
 \noindent
 (3) Based on the model created as part of this work, can current formal verification tools proof or disproof particular security requirements of the \gls{prins} protocol?
@@ -34,5 +37,8 @@ Moreover, message modifications by unknown \gls{ipx} providers or modifications 
 
 Properties that were disproven include the rejection of replayed message modifications, detection of the removal of previously added message modifications, as well as the integrity protection of \gls{json} patches.
 While the respective queries leave some margin of error for potential false attacks to be found by \textsc{ProVerif}, as outlined in section~\ref{sec:verification}, there is no way to tell without the discovered attack traces available.
-
 What is more, the authentication of N32-f messages itself could not be proven, as it resulted in the non-termination of \textsc{ProVerif}.
+
+Based on these results, it would be premature to speak of a vulnerability or weakness in the \gls{prins} protocol itself.
+Instead, further work is needed in order to validate the created model, refine the verification performed as part of this thesis, and substantiate the findings.
+A few approaches that may guide future efforts are outlined in the last section.
