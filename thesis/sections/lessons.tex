@@ -1,21 +1,21 @@
-Aside from insights into the security properties of \gls{prins} itself, modelling a complex protocol like this also provides a better understanding of the tool \textsc{ProVerif}.
+Aside from insights into the security properties of \gls{prins} itself, modeling a complex protocol like this also provides a better understanding of the tool \textsc{ProVerif}.
 The following is a brief account of some of the key challenges encountered while compiling this thesis.\medskip
 
 Firstly, one of the most challenging aspects of the verification with \textsc{ProVerif} is the lack of built-in debug capabilities.
 The reason why the debug queries in section~\ref{ssec:debug} are introduced to the verification is that without them, there is no indication when specified events cannot be reached individually.
 Instead, compound reachability queries or correspondence assertions that incorporate these events are likely to provide erroneous results.
 Without being aware of this behavior and explicitly testing the reachability of every single event itself, this may at times lead to a false confidence into the properties of the protocol.
-Thankfully, the \textsc{ProVerif} user manual does mention using simple reachability queries to prevent exactly that (see \cite{blanchet2020proverif}, p. 52).
-A lesson learned from facing the issue of certain protocol branches being unreachable is to add said debug queries from the very beginning of the modelling process each time a new event is specified.\medskip
+Thankfully, the \textsc{ProVerif} user manual does mention using simple reachability queries to prevent exactly that (see \cite{blanchet2020proverif}, p.~52).
+A lesson learned from facing the issue of certain protocol branches being unreachable is to add said debug queries from the very beginning of the modeling process each time a new event is specified.\medskip
 
 Secondly, ensuring termination of the model checker is all but trivial and the tool provides little insights into situations that may lead to non-termination.
-One commonly encountered issue during the verification of \gls{prins}, such as in the case of the query in listing \ref{lst:query-sec-6}, is the program inserting an increasing number of rules during the resolution process when trying to prove a given fact is derivable from available clauses, but never succeeding to do so.
+One commonly encountered issue during the verification of \gls{prins}, such as in the case of the query in listing~\ref{lst:query-sec-6}, is the program inserting an increasing number of rules during the resolution process when trying to prove a given fact is derivable from available clauses, but never succeeding to do so.
 In other scenarios the program does not print out any indication of progress anymore and seemingly halts.
 
 One source of this problem during verification was the confusion of sent and received messages between processes, leading to loops within the protocol.
 As soon as the type signature of a \textsc{ProVerif} function matches those of the avilable names, the tool will attempt to execute it.
-The recommended way to avoid such mix-ups is tagging the protocol using defined constants to guide the execution of honest protocol participants, as explained in the user manual by example of a cryptographic constructor (see \cite{blanchet2020proverif}, p. 114).
-Key takeaway from the modelling experience of \gls{prins} is to add tags to every single input and any custom functions that may be ambiguous based on the type of their input arguments.
+The recommended way to avoid such mix-ups is tagging the protocol using defined constants to guide the execution of honest protocol participants, as explained in the user manual by example of a cryptographic constructor (see \cite{blanchet2020proverif}, p.~114).
+Key takeaway from the modeling experience of \gls{prins} is to add tags to every single input and any custom functions that may be ambiguous based on the type of their input arguments.
 
 Beyond general best practices like the one above, \textsc{ProVerif} can offer little support to prevent non-termination, as termination analysis is generally an undecidable problem.
 The configuration flag {\sffamily verboseTerm} which is supposed to enable a more detailed output with termination warnings does not yield any helpful results for the problematic queries.

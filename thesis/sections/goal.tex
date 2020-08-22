@@ -1,7 +1,7 @@
 This thesis aims to investigate security properties of the 5G inter-operator signaling protocol \gls{prins} with the methods of formal verification.
-Given the compexity of secure protocol design and the fact that \gls{3gpp} more often than not references existing protocols rather than creating its own ones, it is considered beneficial to analyze \gls{prins} in detail.
-Since model checking allows verification based on a system's specification, or rather a formal model thereof, this work is independent from any particular implementation.
-Consequently, proving or disproving properties of the model to be created is supposed to result in recommendations to improve the underlying specification.
+Given the compexity of secure protocol design and the fact that \gls{3gpp} more often than not references existing protocols rather than creating its own ones, the author considers it beneficial to analyze \gls{prins} in detail.
+Since model checking allows verification based on a system's specification, or rather a formal model thereof, this work is independent of any particular implementation.
+Consequently, proving or disproving properties of the model is supposed to result in recommendations to improve the underlying specification.
 In summary, the objective is to answer the following three research questions:
 
 \begin{enumerate}[label=(\arabic*)]
@@ -13,11 +13,11 @@ In summary, the objective is to answer the following three research questions:
 \end{enumerate}
 
 As the protocol to be verified is comprised of several different technologies, some of them already thoroughly tested, certain aspects are considered out of scope.
-This includes \gls{tls} version 1.2 and 1.3, which have been subject to previous formal analysis and are assumed to be perfectly secure in the in the following.
+This includes \gls{tls} version 1.2 and 1.3, which have been subject to previous formal analysis and are assumed to be perfectly secure in the following.
 The reader is referred to~\cite{horvat2015formal}, \cite{cremers2017comprehensive}, and \cite{van2018analysis} who cover this protocol in great detail.
 The same assumption applies to \gls{jwe} and \gls{jws}, which are part of the \gls{jose} suite.
-Their profiles as specified in \cite{3gpp.33.210}, using the \gls{aes} in \gls{gcm} and \gls{ecdsa} respectively, are considered perfect.
+Their profiles as specified in \gls{3gpp} \gls{ts} 33.210 (\cite{3gpp.33.210}, pp.~19-20), using the \gls{aes} in \gls{gcm} and \gls{ecdsa} respectively, are considered perfect.
 Analyses of the security properties of these cryptographic algorithms are provided by \cite{mcgrew2004security} as well as \cite{fersch2016provable}.
 
 Furthermore, this thesis is intentionally restricted to the application of existing software tools for formal verification, rather than extending them or even developing a new one.
-It can be argued that if model checking is to become a common step in the design and standardization of new security protocols, model checkers need to exhibit general applicability so as to be utilized by the protocol designers without having to recreate a special-purpose one each time.
+It can be argued that if model checking is to become a common step in the design and standardization of new security protocols, model checkers need to exhibit general applicability so as to be utilized by the protocol designers without having to create special-purpose tools.

@@ -22,13 +22,13 @@
 \subsection{Supporting Constructs}
 
 As noted in the previous section, \textsc{ProVerif} features a basic type system.
-Aside from allowing for a closer representation of the actual protocol implementation, types also serve as guardrails while modelling the honest participants in that, for example, a constructor expecting an input of type bitstring cannot be called with a different type.
-However, it should be noted that types are ignored by the adversary during verification stage unless explicitly defined otherwise, allowing \textsc{ProVerif} to detect potential type flaw attacks (c.f. \cite{blanchet2020proverif}, p. 38).
+Aside from allowing for a closer representation of the actual protocol implementation, types also serve as guardrails while modeling the honest participants in that, for example, a constructor expecting an input of type bitstring cannot be called with a different type.
+However, it should be noted that types are ignored by the adversary during verification stage unless explicitly defined otherwise, allowing \textsc{ProVerif} to detect potential type flaw attacks (c.f. \cite{blanchet2020proverif}, p.~38).
 
 In addition to \textsc{ProVerif}'s built-in data types, a number of custom types displayed in listing~\ref{lst:types} are defined.
 Compound data structures, such as {\sffamily aad}, {\sffamily prins}, {\sffamily modprins}, and {\sffamily ipxmod}, are defined solely for convenience and improved readability so as to not pass each of their respective subcomponents individually.
 Other types are supposed to resemble data with specific characteristics.
-A \gls{mac}, for example, is modelled by the type {\sffamily mac} that cannot be transformed back into its original components.
+A \gls{mac}, for example, is modeled by the type {\sffamily mac} that cannot be transformed back into its original components.
 Data of type {\sffamily pubkey} on the other hand, can only be derived from a related {\sffamily privkey}.
 
 \begin{lstlisting}[caption={Custom type definitions},label={lst:types},firstnumber=11]
@@ -45,16 +45,16 @@ type ipxmod.                        (* ipx json patch *)
 
 Listing~\ref{lst:channels} shows the defined channels used to transport messages between processes.
 By default, channels follow the Dolev-Yao model, meaning that all transferred information can be read, modified, intercepted or arbitrarily created by the adversary.
-Secure channels that the attacker has no access to can be modelled by explicitly annotating them as private.
+Secure channels that the attacker has no access to can be modeled by explicitly annotating them as private.
 
 Three public channels are defined in order to represent the logical N32-f message flow from the sending \gls{sepp} to the first \gls{ipx} provider ({\sffamily nf32\_a}), from there to the next \gls{ipx} node ({\sffamily nf32\_i}), and finally to the receiving \gls{sepp} ({\sffamily nf32\_b}) or vice versa.
-If all N32-f communication would be modelled using a single channel, the verification tool would have no information about the intended message flow involing the intermediary nodes.
+If all N32-f communication would be modeled using a single channel, the verification tool would have no information about the intended message flow involing the intermediary nodes.
 In such a case, a message sent by one \gls{sepp} could be received directly by another \gls{sepp} without traversing any of the \gls{ipx} providers.
-Beyond that, separate channels also alleviate the need to encode full-featured routing information in every single message, detailed further in section \ref{sec:issues}.
+Beyond that, separate channels also alleviate the need to encode full-featured routing information in every single message, detailed further in section~\ref{sec:issues}.
 
 In contrast to N32-f, N32-c communication utilizes a single private channel.
 Logically, this represents an end-to-end channel between two communicating \glspl{sepp} guaranteeing both confidentiality and integrity of messages.
-As highlighted in section \ref{sec:goal}, proving security of established, well-tested protocols is considered out of scope.
+As highlighted in section~\ref{sec:goal}, proving security of established, well-tested protocols is considered out of scope.
 Since the protection of N32-c traffic completely relies on \gls{tls}, the protocol is assumed to perfectly secure in that regard.
 
 The remaining channels transport messages within the \glspl{sepp} themselves or their respective \glspl{plmn} and thus, are also considered secure.
@@ -69,13 +69,13 @@ free n32c_a: channel [private].     (* Channel between SEPP A and SEPP B *)
 free n32c_b: channel [private].     (* Channel between SEPP A and SEPP B *)
 free plmn_a: channel [private].     (* PLMN A internal channel *)
 free plmn_b: channel [private].     (* PLMN B internal channel *)
-free err_a: channel [private].      (* Internal error signalling Sepp A *)
-free err_b: channel [private].      (* Internal error signalling Sepp B *)
+free err_a: channel [private].      (* Internal error signaling Sepp A *)
+free err_b: channel [private].      (* Internal error signaling Sepp B *)
 \end{lstlisting}
 
 Listing~\ref{lst:constants} provides an overview of global constants used by the protocol model.
 These are utilized at different points of the process execution to represent fixed, known values or flags.
-An empty \gls{json} patch written by \gls{ipx} providers is modelled by the {\sffamily EMPTY} constant (see listing~\ref{lst:ipx-send}).
+An empty \gls{json} patch written by \gls{ipx} providers is modeled by the {\sffamily EMPTY} constant (see listing~\ref{lst:ipx-send}).
 {\sffamily SEND} and {\sffamily RECV} flags are utilized, for example, during derivation of the N32-f keys to indicate whether or not the \gls{sepp} initiated the N32-c handshake (see listing~\ref{lst:n32c-handshake-send} and \ref{lst:n32c-handshake-recv}).
 {\sffamily SUCC} and {\sffamily FAIL} are constants representing the status code for success or failure in error signaling procedures (see listing~\ref{lst:n32c-error-send} and \ref{lst:n32c-error-recv})
 Lastly, {\sffamily REQ} and {\sffamily RES} indicate the type of \gls{http} message being exchanged between the two \glspl{nf} communicating via the inter-operator interface.
@@ -91,7 +91,7 @@ const RES: bitstring.               (* HTTP Response *)
 \end{lstlisting}
 
 \textsc{ProVerif}'s tables are used to model each \gls{sepp}'s local storage for N32-f context information.
-Each \gls{sepp} has to keep track of several attributes, listed in section \ref{sec:n32}, in order to correlate N32-f messages to a previously established session and check the validity of incoming messages.
+Each \gls{sepp} has to keep track of several attributes, listed in section~\ref{sec:n32}, in order to correlate N32-f messages to a previously established session and check the validity of incoming messages.
 The created model does not consider all of these information, abstracting away the following attributes cited in the \gls{3gpp} specification:
 (1)~The remote \gls{sepp} ID, part of the N32-f peer information, is not considered.
 In real-world implementations, this attribute helps peers to distinguish multiple \gls{sepp} instances in a foreign \gls{plmn}.
@@ -128,7 +128,7 @@ Data constructors are used to model type transformations in \textsc{ProVerif}.
 Listing~\ref{lst:constructor} shows an example that combines the information elements added by intermediate \gls{ipx} providers when applying message modifications.
 This particular constructor takes four information elements of type {\sffamily bitstring}, {\sffamily mac}, {\sffamily bitstring}, and {\sffamily bitstring} and produces a single {\sffamily ipxmod} element.
 Fundamentally, this follows the same syntax as ordinary \textsc{ProVerif} constructors.
-However, the {\sffamily [data]} annotation has the effect that the adversary is able to deconstruct the resulting data type into its original subcomponents at any time (c.f. \cite{blanchet2020proverif}, p. 37), even without a related deconstructor explicitly defined.
+However, the {\sffamily [data]} annotation has the effect that the adversary is able to deconstruct the resulting data type into its original subcomponents at any time (c.f. \cite{blanchet2020proverif}, p.~37), even without a related deconstructor explicitly defined.
 
 \begin{lstlisting}[caption={Definition of custom data constructor},label={lst:constructor},firstnumber=104]
 fun jsonPatch(bitstring,            (* Operations *)
@@ -143,9 +143,9 @@ Below functions for the derivation of N32-f context ID, master key, session key,
 Since none of them defines a related deconstructor, the original function inputs cannot be derived from its output.
 
 The function {\sffamily deriveMasterKey} is uniquely defined as a private function due to a limitation of the created model.
-According to the \gls{3gpp} specification, the N32-f master key is derived from the N32-c session using \gls{tls} keying material exporters (\cite{3gpp.33.501}, p. 132).
-Since the \gls{tls} protocol is not modelled in detail, the {\sffamily deriveMasterKey} function is defined as a substitue not available to the Dolev-Yao adversary.
-Section \ref{sec:issues} further describes the benefits and drawbacks of modelling the key derivation in this way.
+According to the \gls{3gpp} specification, the N32-f master key is derived from the N32-c session using \gls{tls} keying material exporters (\cite{3gpp.33.501}, p.~132).
+Since the \gls{tls} protocol is not modeled in detail, the {\sffamily deriveMasterKey} function is defined as a substitue not available to the Dolev-Yao adversary.
+Section \ref{sec:issues} further describes the benefits and drawbacks of modeling the key derivation in this way.
 
 \begin{lstlisting}[caption={Definition of custom one-way functions},label={lst:functions},firstnumber=125]
 fun deriveContextId(bitstring, bitstring): bitstring.
@@ -161,7 +161,7 @@ This is examplified by the {\sffamily sign} function in listing~\ref{lst:destruc
 Given two inputs of type {\sffamily bitstring} and {\sffamily privkey}, the function creates a new {\sffamily bitstring}, resembling a digital signature.
 The related deconstructor {\sffamily checkSign} takes two arguments of type {\sffamily bitstring} and {\sffamily pubkey} and returns the original message.
 This operation only succeeds with the public key belonging to the private key that was previously used for signing the message, i.e. if the signature is valid.
-The second deconstructor depicted in the listing below is provided to allow the adversary to retrieve signed message contents without possessing the public key for validation, as suggested by the official \textsc{ProVerif} user's manual (c.f. \cite{blanchet2020proverif}, p. 14).
+The second deconstructor depicted in the listing below is provided to allow the adversary to retrieve signed message contents without possessing the public key for validation, as suggested by the official \textsc{ProVerif} user's manual (c.f. \cite{blanchet2020proverif}, p.~14).
 
 \begin{lstlisting}[caption={Definition of custom constructors and destructors},label={lst:destructors},firstnumber=142]
 fun pk(privkey): pubkey.
@@ -174,10 +174,10 @@ reduc forall m: bitstring, k: privkey;
 
 \subsection{N32-c Processes}
 
-According to the specification, N32-c communication comprises three different procedures: Key agreement, parameter exchange (e.g. protection policies or \gls{ipx} provider information), and error handling (c.f. \cite{3gpp.33.501}, p. 128).
+According to the specification, N32-c communication comprises three different procedures: Key agreement, parameter exchange (e.g. protection policies or \gls{ipx} provider information), and error handling (c.f. \cite{3gpp.33.501}, p.~128).
 The model created as part of this work combines the first two into a single procedure for initial session establishment and considers a separate error signaling procedure.
 Each of them is defined by a sending and a receiving process.
-Further, each process is modelled separately for \gls{sepp}~A and \gls{sepp}~B, since all processes access local storage, represented by a distinct table for each \gls{sepp} (see listing~\ref{lst:tables}).
+Further, each process is modeled separately for \gls{sepp}~A and \gls{sepp}~B, since all processes access local storage, represented by a distinct table for each \gls{sepp} (see listing~\ref{lst:tables}).
 
 Listing~\ref{lst:n32c-handshake-send} shows the sending process of the N32-c handshake for \gls{sepp}~A.
 Initially, a fresh N32-f pre-context ID is created and sent towards the peer \gls{sepp} the N32-c channel, together with the configured cipher suites.
@@ -189,11 +189,11 @@ Section \ref{sec:issues} explains this requirement in detail and what impact it 
 Subsequently, the \glspl{sepp} exchange encryption policies and modification policies.
 The information sent out as part of message 3 is accompanied by the destination \gls{sepp} address and the N32-f context ID agreed during the previous step.
 The process only continues past the receipt of message 4 if the incoming message contains the correct destination address, N32-f context ID, and an encryption policy that matches its own.
-Recall that the \gls{3gpp} specification assumes these protection policies to be agreed by the \gls{sepp} operators in advance (see section \ref{sec:n32}).
+Recall that the \gls{3gpp} specification assumes these protection policies to be agreed by the \gls{sepp} operators in advance (see section~\ref{sec:n32}).
 Following a successful protecion policy exchange, messages 5 and 6 are used to share the \gls{ipx} security information lists, i.e. an identifier of each \gls{sepp}'s directly connected \gls{ipx} provider and its public key.
 
 Subsequently, the master key is derived using the above-mentioned constructor {\sffamily deriveMasterKey}.
-Based on this master key, the complete hierarchy of session keys and initialization vectors is derived as outlined in section \ref{sec:n32}.
+Based on this master key, the complete hierarchy of session keys and initialization vectors is derived as outlined in section~\ref{sec:n32}.
 Since the protocol distinguishes session keys and initialization vectors to be used based on the \gls{sepp}'s role in the N32-c communication as well as the type of \gls{http} message transported, the functions {\sffamily deriveSessionKey} and {\sffamily deriveIV} consume a flag indicating whether the \gls{sepp} initiated the N32-c session ({\sffamily SEND}) or not ({\sffamily RECV}) and a flag indicating its use for \gls{http} requests or responses, in addition to the master key itself.
 Lastly, the agreed session parameters are stored in the \gls{sepp}'s local storage table.
 
@@ -325,9 +325,9 @@ let N32cRecvHandshakeSeppA(sepp_a_plmn: bitstring, sepp_a_addr: bitstring,
     ).
 \end{lstlisting}
 
-Listing~\ref{lst:n32c-error-send} shows the sending \gls{sepp}'s part of error signaling process carried out over N32-c, the details of which are described not in the security specification \gls{ts} 33.501, but \gls{ts} 33.573 (c.f. \cite{3gpp.29.573}, p. 18).
+Listing~\ref{lst:n32c-error-send} shows the sending \gls{sepp}'s part of error signaling process carried out over N32-c, the details of which are described not in the security specification \gls{ts} 33.501, but \gls{ts} 33.573 (c.f. \cite{3gpp.29.573}, p.~18).
 
-After detecting an error in an incoming N32-f message, modelled by receiving a message containing on the internal channel {\sffamily err\_a}, the \gls{sepp} retrieves the related N32-f context from its local storage.
+After detecting an error in an incoming N32-f message, modeled by receiving a message containing on the internal channel {\sffamily err\_a}, the \gls{sepp} retrieves the related N32-f context from its local storage.
 Based on this information, the process initiates an error message over N32-c, containing the destination \gls{sepp}'s address, the N32-f context ID, and the ID of the flawed message received.
 
 The \gls{sepp} then awaits a response from its peer, confirming the receipt of said error message.
@@ -403,7 +403,7 @@ let NfARequest(nf_a_addr: bitstring, nf_b_addr: bitstring)=
     out(plmn_a, (SEND, http_message)).
 \end{lstlisting}
 
-The \gls{nf} response process shown in listing \ref{lst:nf-respond} expects an incoming \gls{http} message.
+The \gls{nf} response process shown in listing~\ref{lst:nf-respond} expects an incoming \gls{http} message.
 The equality sign before the constant {\sffamily RECV} is a shorthand for the validation of the message direction parameter.
 In this case, only tuples consisting of the constant {\sffamily RECV} and a variable of type {\sffamily http} will be consumed by the process.
 
@@ -491,7 +491,7 @@ let N32fSendSeppA()=
     ).
 \end{lstlisting}
 
-The receiving part of N32-f signaling is modelled by the process in listing~\ref{lst:n32f-recv}.
+The receiving part of N32-f signaling is modeled by the process in listing~\ref{lst:n32f-recv}.
 The \gls{sepp} initially awaits a modified \gls{prins} message with a destination address that matched its own.
 Note, that even if none of the intermediate \gls{ipx} providers is required to make changes to a N32-f message, they are still be expected to each create an empty \gls{json} patch and sign it - hence the expected data type {\sffamily modprins}.
 
@@ -603,7 +603,7 @@ let N32fRecvSeppA(sepp_a_addr: bitstring)=
 
 \subsection{IPX Processes}
 
-As with the \glspl{sepp}, the two directly connected intermediaries providers are modelled separately as \gls{ipx} A and \gls{ipx} B.
+As with the \glspl{sepp}, the two directly connected intermediaries providers are modeled separately as \gls{ipx} A and \gls{ipx} B.
 Listing~\ref{lst:ipx-send} shows the process of \gls{ipx} A receiving a message from its peer \gls{sepp}, applying the first \gls{json} patch and then sending it on to the next \gls{ipx} provider.
 
 After receiving the N32-f message, it is decomposed into its individual parts.
@@ -611,7 +611,7 @@ This operation, among other information, yields the \gls{jwe} tag required for w
 Lines 838-840 show how the message operations (i.e. the modifications itself), the \gls{ipx} provider ID, the \gls{jwe} tag, and a \gls{jws} signature of the complete message are combined to form this patch.
 
 The following decomposition of the \gls{aad} object solely serves the purpose of accessing the N32-f context ID and the message ID used by event {\sffamily ipxSendA} at the end of the process.
-Section \ref{sec:analysis} describes how this information is used for verification.
+Section \ref{sec:verification} describes how this information is used for verification.
 Afterwards, the \gls{ipx} provider's patch is combined with the original message contents in lines 851-859 to form a modified \gls{prins} message of type {\sffamily modprins}.
 Note, that there is an additional, empty \gls{json} patch written by this first \gls{ipx} provider.
 This is done to simplify the model by not creating a separate data-type for a modified \gls{prins} message with a single \gls{json} patch.
@@ -749,7 +749,7 @@ The receiving \gls{sepp} processes {\sffamily N32fRecvSeppA} and {\sffamily N32f
 The same applies to the error handling processes {\sffamily N32cSendErrorSeppA} and {\sffamily N32cSendErrorSeppB} as well as {\sffamily N32cRecvErrorSeppA} and {\sffamily N32cRecvErrorSeppB}.
 The \gls{nf} processes {\sffamily NfAResponse} and {\sffamily NfBResponse}, just as the request processes, consume source and destination addresses of the message to be created in response.
 
-Synchronization group~4 and 5 mirror groups 2 and 3 in that the response messages created during the previous phase are transmitted via the \gls{ipx} providers and received by the peer elements.
+Synchronization group~4 and 5 mirror group.~2 and 3 in that the response messages created during the previous phase are transmitted via the \gls{ipx} providers and received by the peer elements.
 The only exception in synchronization group~5 is that no response is being sent following the receipt of a response message. Hence, sending \gls{sepp} processes are omitted.
 
 \begin{lstlisting}[caption={Definition of the main process},label={lst:main-proc},firstnumber=1508]

@@ -1,8 +1,8 @@
-As outlined in section \ref{sec:n32}, \gls{prins} is a non-trivial security protocol involving three active participants (initiating \gls{sepp}, responding \gls{sepp}, intermediary \gls{ipx} providers), and two interdependent protocol channels.
+As outlined in section~\ref{sec:n32}, \gls{prins} is a non-trivial security protocol involving three active participants (initiating \gls{sepp}, responding \gls{sepp}, intermediary \gls{ipx} providers), and two interdependent protocol channels.
 Its security goals evolve around confidentiality, integrity, replay protection, observational equivalenve, and authentication of message and patch sources.
 These properties do lend themselves to verification using formal methods.
 
-The previous section \ref{sec:formal} introduces the underlying theory and basic functionality of \textsc{Tamarin} and \textsc{ProVerif}.
+The previous section~\ref{sec:formal} introduces the underlying theory and basic functionality of \textsc{Tamarin} and \textsc{ProVerif}.
 Before transposing the \gls{prins} protocol specification into a model for formal verification, the question arises whether one is objectively better suited for this particular application.
 \\
 
@@ -24,9 +24,9 @@ Before transposing the \gls{prins} protocol specification into a model for forma
                                                & XOR operations        &       &                    & \checkmark                       &                           \\
     \hline
 \multirow{4}{*}{\begin{tabular}[c]{@{}l@{}}Authentication \\types\end{tabular}}            & Aliveness                    &       &                    & \checkmark                        & \checkmark                          \\
-                                               & Weak agreement               &       &                    & \checkmark                        &                            \\
-                                               & Non-injective agreement      &       &                    & \checkmark                        &                            \\
-                                               & Injective agreement          & $\bullet$     &                    & \checkmark                        & \checkmark                          \\
+                                               & Weak agreement               &       &                    & \checkmark                        & \checkmark                           \\
+                                               & Non-injective agreement      &       &                    & \checkmark                        & \checkmark                           \\
+                                               & Injective agreement          & $\bullet$     & $\bullet$                   & \checkmark                        & \checkmark                          \\
     \hline
     \multirow{4}{*}{\begin{tabular}[c]{@{}l@{}}Observational \\equivalence \end{tabular}} & Strong secrecy               & $\bullet$     &                    &                        & \checkmark                          \\
                                                & Offline guessing             &       &                    &                          & \checkmark                           \\
@@ -36,7 +36,7 @@ Before transposing the \gls{prins} protocol specification into a model for forma
     \multirow{4}{*}{\begin{tabular}[c]{@{}l@{}}Channel \\properties\end{tabular}} & Dolev-Yao                    &       & $\bullet$                  & \checkmark                        & \checkmark                          \\
                                                & Authenticated                &       &                    & \checkmark                        &                            \\
                                                & Confidential                 &       &                    & \checkmark                        &                            \\
-                                               & Secure                       & $\bullet$\footnotemark     &                    & \checkmark                        & \checkmark                         \\
+                                               & Secure                       & $\bullet$     &                    & \checkmark                        & \checkmark                         \\
     \hline
     \multirow{3}{*}{\begin{tabular}[c]{@{}l@{}}Additional \\features\end{tabular}} & Tables                       & $\circ$     & $\circ$                  &                          & \checkmark                          \\
                                                & Phases                       &       &                    &                          & \checkmark                          \\
@@ -48,18 +48,21 @@ Before transposing the \gls{prins} protocol specification into a model for forma
 \end{table}
 
 Table \ref{tab:tama-pro-comparison} aims to capture modeling features of both \textsc{Tamarin} and \textsc{ProVerif} and to map them to the requirements of \gls{prins}.
-Note that this does not preclude the fact that further operations (e.g. \gls{aead} encryption) cannot be specified using these built-in primitives.
-What is considered here is only the ,,out-of-the-box'' functionality of each respective tool.
+\gls{aead} encryption, which is an essential aspect of the N32-f protection, is assumed to be modeled using the built-in primitives for symmetric encryption and hashing.
+Depicted in this overview is only the ,,out-of-the-box'' functionality of each respective tool.
+Based on that, both model checkers offer support for all cryptographic primitives necessary to model the \gls{prins} protocol.
+As far as authentication is concerned, both \textsc{Tamarin} and \textsc{ProVerif} are able to address several different levels that cover the requirements of \gls{prins}.
 
-\footnotetext{Since \gls{tls} is considered secure (c.f. section \ref{sec:goal}), the N32-c channel is modeled as a secure channel.}
+Different channel properties can ease modeling by encoding explicit assumptions about their security.
+Since \gls{tls} is not analyzed as part of this thesis (c.f. section~\ref{sec:goal}), the N32-c channel is modeled as a secure channel.
+Both model checkers support this functionality.
 
-One can gather from this overview that both model checkers offer support for cryptographic primitives, authentication types, and channel properties necessary to model the \gls{prins} protocol.
 Although the \gls{3gpp} specification does not explicitly spell out any observational equivalence requirements, it is to be assumed that the refresh of N32-f session keys should not be noticable to adversaries controlling the N32-f channel, given that this procedure is performed via the end-to-end protected N32-c channel.
-As noted before, \textsc{ProVerif} does offer finer control over the type of observational equivalence to be verified and proving strong secrecy of individual terms is a particular advantage over \textsc{Tamarin}.
+As noted before, \textsc{ProVerif} does offer finer control over the type of observational equivalence to be verified and proving strong secrecy of individual terms is a particular advantage over \textsc{Tamarin} that is discernable based on these tools' documentation.
 
-Furthermore, the additional features of \textsc{ProVerif} can potentially help modeling the protocol more closely aligned to the \gls{3gpp} specification.
+Furthermore, the additional features of \textsc{ProVerif} can potentially help modeling the protocol more intuitively and closely aligned to the \gls{3gpp} specification.
 Its concept of tables can be utilized to recreate the N32-f context and the associated information stored by each of the \glspl{sepp}.
 Synchronization on the other hand is a suitable way to control the execution order of \mbox{N32-c} handshake and N32-f data transmission:
-As long as the handshake procedure described in section \ref{ssec:prins-sequence} is not finalized by both parties, there should be no N32-f communication.
+As long as the handshake procedure described in section~\ref{ssec:prins-sequence} is not finalized by both parties, there should be no N32-f communication.
 Both these constructs may not be strictly mandatory to accurately specify the \gls{prins} protocol, but they certainly make it more straightforward and hence, contribute to avoiding mistakes during modeling.
-Therefore, from chapter \ref{chap:modeling} onwards, this thesis focuses on modeling and verifying \gls{prins} using \textsc{ProVerif}.
+Therefore, from chapter~\ref{chap:modeling} onwards, this thesis focuses on modeling and verifying \gls{prins} using \textsc{ProVerif}.

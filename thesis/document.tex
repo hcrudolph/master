@@ -41,11 +41,11 @@
 \chapter{Introduction}
 \label{chap:intro}
 
-This thesis is about verifying security properties of the network protocol used for inter-operator communication in 5G systems.
-Section \ref{sec:problem} establishes the motivation to research this particular problem.
+This chapter establishes the problem statement and reserch interest behind the formal verification of the 5G inter-operator signaling protocol.
+Section \ref{sec:problem} describes the motivation to research this particular problem.
 Section \ref{sec:goal} outlines the research questions in scope and general working assumptions.
 Section \ref{sec:related} provides an overview of related work on formal verification of security protocols and mobile network protocols in general.
-Section \ref{sec:outline} describes the approach taken to answer the research questions and the overall structure of this thesis.
+Section \ref{sec:outline} describes the approach to answer the research questions and the overall structure of this thesis.
 
 \section{Context and Problem Statement}
 \label{sec:problem}
@@ -59,7 +59,7 @@ Section \ref{sec:outline} describes the approach taken to answer the research qu
 \label{sec:related}
 \import{sections/}{related.tex}
 
-\section{Outline}
+\section{Outline and Methodology}
 \label{sec:outline}
 \import{sections/}{method.tex}
 
@@ -68,11 +68,12 @@ Section \ref{sec:outline} describes the approach taken to answer the research qu
 \chapter{Theoretical Preliminaries}
 \label{chap:theory}
 
-Section~\ref{sec:n32} initially describes design rationale and functional requirements on \gls{prins}.
+This chapter establishes the theoretical foundations of the 5G inter-operator protocol and formal verification.
+Section~\ref{sec:n32} describes design rationale and functional requirements of \gls{prins}.
 Subsequently, the individual protocol components and message flows are outlined, specifically focussing on security requirements to be verified.
-Section~\ref{sec:formal} serves as an introduction to symbolic model checking of security protocols and compares two tools that can be used for this purpose.
-Key concepts are explained to an extent that allows the reader to understand the formal model of the \gls{prins} protocol and its verification later on.
-Section~\ref{sec:summary} summarizes the theoretical background and draws a conclusion about which tool to use for further analysis.
+Section~\ref{sec:formal} serves as an introduction to symbolic model checking of security protocols and compares two tools that may be used for this purpose.
+Key concepts are explained to an extent that allows the reader to understand the model of the \gls{prins} protocol and its verification later on.
+Section~\ref{sec:summary} draws a conclusion about which tool to use for further analysis.
 
 \section{5G Signaling and the PRINS Protocol}
 \label{sec:n32}

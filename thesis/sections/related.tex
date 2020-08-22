@@ -1,43 +1,43 @@
 The idea of proving correctness of concurrent systems, such as security protocols, based on a formal representation is not a new one.
 \cite{basin2018model} provide an extensive historical account of this kind of model checking, streching back to the 1980s.
-This section summarizes foundational theories and key contributions to this specific field of reasearch that remains active to this day.
+This section summarizes foundational theories and key contributions to this specific field of research that remains active to this day.
 Specifically, previous work directly related to the application of formal verification to mobile network security and its effect on the development of these protocols is discussed.
-As part of this, model checking software commonly used in recent years are hightlighted, which serves a basis for choosing a particular tool in section \ref{sec:formal}.
+As part of this, examples of model checking software commonly used in recent years are hightlighted, which serves as a basis for choosing a particular tool in section~\ref{sec:formal}.
 Lastly, research on inter-operator signaling protocols of previous mobile generations and their security vulnerabilities is cited in order to emphasize this particular subject's relevancy.
 
 The term ,,model checking'' as it is used today goes back to Clarke and Emerson, who are the first to propose the computer-aided verification of finite-state systems expressed in \gls{gls:ltl}.
-In contrast to previous efforts, they model the system flow graph as a finite structure and describe ,,an efficient algorithm [...] to decide whether a given finite structure is a model of a particular formula'' (\cite{clarke1981design}, p. 2).
+In contrast to previous efforts, they model the system flow graph as a finite structure and describe ,,an efficient algorithm [...] to decide whether a given finite structure is a model of a particular formula'' (\cite{clarke1981design}, p.~2).
 Even though this particular work is used to reason about a single concurrent program, the authors already hint to the possible extension of their approach to ,,network communication protocols''.
 \cite{dolev1983security} consitutes another landmark paper in terms of formally verifying security protocols.
-Their contribution is to model a protocol ,,as a machine consisting of an arbitrary number of honest agents executing the protocol, in which all messages sent are intercepted by the adversary [...], all messages received are sent by the adversary'' (\cite{basin2018model}, p. 6).
-A foundational concept for many model checkers to this day, it is shown in section \ref{sec:n32} how this assumption is an excellent fit for the use case of inter-operator signaling.
+Their contribution is to model a protocol ,,as a machine consisting of an arbitrary number of honest agents executing the protocol, in which all messages sent are intercepted by the adversary [...], all messages received are sent by the adversary'' (\cite{basin2018model}, p.~6).
+A foundational concept for many model checkers to this day, it is shown in section~\ref{sec:n32} how this assumption is an excellent fit for the use case of inter-operator signaling.
 
 The Dolev-Yao model further represents all messages in abstract mathematical terms and assumes the underlying cryptography to be perfect -- an approach also known as formal verification in the symbolic model or \textit{symbolic model checking}.
-This stands in contrast to \textit{computational model checking} in which ,,messages are bitstrings, and the adversary is a probabilistic polynomial-time Turing machine'' (\cite{blanchet2008computationally}, p. 1).
+This stands in contrast to \textit{computational model checking} in which ,,messages are bitstrings, and the adversary is a probabilistic polynomial-time Turing machine'' (\cite{blanchet2008computationally}, p.~1).
 Although successfully used for verifying security properties of several security protocols (see~\cite{BlanchetJaggardScedrovTsayAsiaCCS08}, \cite{CadeBlanchetJoWUA13}, \cite{LippBlanchetBhargavanEuroSP19}), one of the basic assumptions of the thesis is perfect cryptography (c.f. section~\ref{sec:goal}).
-Therefore, this approach is only mentioned for informational purposes and shall not be pursued further.
+Therefore, this approach is only mentioned for the sake of completeness and shall not be pursued further.\medskip
 
 In recent years, \gls{3gpp} networks and protocols clearly capture the interest of the model checking research community.
-This does not just apply to the latest 5G specifications, but to earlier generations as well, such as \gls{gls:3g}/\gls{umts} (see~\cite{alt2016cryptographic} and \gls{gls:4g}/\gls{lte} \cite{lee2014anonymity}).
+This does not just apply to the latest 5G specifications, but to earlier generations as well, such as \gls{gls:3g}/UMTS (see~\cite{alt2016cryptographic} and \gls{gls:4g}/LTE \cite{lee2014anonymity}).
 However, these papers mostly focus on the \gls{aka} protocol used for mutual authentication between subscriber and mobile network.
 Similar efforts are documented for the slightly modified 5G-\gls{aka} protocol.
 \cite{dehnel2018security} analyze a draft version of the 5G security specification and discover a potentially critical race-condition.
 By replaying an overheard encrypted subscription identifier following the authentication of a genuine user with the network, an attacker may be able to induce a session mis-binding in the communication between two 5G core network elements, leading to the leakage of the genuine subscriber's Authentication Vector.
-Although discussed by \gls{3gpp}'s security working group, this publication did not directly result in any of the improvements suggested by the authors.
+Although discussed by \gls{3gpp}'s Security Working Group, this publication did not directly result in any of the improvements suggested by the authors.
 \cite{basin2018formal} provide a comprehensive analysis that highlights a number flaws uncovered using formal methods and suggesting possible improvements.
 Specifically, they point out a lack of explicit specification of desired security properties, confidentiality requirements that are too weak, redundancies in the messages exchanged between network and subscriber, the use of a sequence number for replay protection, and a flawed key confirmation procedure.
 \cite{borgaonkar2019new} demonstrate a proof of concept and formal verification for an attack that utilizes authentication challenges obtained on a victim's behalf to infer at least 10 bits of the sequence number used in 5G \gls{aka}.
-Of these three papers on the 5G system, none of them directly resulted in the improvements the researchers suggested, although having been discussed in \gls{3gpp}'s security working group (see~\cite{s3-180727}).
+Of these three papers on the 5G system, none of them directly resulted in the improvements the researchers suggested, although having been discussed in \gls{3gpp}'s Security Working Group (see~\cite{s3-180727}).\medskip
 %While certainly not the only reason, one contributing factor is the way individual \gls{3gpp} specifications relate to and complement one another.
 
 The software used to aid the formal proofs on the 5G security protocols above is the \textsc{Tamarin} prover (\cite{meier2013tamarin}).
-The logical successor to another popular model checking tool, Scyther (\cite{cremers2008scyther}, \cite{scyther}), it is used in a number of formal verification research papers and enjoys active development.
-The tool \textsc{Proverif} (see \cite{blanchet2016modeling}, \cite{proverif}) takes a slightly different approch to symbolic model checking by describing protocols in a formal process algebra rather than multiset rewriting systems employed by \textsc{Tamarin}.
-An in-depth comparison of these two model checking tools is provided in section \ref{sec:formal}.
+The logical successor to another popular model checking tool, \textsc{Scyther} (\cite{cremers2008scyther}, \cite{scyther}), it is used in a number of formal verification research papers and enjoys active development.
+The tool \textsc{ProVerif} (see \cite{blanchet2016modeling}, \cite{proverif}) takes a slightly different approch to symbolic model checking by describing protocols in a formal process algebra rather than multiset rewriting systems employed by \textsc{Tamarin}.
+An in-depth comparison of these two model checking tools is provided in section~\ref{sec:formal}.
 
-Since the first 5G specification, i.e. \gls{3gpp} Release 15, has officially been released just over one year ago, security research has yet to cover all of its aspects.
+Since the first 5G specification, i.e. \gls{3gpp} Release 15, has officially been released just over two years ago, security research has yet to cover all of its aspects.
 At the time of this writing, the author is not aware of any work that specifically focuses on the \gls{prins} protocol.
-However, from efforts on inter-operator signaling in previous mobile generations and the security risks associated with it, one can deduct that it is just a matter of time until broader research interest focussed on the 5G equivalent.
-Security issues of \gls{ss7} are known since 2008 (see~\cite{engel2008locating}, \cite{engel2014locate}, \cite{oliveira2014world}, \cite{puzankov2014how}).
+However, from efforts on inter-operator signaling in previous mobile generations and the security risks associated with it, one can deduct that it is just a matter of time until broader research interest catches up with the 5G equivalent.
+Security issues of \gls{ss7} are known since the year 2008 (see~\cite{engel2008locating}, \cite{engel2014locate}, \cite{oliveira2014world}, \cite{puzankov2014how}).
 Furthermore, Diameter, the inter-operator signaling protocol used in between 4G/\gls{lte} network, is proven to share many of these weaknesses with its predecessor (see~\cite{rao2015unblock}, \cite{rao2016privacy}, \cite{rao2016where}, \cite{holtmanns2016user}, \cite{holtmanns2017sms}).
-Hence, the European Network and Information Security Agency recognizes a ,,medium to high level of risk'' (\cite{enisa2018signal}, p. 23) in present-day mobile networks and points to additional troubles, such as shorter time to real-world exploitation due to the broad use of common web protocols in 5G.
+Hence, the European Network and Information Security Agency recognizes a ,,medium to high level of risk'' (\cite{enisa2018signal}, p.~23) in present-day mobile networks and points to additional troubles, such as shorter time to real-world exploitation due to the broad use of common web protocols in 5G.
