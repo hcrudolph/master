@@ -6,7 +6,7 @@ The three research questions can be answered as follows.\bigskip
 
 Yes, with a number of abstractions.
 The high-level comparison between \textsc{Tamarin} and \textsc{ProVerif} shows that both tools should in theory be able to express and validate important aspects of the \gls{prins} protocol.
-Only a few useful modelling constructs in \textsc{ProVerif}, such as tables, synchronization, and better support for observational equivalence proofs, favor this tool.
+Only a few useful modeling constructs in \textsc{ProVerif}, such as tables, synchronization, and better support for observational equivalence proofs, favor this tool.
 
 The created model successfully incorporates all key characteristics of the \gls{prins} protocol, including multi-channel communication, separation of protocol phases, multiple active participants, intermediary message modifications, and all necessary cryptographic operations (i.e. signatures, \glspl{mac}, and \gls{aead} encrytion).
 Minor aspects are abstracted away, such as the detailed structure of protection policies, the \gls{tls} key export, and the invalidation of N32-f sessions as described in section~\ref{sec:issues}.
@@ -33,6 +33,7 @@ More so than a formal verification, which proved rather fragile in practice, a p
 
 Yes, partially.
 Section \ref{sec:verification} shows that confidentiality protection for all sensitive information is indeed ensured if the protocol is implemented according to the specification.
+Note, that since the verification is performed in the symbolic domain, cryptographic flaws such as nonce reuse resulting in a breach of confidentiality with \gls{aead} ciphers, cannot be proven.
 Moreover, message modifications by unknown \gls{ipx} providers or modifications not captured in the modification policy are never accepted by the receiving party.
 
 Properties that were disproven include the rejection of replayed message modifications, detection of the removal of previously added message modifications, as well as the integrity protection of \gls{json} patches.
