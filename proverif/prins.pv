@@ -1,7 +1,6 @@
 set privateCommOnPublicFreeNames = false.
 set preciseActions = false.
 set selFun = TermMaxsize.
-set verboseRules = true.
 set simplifyDerivation = true.
 set redundancyElim = best.
 set redundantHypElim = true.
@@ -398,21 +397,23 @@ query n32f_context: bitstring, ipx_a_id: bitstring, ipx_b_id: bitstring,
     http_method: bitstring, msg_body: bitstring;
     event(recvValidIpxPatchSeppA(
         ipx_a_id, n32f_context, msg_id, jwe_tag, ipx_a_mods)) &&
-    event(recvValidIpxPatchSeppA(
+    inj-event(recvValidIpxPatchSeppA(
         ipx_b_id, n32f_context, msg_id, jwe_tag, ipx_b_mods)) ==> (
-            event(ipxRecvA(n32f_context, msg_id, jwe_tag, ipx_a_mods)) &&
-            event(ipxSendB(n32f_context, msg_id, jwe_tag, ipx_b_mods))
+            inj-event(ipxRecvA(n32f_context, msg_id, jwe_tag, ipx_a_mods))
+            &&
+            inj-event(ipxSendB(n32f_context, msg_id, jwe_tag, ipx_b_mods))
         );
 
     event(recvValidIpxPatchSeppB(
         ipx_b_id, n32f_context, msg_id, jwe_tag, ipx_b_mods)) &&
-    event(recvValidIpxPatchSeppB(
+    inj-event(recvValidIpxPatchSeppB(
         ipx_a_id, n32f_context, msg_id, jwe_tag, ipx_a_mods)) ==> (
-            event(ipxRecvB(n32f_context, msg_id, jwe_tag, ipx_b_mods)) &&
-            event(ipxSendA(n32f_context, msg_id, jwe_tag, ipx_a_mods))
+            inj-event(ipxRecvB(n32f_context, msg_id, jwe_tag, ipx_b_mods))
+            &&
+            inj-event(ipxSendA(n32f_context, msg_id, jwe_tag, ipx_a_mods))
         ).
 
-(* sec property 6/7/11: integrity protection / authentication *)
+(* sec property 6/7: integrity protection / authentication *)
 query msg_id: nat, n32f_context: bitstring,
     msg_conf: bitstring, msg_nonconf: aad;
     event(recvN32fMsgSeppA(
