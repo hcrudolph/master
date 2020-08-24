@@ -24,9 +24,18 @@ Different built-in resolution strategies do not solve the problem either.\medski
 Thirdly, even if \textsc{ProVerif} itself successfully terminates and finds an attack, there is no guarantee the related trace can be exported in form of a visual graph.
 By default, the program creates files of type \textit{dot} that can be consumed by the software Graphviz to draw a directed graph into several different output formats, such as pdf, png, or svg.
 With large protocol models such as the one created for \gls{prins}, Graphviz's \textit{dot} utility is quickly overburdened by the number of nodes representing key protocol events and edges representing their relation as well as message flows.
-Even after multiple hours of execution, Graphviz is unable to completely render an attack trace from any of the disproven queries described in the previous sections.
-Ommitting all replications in the main process of the model, denoted by an exclamation mark, does not result in a noticable improvement either.
-Hence, the only result provided for queries 8, 9, and 10 is the textual representation of the attack trace by \textsc{ProVerif} and the raw \textit{dot} files.
+As shown in figure~\ref{fig:dot-execution} after more than six hours of execution, Graphviz is still not able to completely render an attack trace from any of the disproven queries described in the previous sections.
+Omitting all replications in the main process of the model, denoted by an exclamation mark, does not result in a noticable improvement.
+Since \textit{dot} is the only utility in the Graphviz toolbox that produces directed graphs, the output of other programs such as \textit{sfdp} or \textit{neato} which do terminate is not suitable to retrace the protocol execution either.
+A question on how these issues may be resolved posted to the official \textsc{ProVerif} mailing list did not result in further insights until the date of submission.
+Hence, the only result provided for queries 8, 9, and 10 is the textual representation of the attack trace by \textsc{ProVerif} and the raw dot files.
+
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{dot-execution.png}
+    \centering
+    \caption{Graphviz dot utility execution}
+    \label{fig:dot-execution}
+\end{figure}
 
 Since \textit{dot} is the only supported output for a visual representation of the discovered attack traces, \textsc{ProVerif} is necessarily limited by the issues with the handling of this file format.
 The lack of such visualization severely complicates validation of the discovered attacks.
