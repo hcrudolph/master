@@ -8,7 +8,7 @@ Yes, with a number of abstractions.
 The high-level comparison between \textsc{Tamarin} and \textsc{ProVerif} shows that both tools should in theory be able to express and validate important aspects of the \gls{prins} protocol.
 Only a few useful modeling constructs in \textsc{ProVerif}, such as tables, synchronization, and better support for observational equivalence proofs, favor this tool.
 
-The created model successfully incorporates all key characteristics of the \gls{prins} protocol, including multi-channel communication, separation of protocol phases, multiple active participants, intermediary message modifications, and all necessary cryptographic operations (i.e. signatures, \glspl{mac}, and \gls{aead} encrytion).
+The created model successfully incorporates all key characteristics of the \gls{prins} protocol, including multi-channel communication, separation of protocol phases, multiple active participants, intermediary message modifications, and all necessary cryptographic operations (i.e. signatures, \glspl{mac}, and \gls{aead} encryption).
 Minor aspects are abstracted away, such as the detailed structure of protection policies, the \gls{tls} key export, and the invalidation of N32-f sessions as described in section~\ref{sec:issues}.
 However, given their impact on the security properties to be verified, these do not have an impact on the verification result.
 

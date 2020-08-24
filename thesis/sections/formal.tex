@@ -450,7 +450,7 @@ Processes are used to model protocol participants, the Dolev-Yao adversary, as w
 While names represent atomic data, variables are a placeholder for other terms and can be replaced by such.
 Constructors are functions with a certain arity used to build terms.
 All three kinds of terms are defined with a type.
-The default types defiend by \textsc{ProVerif} are \textsf{channel}, \textsf{boolean}, and \textsf{bitstring}, but the tool also supports the definition of custom types.
+The default types defined by \textsc{ProVerif} are \textsf{channel}, \textsf{boolean}, and \textsf{bitstring}, but the tool also supports the definition of custom types.
 
 \lstset{
     basicstyle=\footnotesize\sffamily,
@@ -490,7 +490,7 @@ This language feature allows for the modeling of complex data types as well as c
         fail                        failure
 \end{lstlisting}
 
-\textbf{Processes} in \textsc{ProVerif} largely coincide with processes in the original pi calculs (c.f. \cite{blanchet2016modeling}, p.~18).
+\textbf{Processes} in \textsc{ProVerif} largely coincide with processes in the original pi calculus (c.f. \cite{blanchet2016modeling}, p.~18).
 They allow for the description of sending and receiving messages, parallel execution, creation of new names, evaluation of expressions, and conditionals.
 Listing~\ref{lst:pv-processes} below shows the syntactical contructs available to do so.
 
@@ -570,7 +570,7 @@ This can be denoted in two ways (c.f. \cite{blanchet2020proverif}, p.~55):
 
 Correspondence assertions on the other hand are the basis for verifying authentication properties.
 As described in the previous section, authentication can be defined in several different ways.
-\textsc{ProVerif}'s user manual describes the verification of two of them (\cite{blanchet2020proverif}, pp.~19-20).
+\textsc{ProVerif}'s user manual describes the verification of two of them - aliveness and injective agreement (see \cite{blanchet2020proverif}, pp.~19-20).
 The keyword \textsf{\textbf{event}} can be used to annotate special points in a protocol that can then be checked for correspondence, as shown in the below code fragment.
 Effectively, below query is the equivalent of proving the aforementioned aliveness property, i.e. for every event \textsf{receivedByA} the event \textsf{sentByB} has been reached previously at least once.
 Injective agreements, requiring a one-to-one relationship between states can be expressed using the keyword \textsf{\textbf{inj-event}}.

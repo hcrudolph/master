@@ -144,7 +144,7 @@ Since none of them defines a related deconstructor, the original function inputs
 
 The function {\sffamily deriveMasterKey} is uniquely defined as a private function due to a limitation of the created model.
 According to the \gls{3gpp} specification, the N32-f master key is derived from the N32-c session using \gls{tls} keying material exporters (\cite{3gpp.33.501}, p.~132).
-Since the \gls{tls} protocol is not modeled in detail, the {\sffamily deriveMasterKey} function is defined as a substitue not available to the Dolev-Yao adversary.
+Since the \gls{tls} protocol is not modeled in detail, the {\sffamily deriveMasterKey} function is defined as a substitute not available to the Dolev-Yao adversary.
 Section \ref{sec:issues} further describes the benefits and drawbacks of modeling the key derivation in this way.
 
 \begin{lstlisting}[caption={Definition of custom one-way functions},label={lst:functions},firstnumber=124]

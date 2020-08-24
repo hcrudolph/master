@@ -7,13 +7,13 @@ In the following, these intentional abstractions and their implications on the v
 \subsubsection{Perfectly Secure TLS \& Key Derivation}
 
 As outlined before, this analysis solely focusses on the novel parts of the \gls{prins} protocol defined by \gls{3gpp}.
-\gls{tls} is assumed to be perfectly secure and thus, is not modelled in detail.
-Instead, \gls{tls}-based connections are represented by secure (i.e. confidential and integrity protected) channels shown in listing \ref{lst:channels}.
+\gls{tls} is assumed to be perfectly secure and thus, is not modeled in detail.
+Instead, \gls{tls}-based connections are represented by secure (i.e. confidential and integrity protected) channels shown in listing~\ref{lst:channels}.
 Since mutual authentication in N32-c communication crucially depends on the security of the transport layer, this model is not able to effectively validate this property of N32-c.
 
 Another protocol aspect closely coupled with the \gls{tls} protocol is derivation of cryptographic key material during the N32-c handshake procedure.
-According to the specification ,,two \glspl{sepp} shall export keying material from the \gls{tls} session established between them using the \gls{tls} export function'' (\cite{3gpp.33.501}, p. 132).
-This export function produces a pseudorandom bitstring that is used to derive the various N32-f session keys outlined in section \ref{sec:n32}.
+According to the specification ,,two \glspl{sepp} shall export keying material from the \gls{tls} session established between them using the \gls{tls} export function'' (\cite{3gpp.33.501}, p.~132).
+This export function produces a pseudorandom bitstring that is used to derive the various N32-f session keys outlined in section~\ref{sec:n32}.
 The model's N32-c channel being inherently secure by assumption, it is not possible to model a similar function producing fresh key material based on a shared, authenticated session.
 This issue is being addressed, by the private constructor {\sffamily deriveMasterKey}, consuming the N32-f context ID.
 This input parameter ensures that the resulting master key is unique to a specific N32-f session.
@@ -29,14 +29,27 @@ However, these points do not impact verification of the protocol, as private \te
 Both types of protection policies are abstracted to single bitstrings in order to simplify related operations.
 
 The data-type encryption policy plays a key role in rewriting \gls{http} messages received from \glspl{nf} in the \gls{sepp}'s own \gls{plmn}.
-In the model, confidential and non-confidential message parts are extracted from an \gls{http} message body using the constructors {\sffamily getConf} and {\sffamily getNonconf}, displayed in listing \ref{lst:n32f-rewriting}.
+In the model, confidential and non-confidential message parts are extracted from an \gls{http} message body using the constructors {\sffamily getConf} and {\sffamily getNonconf}, displayed in listing~\ref{lst:n32f-rewriting}.
 Using an encryption policy as a second argument, they enable honest participants to identify those information elements only requiring integrity protection and those additionally requiring confidentialiy.
 Note, that since the model does not consider protection policies confidential information and makes them publicly available, a flawed representation is avoided in which the adversary would not be able to retrieve sensitive information from the body of an \gls{http} message without the related encryption policy.
 
 Before the receiving \gls{sepp} compiles the resulting \gls{http}message, it uses the {\sffamily policyValidation} deconstructor to verify whether the sending peer actually applied the previously agreed encryption policy or whether sensitive elements are actually contained in non-confidential parts of the N32-f message.
 This is in addition to the equality check of both locally stored and received encryption policies during the initial N32-c handshake.
 
-The bitstrings modelling the modification policies represent both the policies defined by either of the \gls{sepp} operators as well as the actual modifications written by intermediary \gls{ipx} providers.
+\begin{lstlisting}[caption={N32-f Message Rewriting Functions},label={lst:n32f-rewriting},firstnumber=136]
+fun getConf(bitstring, bitstring): bitstring.
+fun getNonconf(bitstring, bitstring): bitstring.
+
+fun policyValidation(bitstring, bitstring): bool
+reduc forall m: bitstring, p: bitstring;
+    policyValidation(getNonconf(m, p), p) = true
+otherwise forall m: bitstring, p': bitstring, p: bitstring;
+    policyValidation(getNonconf(m, p'), p) = false
+otherwise forall m: bitstring, p': bitstring, p: bitstring;
+    policyValidation(fail, p) = false.
+\end{lstlisting}
+
+The bitstrings modeling the modification policies represent both the policies defined by either of the \gls{sepp} operators as well as the actual modifications written by intermediary \gls{ipx} providers.
 This allows a simple comparison of the operation contained inside the \gls{json} patch and the related policy itself to determine whether or not a given message modification is legitimate.
 This does not impact the verification result, as it is logically the same as a policy containing exactly one entry.
 If the protocol behaves as intended using this examplary modification policy, it behaves similarly for more complex examples.
@@ -73,7 +86,7 @@ Such procedure is required when existing session keys reach the end of their lif
 Firstly, at the time of this writing the \gls{3gpp} specifications \gls{ts} 33.501 and \gls{ts} 29.573 do not clearly stipulate how a \gls{sepp} is to perform a renegotiation.
 Secondly, the triggers that would necessitate this procedure, such as the timeout of cryptographic keys are not considered in the model either, for reasons described in the following section.
 
-\subsection{Model Shortcomings}
+\subsection{Limitations of ProVerif}
 
 \subsubsection{Invalidation of N32-f Keys \& Contexts}
 
@@ -85,7 +98,7 @@ Furthermore, real-world protocol implementations relying on incremental counters
 At some point during protocol execution, session parameters have to be refreshed in order to prevent counter wrap around.
 \textsc{ProVerif} does offer support for natural numbers, however, the concept of integer overflows is not reproduceble.
 
-Lastly, \textsc{ProVerif} tables, which represent a convenient way of modelling local \gls{sepp} storage as shown in the previous sections, do not offer the possibility of deleting records.
+Lastly, \textsc{ProVerif} tables, which represent a convenient way of modeling local \gls{sepp} storage as shown in the previous sections, do not offer the possibility of deleting records.
 While real-world implementations would invalidate N32-f contexts at certain events or specific points in time, the model is not able to reproduce this behavior.
 
 \subsubsection{Behavior of N32-c Channels}
@@ -97,9 +110,9 @@ The initiating \gls{sepp} takes on the role of the client, the responding \gls{s
 In order to enable the responding end to initiate requests as well, for example to perform error signaling, a second N32-c connection in the inverse direction is established at the end of the initial handshake.
 
 \textsc{ProVerif} channels, no matter if private or not, are always bidirectional.
-While this fails to restrict messages being sent in either direction, one can work around this limitation during the modelling phase by letting sending and responding processes of both \glspl{sepp} use separate N32-c channels.
+While this fails to restrict messages being sent in either direction, one can work around this limitation during the modeling phase by letting sending and responding processes of both \glspl{sepp} use separate N32-c channels.
 Since private channels, unlike public ones, cannot be created ad hoc during the protocol execution, both N32-c channels have to be declared in advance.
 
 An additional characteristic of private channels that does not mirror a real-world \gls{tls} connection is that every information sent over them can be received by any of the listening participants at any time.
 As the user manual explains, ,,ProVerif just computes a set of messages sent on a private channel, and considers that any input on that private channel can receive any of these messages (independently of the order in which
-they are sent)'' (\cite{blanchet2020proverif}, p. 119).
+they are sent)'' (\cite{blanchet2020proverif}, p.~119).

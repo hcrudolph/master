@@ -90,7 +90,7 @@ The query in listing~\ref{lst:query-sec-8} below asserts that the events {\sffam
 That is, all messages from by \gls{ipx} R1 never result in a patch being recognized as valid by the receiving \gls{sepp}.
 
 \textsc{ProVerif} is able to disprove this query, returning a negative result.
-This means both states can indeed by reached together in the same execution of proverif.
+This means both states can indeed by reached together in the same execution of the program.
 Trying to export a representation of the discovered trace, however, results in non-termination of the program.
 This is not due to a limitation of \textsc{ProVerif} itself but of the \textit{Graphviz} software, specifically its \textit{dot} utility used for drawing directed graphs of the attack trace.
 Due to the large number of protocol states, the program is unable to finalize the trace even after several hours of execution.
@@ -117,7 +117,7 @@ The process {\sffamily N32fRecvIpxR3}, too, takes a similar role as {\sffamily N
 Connected to both \gls{ipx} B via the channel {\sffamily n32f\_i} and to \gls{sepp} A via the channel {\sffamily n32f\_a}, it tries to re-apply the already signed modifications by \gls{ipx} B before the event {\sffamily ipxRecvR3} is triggered and the modified message is sent towards \gls{sepp} A.
 
 \textsc{ProVerif} proves this query wrong, returning a negative result.
-Since the same limitation for the export of the discovered attack trace described above applies as well, it is unclear whether this correspondes to a real attack real.
+Since the same limitation for the export of the discovered attack trace described above applies as well, it is unclear whether this corresponds to a real attack.
 One potential source of a false attack trace is again the lack of a specified temporal relation, which allows for the possibility that {\sffamily ipxRecvR3} is executed after {\sffamily recvValidIpxPatchSeppA}.
 
 \begin{lstlisting}[caption={Query for security property 10},label={lst:query-sec-10},firstnumber=367]
