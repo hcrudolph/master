@@ -6,10 +6,12 @@ This thesis solely focussed on one part of the \gls{gls:5g} specification produc
 A fundamental requirement for global connectivity in the \gls{3gpp} ecosystem is communication between different \glspl{plmn}.
 Whether a subscriber visits a foreign network, commonly known as \textit{roaming}, or locally consumes services that involve parties in different mobile networks (e.g. international calls), mobile network operators need to exchange data with their peers.
 This communication is routed through a global network called \gls{ipx}, separate from the Internet.
-Originally thought of as a private communication channel of the mobile operator community, it is known for being a security risk that operators are inevitably exposed to due to a number of shortcomings.
-Firstly, it lacks proper access control to restrict its members to genuine mobile network operators only, as these companies are regularly reselling their connectivity as part of partnerships or even end-user offerings.
+Originally a private communication channel of the mobile operator community, the privatization of telecommunications providers and competition laws gradually mandated interconnect networks to be opened up to other businesses as well.
+Today it is known for being a security risk that operators are inevitably exposed to due to a number of shortcomings related to this shift.
+Firstly, it lacks proper access control to restrict its members to trustworthy parties only, as mobile network operators regularly resell their connectivity as part of partnerships or even end-user offerings.
 Secondly, the fact that some of the protocols used on the \gls{ipx} network do not offer basic security features such as authentication or confidentiality natively makes this interface particularly prone to malicious traffic.
 Thirdly, the network infrastructure itself is operated by third-party companies which have full access to signaling traffic that passes through their peering points.
+While this enables valuable services to be provided by these companies, there is no definitive way for the communication endpoints to control the extent to which different parties access their traffic.
 Although the associated risks can be minimized by appropriate security controls, the inherent weaknesses of inter-operator signaling renders it one of the major security and fraud risks for mobile network operators.
 
 \gls{3gpp} attempts to improve the security of inter-operator signaling in its technical specifications of the 5G system.
