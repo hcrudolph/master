@@ -63,13 +63,12 @@ Or
 
 First-order logic is defined relative to a \textit{signature}, i.e. a set of symbols not inherent to classical logic, by a particular syntax and semantics.
 The syntax determines the set of well-formed formulas, whereas the semantics associates meaning to these formulas.
-This thesis follows the formal definition of Schöning (c.f. \cite{schoning2008logic}, pp.~41-47), the key points of which are summarized below.
+This thesis follows the formal definition of Schöning (see \cite{schoning2008logic}, pp.~41-47), the key points of which are extracted below.
 
 The first-order logic syntax is comprised of variables, predicates, functions and quantifiers.
-A \textit{variable} is of the form $x_i$ where $i= 1, 2, 3, \ldots$.
-A \textit{predicate symbol} is of the form $P_i^k$ and a \textit{function symbol} of the form $f_i^k$ where $i = 1, 2, 3 , \ldots$ and
-$k = 0, 1, 2, \ldots$, where $i$ is the index and $k$ is the arity.
-A function symbol of arity 0 is also called a \textit{constant}.
+\textit{Variables} are denoted as $x_i$ where $i= 1, 2, 3, \ldots$, \textit{predicate symbol} as $P_i^k$, and a \textit{function symbol} as $f_i^k$ where $i = 1, 2, 3 , \ldots$ and $k = 0, 1, 2, \ldots$.
+The subscript $i$ is called the index whereas $k$ represents the arity of a function.
+A function of arity 0 is called a \textit{constant}.
 A \textit{term} is defined as follows:
 
 \begin{enumerate}
@@ -87,7 +86,7 @@ Next, \textit{formulas} are defined inductively as follows.
     \item If $x$ is a variable and $F$ is a formula, then $\exists xF$ and $\forall xF$ are formulas.
 \end{enumerate}
 
-Formulas built according to rule 1 are called \textit{atomic formulas}.
+Formulas built in accordance to rule 1 are also called \textit{atomic formulas}.
 If $F$ is a formula, and $F$ occurs as part of the the formula $G$, then $F$ is called a \textit{subformula} of $G$.
 All occurrences of a variable in a formula are distinguished into bound and free occurrences.
 An occurrence of the variable $x$ in the formula $F$ is bound if $x$ occurs within a subformula of $F$ of the form $\exists xG$ or $\forall xG$.
@@ -98,8 +97,7 @@ The symbol $\forall$ is called the \textit{universal quantifier}.
 It denotes its argument holds true everytime (read: ,,For all $x, \ldots$'').
 
 Each first-order logic is defined in relation to a domain of discourse that gives it meaning.
-A \textit{structure} is a pair $A = (U_A, I_A)$ where $U_A$ is an arbitrary, non-empty set called the \textit{universe}.
-$I_A$ is a mapping that maps
+A \textit{structure} is a construct of the form $A = (U_A, I_A)$. $U_A$ is an arbitrary, non-empty set called the \textit{universe}. $I_A$ is a mapping that maps
 
 \begin{enumerate}
     \item each $k$-ary predicate symbol $P$ to a $k$-ary predicate on $U_A$ (if $I_A$ is defined on $P$).
@@ -210,16 +208,16 @@ Consider, for example, an arbitrary security protocol that would allow sending d
 Even though this trivial case would likely already be discoverd during modeling phase, it examplifies that the order of subsequent states is relevant.
 That is, these type properties is not about guaranteeing the reachability of ,,bad'' states, but ,,bad'' path fragments in the execution trace.
 Some of the relevant features of security protocols that can be expressed expressed by this logic include confidentiality and authentication.
-Such safety properties are a generalization of invariants and are fullfilled if there is no execution trace that contains a finite prefix violating the premise (c.f. \cite{baier2008principles}, p.~112).
+Such safety properties are a generalization of invariants and are fullfilled if there is no execution trace that contains a finite prefix violating the premise.
 
-A property $P_{safe}$ over $A$ is called a safety property if for all words $\sigma \in (2^{AP})^{\omega} \in P_{safe}$ there exists a finite prefix $\widehat{\sigma}$ of $\sigma$ such that
+According to Baier and Katoen, ,,a property $P_{safe}$ over $AP$ is called a safety property if for all words $\sigma \in (2^{AP})^{\omega} \in P_{safe}$ there exists a finite prefix $\widehat{\sigma}$ of $\sigma$ such that
 
 \begin{equation*}
     P_{safe} \cap \{ \sigma' \in (2^{A})^{\omega} | \widehat{\sigma} \text{ is a finite prefix of } \sigma' \} = \emptyset
 \end{equation*}
 
 \noindent
-Any such finite word $\widehat{\sigma}$ is called a bad prefix for $P_{safe}$.
+Any such finite word $\widehat{\sigma}$ is called a \textit{bad prefix} for $P_{safe}$'' (\cite{baier2008principles}, p.~112).
 
 \subsubsection{Liveliness Properties}
 
@@ -238,9 +236,9 @@ Concrete examples for liveness properties are recovery, revocation, and the time
 The above definitions for both safety and liveliness are closely linked to the concept of traces, i.e. individual system runs that satisfy or violate certain conditions.
 There exisits yet another type of properties that is not defined over individual traces, but the information an attacker is able to obtain by observing multiple instances of the system.
 This is commonly referred to as \textit{indistinguishability} or \textit{observational equivalence}.
-The formal definition is given below (c.f. \cite{baier2008principles}, pp.~589-590).
+The formal definition by Baier and Katoen is provided below.
 
-Let $TS_1$ and $TS_2$ be two transition systems over $A$ with state spaces $S_1$ and $S_2$ , respectively.
+,,Let $TS_1$ and $TS_2$ be two transition systems over $A$ with state spaces $S_1$ and $S_2$, respectively.
 A binary relation $R \subseteq S_1 \times S_2$ is an
 observational bisimulation for ($TS_1$ , $TS_2$) if and only if the following conditions are satisfied:
 
@@ -259,7 +257,7 @@ and $L_1(u_{m+1}) = L_1(u_{m+2}) = \ldots = L_1 (u_n)$.
 \end{enumerate}
 
 \noindent
-$TS_1$ and $TS_2$ are called observational equivalent, denoted $TS_1 \approx_{obs} TS_2$, if there exists an observational bisimulation for $(TS_1, TS_2)$.
+$TS_1$ and $TS_2$ are called \textit{observational equivalent}, denoted $TS_1 \approx_{obs} TS_2$, if there exists an observational bisimulation for $(TS_1, TS_2)$'' (\cite{baier2008principles}, pp.~589-590).
 
 \subsection{Tamarin}
 \label{ssec:tamarin}
