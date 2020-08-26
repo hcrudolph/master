@@ -53,7 +53,7 @@ If the definition of the deconstructor would finish at this point, the different
 Hence, the next line starting with the keyword {\sffamily otherwise} captures scenarios in which the private/public key pair is not matching and the return value is \textsf{false}.
 The last {\sffamily otherwise} branch is a catch-all rule, capturing cases in which the first input parameter does not match the expected structure of a \gls{json} patch.
 
-\begin{lstlisting}[caption={Custom channel declarations},label={lst:patch-verification},firstnumber=23]
+\begin{lstlisting}[caption={Definition of deconstructors for patch validation},label={lst:patch-verification},firstnumber=149]
 fun validPrinsSign(bitstring, pubkey): bool
 reduc forall p: prins, ops: bitstring, id: bitstring, tag: mac, k: privkey;
     validPrinsSign(signPrins(p, ops, id, tag, k), pk(k)) = true
