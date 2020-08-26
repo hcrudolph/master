@@ -118,7 +118,7 @@ Connected to both \gls{ipx} B via the channel {\sffamily n32f\_i} and to \gls{se
 
 \textsc{ProVerif} proves this query wrong, returning a negative result.
 Since the same limitation for the export of the discovered attack trace described above applies as well, it is unclear whether this corresponds to a real attack.
-One potential source of a false attack trace is again the lack of a specified temporal relation, which allows for the possibility that {\sffamily ipxRecvR3} is executed after {\sffamily recvValidIpxPatchSeppA}.
+One potential source of a false attack trace is again the lack of a specified temporal relation, which allows for the possibility that {\sffamily ipxRecvR3} is executed after {\sffamily recvValidIpxPatchSeppA}.\pagebreak
 
 \begin{lstlisting}[caption={Query for security property 10},label={lst:query-sec-10},firstnumber=367]
 (* sec property 10: rejecting replayed json patches *)
