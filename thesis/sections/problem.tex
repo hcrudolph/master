@@ -6,7 +6,7 @@ This thesis solely focussed on one part of the \gls{gls:5g} specification produc
 A fundamental requirement for global connectivity in the \gls{3gpp} ecosystem is communication between different \glspl{plmn}.
 Whether a subscriber visits a foreign network, commonly known as \textit{roaming}, or locally consumes services that involve parties in different mobile networks (e.g. international calls), mobile network operators need to exchange data with their peers.
 This communication is routed through a global network called \gls{ipx}, separate from the Internet.
-Originally a private communication channel of the mobile operator community, the privatization of telecommunications providers and competition laws gradually mandated interconnect networks to be opened up to other businesses as well.
+Originally a private communication channel of the mobile operator community, the privatization of telecommunication providers and competition laws gradually mandated interconnect networks to be opened up to other businesses as well.
 Today it is known for being a security risk that operators are inevitably exposed to due to a number of shortcomings related to this shift.
 Firstly, it lacks proper access control to restrict its members to trustworthy parties only, as mobile network operators regularly resell their connectivity as part of partnerships or even end-user offerings.
 Secondly, the fact that some of the protocols used on the \gls{ipx} network do not offer basic security features such as authentication or confidentiality natively makes this interface particularly prone to malicious traffic.
@@ -15,17 +15,17 @@ While this enables valuable services to be provided by these companies, there is
 Although the associated risks can be minimized by appropriate security controls, the inherent weaknesses of inter-operator signaling renders it one of the major security and fraud risks for mobile network operators.
 
 \gls{3gpp} attempts to improve the security of inter-operator signaling in its technical specifications of the 5G system.
-As part of an overall updated protocol stack, release 15 and beyond include a new security protocol for the so-called N32 interface (see \cite{3gpp.33.501}, pp.~130-146).
-The \gls{prins} is purposefully designed by \gls{3gpp}'s Security Working Group to fit the specific requirements of inter-operator signaling, described in detail in clause \ref{sec:n32}.
+As part of an overall updated protocol stack, Release 15 and beyond include a new security protocol for the so-called N32 interface (see \cite{3gpp.33.501}, pp.~130-146).
+The \gls{prins} is purposefully designed by \gls{3gpp}'s Security Working Group to fit the specific requirements of inter-operator signaling, described in detail in section~\ref{sec:n32}.
 Although parts of this protocol build on established technologies such as \gls{tls} and \gls{jose}, secure protocol design remains a non-trivial task in which defects are difficult to identify by manual analysis.
 A prominent negative example is the protocol proposed by Needham and Schroeder in 1978 (\cite{needham1978using}).
 Initially considered secure, it was proven to be flawed 17 years after its inception (\cite{lowe1996breaking}).
 
 One instrument that can facilitate the design of secure systems and algorithms is formal verification -- establishing correctness proofs with respect to its requirements by means of formal methods of mathematics.
-Since this process is based on a abstract model of the system under test it is also known as ,,model checking''.
+Since this process is based on an abstract model of the system under test it is also known as \textit{model checking}.
 As Alur explains, ,,a designer first constructs a model, with mathematically precise semantics [...] and performs extensive analysis with respect to correctness requirements'' (\cite{alur2011formal}, p.~1).
-In combination with computer-aided verification tools, some of which are reviewed in section~\ref{sec:formal}, this approach can help to discover logical flaws that would remain undetected with other static testing methods -- the above-mentioned Needham-Schroeder protocol only being one example.
+In combination with computer-aided verification tools, some of which are reviewed in section~\ref{sec:formal}, this approach can help to discover logical flaws that would remain undetected using other static testing methods -- the above-mentioned Needham-Schroeder protocol only being one example.
 It should be noted that formal verification can only ever produce proofs about the model it is applied to.
 Proving facts about a model that does not accurately reflect the actual system yields limited or even false insights.
 
-In light of the 5G system introducing a new inter-operator signaling protocol, the question arises whether \gls{prins} succeeds to cater to the particular requirements of the N32 interface while simultaneously delivering on its desired security properties.
+In light of the 5G system introducing a new inter-operator signaling protocol, the question arises whether \gls{prins} succeeds to cater to the particular requirements of the N32 interface while simultaneously delivering on its intended security properties.

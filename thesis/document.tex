@@ -37,12 +37,16 @@
 %--- Acronyms ---%
 \printglossary[type=\acronymtype,title=Abbreviations]
 
+\cleardoublepage
+\afterpage{\null\newpage}
+\cleardoublepage
+
 %--- Main contents ---%
 \chapter{Introduction}
 \label{chap:intro}
 
-This chapter establishes the problem statement and reserch interest behind the formal verification of the 5G inter-operator signaling protocol.
-Section \ref{sec:problem} describes the motivation to research this particular problem.
+This chapter establishes the problem statement and research interest behind the formal verification of the 5G inter-operator signaling protocol.
+Section \ref{sec:problem} describes the motivation to explore this particular problem.
 Section \ref{sec:goal} outlines the research questions in scope and general working assumptions.
 Section \ref{sec:related} provides an overview of related work on formal verification of security protocols and mobile network protocols in general.
 Section \ref{sec:outline} describes the approach to answer the research questions and the overall structure of this thesis.
@@ -144,23 +148,22 @@ Section \ref{sec:gaps} summarizes gaps and inconsistencies discovered during mod
 \label{sec:outlook}
 \import{sections/}{outlook.tex}
 
-\clearpage
+\cleardoublepage
+\afterpage{\null\newpage}
 
 \printbibliography[title={Literature},heading=bibintoc,nottype=online]
 
 \printbibliography[title={Online Sources},heading=bibintoc,type=online]
 
-\clearpage
+\cleardoublepage
 
 \begin{appendices}
-\renewcommand\thechapter{}
-\renewcommand\thesection{\arabic{section}}
-\renewcommand\thesubsection{\thesection.\arabic{subsection}}
-\renewcommand\thefigure{\arabic{figure}}
-\renewcommand\thetable{\arabic{table}}
-\chapter{}
 
 \input{appendix_a.tex}
+
+\cleardoublepage
+
+\input{originality.tex}
 
 \end{appendices}
 

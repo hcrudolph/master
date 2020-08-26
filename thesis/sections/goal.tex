@@ -1,5 +1,5 @@
 This thesis aims to investigate security properties of the 5G inter-operator signaling protocol \gls{prins} with the methods of formal verification.
-Given the compexity of secure protocol design and the fact that \gls{3gpp} more often than not references existing protocols rather than creating its own ones, the author considers it beneficial to analyze \gls{prins} in detail.
+Given the compexity of secure protocol design and the fact that \gls{3gpp} more often than not references existing protocols rather than creating its own ones, it is considered beneficial to analyze \gls{prins} in detail.
 Since model checking allows verification based on a system's specification, or rather a formal model thereof, this work is independent of any particular implementation.
 Consequently, proving or disproving properties of the model is supposed to result in recommendations to improve the underlying specification.
 In summary, the objective is to answer the following three research questions:
@@ -7,9 +7,9 @@ In summary, the objective is to answer the following three research questions:
 \begin{enumerate}[label=(\arabic*)]
     \item Is it possible to comprehensively describe the 5G inter-operator signaling protocol with existing modeling techniques?
 
-    \item Does modeling \gls{prins} in a formal grammar reveal any inconsistencies that should be addressed by the \gls{3gpp} specification?
+    \item Does modeling \gls{prins} in a formal manner reveal any inconsistencies that should be addressed by the \gls{3gpp} specification?
 
-    \item Based on the model created as part of this work, can current formal verification tools proof or disproof particular security requirements of the \gls{prins} protocol?
+    \item Based on the model created as part of this work, can current formal verification tools prove or disprove particular security requirements of the \gls{prins} protocol?
 \end{enumerate}
 
 As the protocol to be verified is comprised of several different technologies, some of them already thoroughly tested, certain aspects are considered out of scope.
@@ -20,4 +20,4 @@ Their profiles as specified in \gls{3gpp} \gls{ts} 33.210 (\cite{3gpp.33.210}, p
 Analyses of the security properties of these cryptographic algorithms are provided by \cite{mcgrew2004security} as well as \cite{fersch2016provable}.
 
 Furthermore, this thesis is intentionally restricted to the application of existing software tools for formal verification, rather than extending them or even developing a new one.
-It can be argued that if model checking is to become a common step in the design and standardization of new security protocols, model checkers need to exhibit general applicability so as to be utilized by the protocol designers without having to create special-purpose tools.
+It can be argued that if model checking is to become a common step in the design and standardization of new security protocols, related software tools need to exhibit general applicability so as to be utilized by the protocol designers without having to create special-purpose ones.

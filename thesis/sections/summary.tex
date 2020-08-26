@@ -62,7 +62,7 @@ As noted before, \textsc{ProVerif} does offer finer control over the type of obs
 
 Furthermore, the additional features of \textsc{ProVerif} can potentially help modeling the protocol more intuitively and closely aligned to the \gls{3gpp} specification.
 Its concept of tables can be utilized to recreate the N32-f context and the associated information stored by each of the \glspl{sepp}.
-Synchronization on the other hand is a suitable way to control the execution order of \mbox{N32-c} handshake and N32-f data transmission:
+Synchronization on the other hand is a suitable way to control the execution order of \mbox{N32-c} handshake and N32-f data transmission.
 As long as the handshake procedure described in section~\ref{ssec:prins-sequence} is not finalized by both parties, there should be no N32-f communication.
 Both these constructs may not be strictly mandatory to accurately specify the \gls{prins} protocol, but they certainly make it more straightforward and hence, contribute to avoiding mistakes during modeling.
-Therefore, from chapter~\ref{chap:modeling} onwards, this thesis focuses on modeling and verifying \gls{prins} using \textsc{ProVerif}.
+Therefore, from chapter~\ref{chap:modeling} onwards, this thesis focuses on modeling and verifying \gls{prins} using \textsc{ProVerif} version 2.01.

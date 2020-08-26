@@ -26,14 +26,14 @@ However, these points do not impact verification of the protocol, as private \te
 \subsubsection{Protection Policies}
 
 \gls{prins} protection policies control what data-types are to be ciphered before being sent over the N32-f channel and which authenticated modifications may be performed on them.
-Both types of protection policies are abstracted to single bitstrings in order to simplify related operations.
+Both protection policies are abstracted to single bitstrings to simplify related operations.
 
 The data-type encryption policy plays a key role in rewriting \gls{http} messages received from \glspl{nf} in the \gls{sepp}'s own \gls{plmn}.
 In the model, confidential and non-confidential message parts are extracted from an \gls{http} message body using the constructors {\sffamily getConf} and {\sffamily getNonconf}, displayed in listing~\ref{lst:n32f-rewriting}.
 Using an encryption policy as a second argument, they enable honest participants to identify those information elements only requiring integrity protection and those additionally requiring confidentialiy.
 Note, that since the model does not consider protection policies confidential information and makes them publicly available, a flawed representation is avoided in which the adversary would not be able to retrieve sensitive information from the body of an \gls{http} message without the related encryption policy.
 
-Before the receiving \gls{sepp} compiles the resulting \gls{http}message, it uses the {\sffamily policyValidation} deconstructor to verify whether the sending peer actually applied the previously agreed encryption policy or whether sensitive elements are actually contained in non-confidential parts of the N32-f message.
+Before the receiving \gls{sepp} compiles the resulting \gls{http} message, it uses the {\sffamily policyValidation} deconstructor to verify whether the sending peer actually applied the previously agreed encryption policy or whether sensitive elements are actually contained in non-confidential parts of the N32-f message.
 This is in addition to the equality check of both locally stored and received encryption policies during the initial N32-c handshake.
 
 \begin{lstlisting}[caption={N32-f Message Rewriting Functions},label={lst:n32f-rewriting},firstnumber=136]
@@ -77,7 +77,7 @@ Every message received on one of these interfaces is forwarded on the other one 
 
 Modifications are signed using raw private keys, one of two options specified by the \gls{3gpp} specification for this purpose.
 The alternative, i.e. a digital certificate issued by the operator of the directly connected \gls{sepp}, as well as the possibility for \gls{ipx} providers to use multiple cryptographic identities is not considered in the model.
-Since there is no fundamental difference between the use of one or more keys and the asymmetric cryptography used in digital certificates is the same as for raw private/public key pairs, this abstraction does not negatively impact the verification result.
+Since there is no fundamental difference between the use of one or more keys and the asymmetric cryptography used in digital certificates is the same as for raw private/public key pairs, this abstraction does not impact the verification result.
 
 \subsubsection{Parameter Renegotiation}
 

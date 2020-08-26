@@ -1,7 +1,7 @@
 \begin{abstract}
     This thesis analyzes the formal security properties of the \gls{prins}, specified by the \gls{3gpp} for the purposes of protecting signaling traffic between 5G mobile networks.
-    Being an emerging technology that is believed to enable a plethora of novel and potentially critical applications, it is mandatory that 5G communication be effectively secured by design.
-    Since inter-operator signaling exhibits specific functional requirements that existing security protocols fail to meet, \gls{3gpp} defines this purpose-built protocol that has yet to undergo thorough analysis by the broader research community at the time of this writing.
+    An emerging technology that is believed to enable a plethora of novel and potentially critical applications, it is mandatory that 5G communication be effectively secured by design.
+    Since inter-operator signaling exhibits specific functional requirements that existing security protocols fail to address, \gls{3gpp} defines this purpose-built protocol that has yet to undergo thorough analysis by the broader research community at the time of this writing.
 
     Formal methods have successfully been used to validate and improve several security protocols in the past.
     The nature of this approach to verifying a system's correctness makes it particularly suited for detecting logical flaws in the underlying design.
@@ -9,8 +9,8 @@
     As part of this thesis, the \gls{prins} specification is assessed in detail in order to understand all related message flows and derive the intended security properties.
     Subsequently, they are transposed into a formalized representation and verified against a model of the protocol for the popular model checker \textsc{ProVerif}.
 
-    Although no concrete attacks substanciate from the formal verification, it is shown that the \gls{3gpp} specification contains several inconsistencies and, most noticably, a lack of clarity about what the protocol is supposed to achieve.
-    This ambiquity may potentially lead to unreliable and therefore insecure implementations.
+    Although no concrete attacks substanciate from the formal verification, it is shown that the \gls{3gpp} specification contains several inconsistencies and, most notably, a lack of clarity about what the protocol is supposed to achieve.
+    This ambiguity may potentially lead to unreliable and therefore insecure implementations.
     Based on these findings, a number of improvements are suggested that can help make the specification more explicit and easier to understand.
 \end{abstract}
 

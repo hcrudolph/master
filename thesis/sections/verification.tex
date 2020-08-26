@@ -11,8 +11,8 @@ Due to this nature, they are used in conjuction with the created model mainly to
 \subsubsection{Debug Queries}
 \label{ssec:debug}
 
-A common mistake in formal verification is modeling system in such a way that parts or even the whole protocol are not executed at all, leading to erroneous results that convey a false sense of security.
-For this reason, simple reachability queries have been defined for all defined events in the protocol, merely verifying whether each event is individually reachable.
+A common mistake in formal verification is modeling the system in such a way that parts or even the whole protocol are not executed at all, leading to erroneous results that convey a false sense of security.
+For this reason, simple reachability queries are defined for all defined events in the protocol, merely verifying whether each event is individually reachable.
 If this is not the case, this indicates that the protocol execution stops prior to the specified point and never reaches the desired state.
 These debug queries are defined in the format {\sffamily{query event(e)}}, where {\sffamily{e}} is the respective event under test.
 As they are only used for the purposes of validating the correctness of the created model and all follow the same pattern, they are not depicted hereafter.
@@ -27,7 +27,7 @@ As detailed in the user manual document, \textsc{ProVerif} offers two ways of sp
 The former checks ,,whether the attacker can compute the term M, built from free names'' (\cite{blanchet2020proverif}, p.~55), while the latter is used to express queries that test the secrecy of the variable or bound name specified.
 Since the created model uses special names that hold all confidential information during protocol execution, only the second variant is used.
 
-There are four types of data in the \gls{prins} protocol which are crucially confidential: private keys of both \glspl{sepp} and \gls{ipx} nodes, master session keys exported from the N32-f \gls{tls} session, session keys derived from them, and the confidential contents in N32-f messages.
+There are four types of data in the \gls{prins} protocol which are crucially confidential: private keys of both \glspl{sepp} and \gls{ipx} nodes, master session keys exported from the \mbox{N32-f} \gls{tls} session, session keys derived from them, and the confidential contents in N32-f messages.
 As described in section~\ref{sec:issues}, \gls{tls} connections are assumed to be secure and thus, there is no need for the protocol to consider private and public keys of the communicating \glspl{sepp}.
 
 Listing \ref{lst:secrecy-queries} below shows all secrecy queries defined for the \gls{prins} protocol.
@@ -66,7 +66,7 @@ Hence, proving unreachability of {\sffamily privkey\_ipx\_a} and {\sffamily priv
 As these variables are only ever consumed by the \gls{ipx} providers themselves and do not get sent across any channel whatsoever, this is a fairly trivial assertion and indeed, \textsc{ProVerif} is able to successfully prove unreachability to the attacker.
 
 The next secrecy queries concern the master keys and session keys used by both \glspl{sepp} for the N32-f \gls{aead} encryption operations.
-While the compromise of a session key would only directly result in a lack of confidentiality for part of the communication --due to cryptographic separation based on the sending or receiving role of the \gls{sepp} as well as the transported message being a request or response--, a master key compromise would allow the adversary to derive the complete hirarchy of cryptographic keys and \gls{iv}.
+While the compromise of a session key would only directly result in a lack of confidentiality for part of the communication --due to cryptographic separation based on the sending or receiving role of the \gls{sepp} as well as the transported message being a request or response--, a master key compromise would allow the adversary to derive the complete hirarchy of cryptographic keys and \glspl{iv}.
 As described previously, master keys are created using the private constructor {\sffamily deriveMasterKey}.
 Afterwards, they are only used for further derivation of cryptographic material and never sent on a channel.
 In contrast, session keys derived from these master keys are stored in the private tables of each of the \glspl{sepp} and used subsequently by the {\sffamily aeadEncrypt} and {\sffamily aeadDecrypt} destructors.
@@ -84,7 +84,7 @@ In order to explicitly test some of the security properties listed in section~\r
 These misbehaving agents comprise sending and receiving processes of the rogue \gls{ipx} providers R1, R2, and R3.
 
 Security property 8 states that intermediaries shall not be able to remove previously added message modifications.
-In order to prove this requirement, the \gls{ipx} process {\sffamily N32fRecvIpxR1} is introduced, which violates the protocol in by doing exactly that.
+In order to prove this requirement, the \gls{ipx} process {\sffamily N32fRecvIpxR1} is introduced, which violates the protocol by doing exactly that.
 Similar to the process {\sffamily N32fRecvIpxA} shown in listing~\ref{lst:ipx-recv}, the only difference between the two is that \gls{ipx} R1 replaces the existing patch object with the empty patch.
 The query in listing~\ref{lst:query-sec-8} below asserts that the events {\sffamily recvValidIpxPatchSeppA} and {\sffamily ipxRecvR1} --given the same N32-f context ID, message ID, \gls{jwe} tag, and \gls{json} patch-- are not reachable together.
 That is, all messages from by \gls{ipx} R1 never result in a patch being recognized as valid by the receiving \gls{sepp}.
@@ -114,7 +114,7 @@ Listing \ref{lst:query-sec-10} involves the intentionally misbehaving \gls{ipx} 
 According to the \gls{3gpp} specification, an adversary on the inter-operator network shall not be able to record message modifications by legitimate \gls{ipx} providers and re-apply them to subsequent messages at a later point in time.
 Since intermediary message modifications must contain the \gls{jwe} tag of the original message before being signed, they are only valid for that particular message.
 The process {\sffamily N32fRecvIpxR3}, too, takes a similar role as {\sffamily N32fRecvIpxA}.
-Connected to both \gls{ipx} B via the channel {\sffamily n32f\_i} and to \gls{sepp} A via the channel {\sffamily n32f\_a}, it tries to re-apply the already signed modifications by \gls{ipx} B before the event {\sffamily ipxRecvR3} is triggered and the modified message is sent towards \gls{sepp} A.
+Connected to both \gls{ipx} B via the channel {\sffamily n32f\_i} and to \gls{sepp} A via the channel {\sffamily n32f\_a}, it tries to re-apply the already signed modifications by \gls{ipx} B before the event {\sffamily ipxRecvR3} is triggered and the message is sent towards \gls{sepp}~A.
 
 \textsc{ProVerif} proves this query wrong, returning a negative result.
 Since the same limitation for the export of the discovered attack trace described above applies as well, it is unclear whether this corresponds to a real attack.
@@ -234,8 +234,8 @@ Moreover, they should demonstrate injective correnspondence, meaning each receiv
 Hence, the two sending events are marked with the keyword {\sffamily inj-event}.
 The parameters {\sffamily msg\_conf} and {\sffamily msg\_nonconf} represent the \textit{dataToIntegrityProtectAndCipher} and \textit{dataToIntegrityProtect} objects of an N32-f message.
 
-Attempting to prove this property results in non-termination of \textsc{ProVerif}\footnote{While the program was still responsive and did make occasional progress, the execution of \textsc{ProVerif} was aborted after 100 hours of runtime.}.
-This shows one of the limitations of model checking of unbound protocol sessions, described in more detail in the following section: ensuring the verification terminates is not trivial.
+Attempting to prove this property results in non-termination of \textsc{ProVerif}. While the program was still responsive and did make occasional progress, the execution of \textsc{ProVerif} was aborted after 100 hours of runtime.
+This shows one of the limitations of model checking of unbound protocol sessions, described in more detail in the following section: Ensuring the verification terminates is not trivial.
 In order to be able to address the remaining queries, this particular test has to be removed from the \textsc{ProVerif} file, leaving the integrity protection and authentication of N32-f messages unverified.
 
 \begin{lstlisting}[caption={Query for security property 6 and 7},label={lst:query-sec-6},firstnumber=416]
@@ -258,7 +258,7 @@ It is defined as an injective correspondence between two successful patch valida
 In other words, given the same N32-f context ID and message ID, each successful validation of both \gls{ipx} patches must be preceeded by the directly connected \gls{ipx} provider receiving this message and the peer \gls{sepp}'s \gls{ipx} provider sending the same.
 
 For both of these queries \textsc{ProVerif} returns a negative result, meaning that a trace has been found in which the receiving \gls{sepp} identifying two valid patches from different \gls{ipx} providers is not preceeded by \gls{ipx} A and \gls{ipx} B transmitting the same message.
-As for the other discovered attacks, the traces cannot be successfully obtained.
+As for the other discovered attacks, the visual trace graphs again cannot be successfully created.
 
 \begin{lstlisting}[caption={Query for security property 9},label={lst:query-sec-9},firstnumber=394]
 (* sec property 9: json patch authentication/integrity protection *)
@@ -313,13 +313,13 @@ This allows increasing the sequence counter with every outgoing message and conv
 When attempting to verify this model with \textsc{ProVerif}, the tool outputs the error message \textit{,,Natural numbers do not work with non-interference yet''}.
 Hence, any natural number in the model would impede strong secrecy queries.
 
-An alternative variant of the model created due to the above limitation represents N32-f message IDs using bitstrings.
+An alternative variant of the model created due to the above limitation represents \mbox{N32-f} message IDs using bitstrings.
 In this case, incrementing the sequence counter within the \gls{sepp} is a matter of calling a trivial constructor consuming a bitstring (the old sequence number) and producing another one (the updated sequence number).
 The check for previously sent message IDs can be modeled using a set of bitstrings, which is updated every time a N32-f message is sent out.
 A suitable way to determine set membership using \textsc{ProVerif}'s {\sffamily predicate} construct is described in the official user manual (\cite{blanchet2020proverif}, p.~96).
 However, program execution using this representation of message IDs yields the following error message: \textit{,,Predicates are currently incompatible with non-interference''}.
 
-Modelling N32-f message IDs as bitstrings does not result in a improvement of the verification result.
+Modeling N32-f message IDs as bitstrings does not result in a improvement of the verification result.
 The final model of the protocol uses natural numbers, since this resembles real-world implementations more closely and further helps to reduce the amount of code required to model this particular protocol aspect, thereby reducing complexity and the potential for errors.
 
 \subsection{Summary}
@@ -328,7 +328,7 @@ The final model of the protocol uses natural numbers, since this resembles real-
 All in all, the queries described above are only able to successfully verify four out of the 12 security properties listed in section~\ref{ssec:prins-sequence}.
 A formal proof for the remaining two thirds cannot be produced due several different reasons.
 
-As the N32-c channel is modeled using a \textsc{ProVerif} private channel without consideration how the same is established renders proofs for security property 1 and 2 superfluous.
+As N32-c is modeled using \textsc{ProVerif} private channels without considering how the same are established, proofs for security property 1 and 2 are superfluous.
 Given that \gls{tls} has successfully been proven secure in previous research (see \cite{cremers2017comprehensive}, \cite{van2018analysis}), it is fair to assume that these requirements are met.
 The strong secrecy property cannot be proven by \textsc{ProVerif} due to a limitation of the tool itself, regardless of the N32-f message ID being modeled as natural number or bitstring.
 Properties 6 and 7 lead to non-termination of \textsc{ProVerif} itself while properties 8, 9, and 10 are explicitly disproven by the program, but a visual represenation of the attack traces cannot be exported due to the large number of nodes and edges in the resulting graph.
@@ -360,6 +360,6 @@ Table \ref{tab:verification-result} summarizes the results of the \textsc{ProVer
 
 While it is positive to successfully prove part of the properties, these results offer limited insights into why the verification of the majority of properties fails or is inconclusive.
 One can argue that an attack reconstruction is actually an essential part of a formal verification as to guide potential improvements to the protocol under test.
-However, all throughout the verification of the protocol there have been a number of significant challenges in ensuring the model does behave as intended and writing composing queries that produce a meaningful result.
-Some of these have been resolved, others remain open as part of this thesis, such as the error N32-c signaling, and may be subject for future work.
+However, all throughout the verification of the protocol there have been a number of significant challenges in ensuring the model does behave as intended and composing queries that produce a meaningful result.
+Some of these have been resolved as part of this thesis, others remain open and may be subject for future work.
 The next section details the user experience of \textsc{ProVerif} for this particular project and lessons learned for future verification attempts.

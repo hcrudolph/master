@@ -11,7 +11,7 @@ System states are modeled in an abstract manner by symbols that represent inform
 State transitions describe how the systems moves from one state into another, the precondition for it happening and the result of the transition.
 The temporal logic formula details the intended system requirements in a mathematical way.
 The act of model checking is the exploration of all system states, verifying whether or not the formula holds true for all possible scenarios.
-An issue is discovered if the provided model does not accurately match the formula – hence the term 'model checking'.
+An issue is discovered if the provided model does not accurately match the formula – hence the term \textit{model checking}.
 In practice, there exists a number of optimizations to make the task of exploring all system states more efficient than a brute-force search (see \cite{etessami2000optimizing}).
 If these operations are performed by a computer, it is considered automatic model checking.
 Most model checkers, including the ones that are considered in this thesis, build on some subset of first-order logic, which shall be briefly introduced in the remainder of this section.
@@ -19,7 +19,7 @@ These fundamental concepts are key to understand what kind of system properties 
 
 \subsubsection{First-Order Logic}
 
-First-Order Logic (also referred to as predicate logic) extends classical, propositional logic by the notion of predicates and quantifiers.
+First-Order Logic --also referred to as predicate logic-- extends classical, propositional logic by the notion of predicates and quantifiers.
 Whereas the latter is solely concerned with logical statements and connectives, first-order logic is inherently connected to a domain of discourse or universe and the semantics associated with it.
 For example, propositional logic is only able to express binary relations using atomic formulas (or symbols), logical connectives (or functions), and formulas that combine symbols and functions according to the logic's particular grammar:
 
@@ -206,7 +206,7 @@ In addition to invariants, there exist safety properties that are more involved 
 Instead, these may impose requirements on parts of the system's execution trace itself.
 Consider, for example, an arbitrary security protocol that would allow sending data prior to performing the cryptogrtaphic operations that ensure integrity or confidentiality.
 Even though this trivial case would likely already be discoverd during modeling phase, it examplifies that the order of subsequent states is relevant.
-That is, these type properties is not about guaranteeing the reachability of ,,bad'' states, but ,,bad'' path fragments in the execution trace.
+That is, these type properties is not about guaranteeing the reachability of bad states, but bad path fragments in the execution trace.
 Some of the relevant features of security protocols that can be expressed expressed by this logic include confidentiality and authentication.
 Such safety properties are a generalization of invariants and are fullfilled if there is no execution trace that contains a finite prefix violating the premise.
 
@@ -222,7 +222,7 @@ Any such finite word $\widehat{\sigma}$ is called a \textit{bad prefix} for $P_{
 \subsubsection{Liveliness Properties}
 
 Complementary to the abovementioned characteristics are properties that demand something good eventually always happening.
-Unlike safety properties, they do not impose requirements on finite traces of the system, but put conditions on the infinite behaviour.
+Unlike safety properties, they do not impose requirements on finite traces of the system, but put conditions on the infinite behavior.
 A formal definition can be given as follows (c.f. \cite{baier2008principles}, p.~121).
 
 Property $P_{live}$ over $A$ is a liveness property whenever $pref(P_{live}) = (2^{A})\star$.
@@ -233,7 +233,7 @@ Concrete examples for liveness properties are recovery, revocation, and the time
 
 \subsubsection{Indistinguishability}
 
-The above definitions for both safety and liveliness are closely linked to the concept of traces, i.e. individual system runs that satisfy or violate certain conditions.
+The above definitions for both safety and liveness are closely linked to the concept of traces, i.e. individual system runs that satisfy or violate certain conditions.
 There exisits yet another type of properties that is not defined over individual traces, but the information an attacker is able to obtain by observing multiple instances of the system.
 This is commonly referred to as \textit{indistinguishability} or \textit{observational equivalence}.
 The formal definition by Baier and Katoen is provided below.
@@ -276,7 +276,7 @@ In the following, an overview of the \textsc{Tamarin} prover's key concepts is p
 \textbf{State} is modeled as a multiset, i.e. a set of sets, of facts.
 Facts are built of terms over a fact signature $\Sigma_{Fact}$ and have the form $F(t_1, \ldots, t_k)$.
 They can either be linear or persistent.
-As Meier explains (\cite{meier2013advancing}, p.~76): ,,Linear facts model resources that can only be consumed once, whereas persistent facts model inexhaustible resources that can be consumed arbitrarily often.''
+As Meier explains, ,,[l]inear facts model resources that can only be consumed once, whereas persistent facts model inexhaustible resources that can be consumed arbitrarily often'' (\cite{meier2013advancing}, p.~76).
 The finite multiset of all facts represents the system state, including the adversary knowledge.
 
 \textbf{Rules} are used to describe transitions between system states.
@@ -329,8 +329,10 @@ These allow the adversary send and receive messages on the public channel, learn
 
 \subsubsection{Security properties}
 
-In \textsc{Tamarin} security properties are denoted using two-sorted first-order logic formulas over message terms and timepoints (c.f. \cite{meier2013advancing}).
+In \textsc{Tamarin} security properties are denoted using two-sorted first-order logic formulas over message terms and timepoints.
 These so-called lemmas allow for the specification of various trace properties as well as some forms of observational equivalence.
+
+\noindent
 As shown in section~\ref{sec:formal}, one of the most common use case of trace properties as far as security protocols are concerned is specifying secrecy (recall that invariants are simply a special form of trace properties).
 Secrecy in \textsc{Tamarin} can be expressed using the following lemma, stating that for any secret action~$x$ at timepoint~$i$, there exsists no timepoint~$j$ at which the adversary has knowledge about~$x$.
 The very last line is added to ensure satisfiability of the lemma in the face of a potential key compromise of an honest participant~$B$ at timepoint~$r$.
@@ -352,7 +354,7 @@ lemma secrecy:
 \end{lstlisting}
 
 Trace properties are also used to specify authentication between protocol participants.
-As \cite{lowe1997hierarchy} shows, there are several ways to define authentication that vary in stictness.
+As Lowe shows, there are several ways to define authentication that vary in stictness (see~\cite{lowe1997hierarchy}).
 With the exception of Recentness, \textsc{Tamarin} can model the following four types of authentication.
 
 \textbf{Aliveness} mandates that if participant~$a$ completes a protocol run at timepoint~$i$, there exists a participant~$b$ that has previously run the protocol.
@@ -403,10 +405,10 @@ lemma injective_agreement:
             | (Ex C #r. Reveal(C) @r & Honest(C) @i)"
 \end{lstlisting}
 
-In addition to trace properties, \textsc{Tamarin} is also able to prove observational equivalence using the \textsf{\textbf{diff}} operator introduced by \cite{basin2015automated}.
+In addition to trace properties, \textsc{Tamarin} is also able to prove observational equivalence using the \textsf{diff} operator introduced by Basin, Dreier, and Sasse (see~\cite{basin2015automated}).
 The underlying idea is to check whether two multiset rewriting system exhibit identical rules but vary only by their instanciation, i.e. by the valuation of their variables.
 If it would be possible to apply different rules in one of the systems that are not available in the other, the adversary would be able to distinguish the two.
-Internally, \textsc{Tamarin} duplicates the model and checks whether every rule execution in one instanciation has a corresponding rule execution in thre other one.
+Internally, \textsc{Tamarin} duplicates the model and checks whether every rule execution in one instanciation has a corresponding rule execution in the other one.
 This type of check is particularly relevant for proving privacy properties, for example in e-voting protocols. (see \cite{tamarin2019manual}, pp.~57-64)
 
 \subsubsection{Featureset \& Limitations}
@@ -416,9 +418,9 @@ On top of that, it provides a number cryptographic primitives built-in that are 
 The first three of these are of relevance to the \gls{prins} protocol, as hash functions and symmetric encryption are key for defining \gls{jwe}'s \gls{aead} encryption scheme and digital signatures are the core of \gls{jws}.
 Additional language features to optimize the formal verification include different channel properties (Dolev-Yao, authentic, confidential, and secure channels), various heuristics to optimize automated proof methods, and proof by induction.
 
-In its current version, \textsc{Tamarin} does not support blind signatures and trapdoor commitments, i.e. non-subterm-convergent theories, although there are extensions that address specificly those (see \cite{dreier2017beyond}).
+In its current version, \textsc{Tamarin} does not support blind signatures and trapdoor commitments, i.e. non-subterm-convergent theories, although there are extensions that address specificly those (see~\cite{dreier2017beyond}).
 Since neither of these properties is required for the \gls{prins} protocol, this does not hinder the verification in any way.
-When operated in observational equivalence mode, the tool is sound, but not complete. (\cite{tamarin2019manual}, p.~107)
+When operated in observational equivalence mode, the tool is sound, but not complete. (see~\cite{tamarin2019manual}, p.~107)
 
 \subsection{ProVerif}
 \label{ssec:proverif}
@@ -426,22 +428,22 @@ When operated in observational equivalence mode, the tool is sound, but not comp
 \textsc{ProVerif} is another example for a popular tool for symbolic model checking.
 Chiefly developed by Bruno Blanchet at INRIA Paris, it is one of the most mature model checking tools in existence, being actively maintained for almost 20 years.
 Like \textsc{Tamarin}, it has successfully been used to analyse a wide range of security protocols over the years.
-Examples cited on its official website include (c.f. \cite{proverif}) the Signal protocol (\cite{kobeissi2017automated}), the ARINC823 avionic protocols (\cite{blanchet2017symbolic}), and the FOO, Lee, JCJ, and Belenios e-voting protocols (\cite{hirschi2019improving}).
+Examples cited on its official website (see~\cite{proverif}) include the Signal protocol (\cite{kobeissi2017automated}), the ARINC823 avionic protocols (\cite{blanchet2017symbolic}), and the FOO, Lee, JCJ, and Belenios e-voting protocols (\cite{hirschi2019improving}).
 
-Compared to the \textsc{Tamarin} prover, \textsc{ProVerif} tackles the problem of verifying security protocols distinctly different.
-Protocols are specified in the applied pi calculus (see \cite{abadi2017applied}), a variant of the pi calculus originally proposed by Milner (\cite{milner1999communicating}), a process algebra that is used to formally describe the behavior of security protocols.
+Compared to the \textsc{Tamarin} prover, \textsc{ProVerif} approaches the problem of verifying security protocols distinctly different.
+Protocols are specified in the applied pi calculus (\cite{abadi2017applied}), a variant of the pi calculus originally proposed by Milner (\cite{milner1999communicating}), a process algebra that is used to formally describe the behavior of security protocols.
 It extends the latter by components such as fresh variables and functions that model cryptographic primitives, to make it more suitable for this particular purpose.
 
 \subsubsection{Terminology}
 
 The \textbf{applied pi calculus} and process algebras in general are a formal method for describing the behavior of concurrent systems.
 As Baeten et al. point out: ,,A process algebra can be defined as any mathematical structure satisfying the axioms given for the basic operators'' (\cite{baeten2007process}, p.~1).
-The term ,,process'' is to be understood as an abstract element of this model.
-The fact that it is an ,,algebra'' signals that algebraic rules apply.
+The term \textit{process} is to be understood as an abstract element of this model.
+The fact that it is an \textit{algebra} signals that algebraic rules apply.
 Accordingly, calculations on processes can be performed using the defined operators in a given algebra.
 In the applied pi calculus used in \textsc{ProVerif}, operators are refered to as expressions.
 Expressions perform computations on terms, representing data or messages that are exchanged between processes.
-Processes are build from terms and expressions.
+Processes are built from terms and expressions.
 Processes are used to model protocol participants, the Dolev-Yao adversary, as well as the protocol under test itself.
 
 \textbf{Terms} are built up from names, variables and constructors.
@@ -569,9 +571,9 @@ This can be denoted in two ways (c.f. \cite{blanchet2020proverif}, p.~55):
 Correspondence assertions on the other hand are the basis for verifying authentication properties.
 As described in the previous section, authentication can be defined in several different ways.
 \textsc{ProVerif}'s user manual describes the verification of two of them - aliveness and injective agreement (see \cite{blanchet2020proverif}, pp.~19-20).
-The keyword \textsf{\textbf{event}} can be used to annotate special points in a protocol that can then be checked for correspondence, as shown in the below code fragment.
+The keyword \textsf{event} can be used to annotate special points in a protocol that can then be checked for correspondence, as shown in the below code fragment.
 Effectively, below query is the equivalent of proving the aforementioned aliveness property, i.e. for every event \textsf{receivedByA} the event \textsf{sentByB} has been reached previously at least once.
-Injective agreements, requiring a one-to-one relationship between states can be expressed using the keyword \textsf{\textbf{inj-event}}.
+Injective agreements, requiring a one-to-one relationship between states can be expressed using the keyword \textsf{inj-event}.
 Additionally, weak agreements and non-injective agreements can be modeled by expanding the term \textsf{M} shared by both participants' events with further information.
 
 \begin{lstlisting}
@@ -589,9 +591,9 @@ Nested hypotheses are equivalent to a chain of logical dependencies of the form 
 \end{lstlisting}
 
 Observational equivalence can take multiple forms, some of which can be verified by \textsc{ProVerif} (c.f. \cite{blanchet2020proverif}, pp.~55-62).
-Firstly, it is able to prove strong secrecy, i.e. the indistinguishability of a change in secrets for the adversary, with the \textsf{\textbf{noninterf}} keyword.
-Secondly, resistence against offline guessing attacks can be verified with the \textsf{\textbf{weaksecret}} keyword by checking whether the adversary is able to distinguish correct from incorrect guesses of a secret when interacting with the protocol participants.
-Thirdly, observational equivalence of two processes instances implemented based on biprocess simulation similar to \textsc{Tamarin}, using the \textsf{\textbf{choice}} keyword.
+Firstly, it is able to prove strong secrecy, i.e. the indistinguishability of a change in secrets for the adversary, with the \textsf{noninterf} keyword.
+Secondly, resistence against offline guessing attacks can be verified with the \textsf{weaksecret} keyword by checking whether the adversary is able to distinguish correct from incorrect guesses of a secret when interacting with the protocol participants.
+Thirdly, observational equivalence of two processes instances implemented based on biprocess simulation similar to \textsc{Tamarin}, using the \textsf{choice} keyword.
 Lastly, \textsc{ProVerif} will also attempt to verify observational equivalence of two processes that differ in structure.
 However, merging different processes into a single biprocess requires at least a similar structure and does not always succeed.
 
@@ -600,19 +602,19 @@ However, merging different processes into a single biprocess requires at least a
 \textsc{ProVerif} supports the verification of secrecy, authentication and privacy properties, similar to \textsc{Tamarin}.
 Unlike the latter, queries for weak agreement and non-injective agreement are not built-in and are not explicitly pointed out in the user manual.
 The tool offers more options for checking various types of observational equivalence.
-Whereas \textsc{Tamarin} only features this kind of analysis for a full protocol execution, \textsc{ProVerif}'s \textbf{choice}, \textbf{noninf}, and \textbf{weaksecret} constructs allow for more granular checks.
+Whereas \textsc{Tamarin} only features this kind of analysis for a full protocol execution, \textsc{ProVerif}'s \textsf{choice}, \textsf{noninf}, and \textsf{weaksecret} constructs allow for more granular checks.
 The cryptographic primitives supported out of the box are symmetric and asymmetric encryption, probabilistic encryption, hashes, signatures, diffie-hellman groups,
 zero-knowledge proofs, and trapdoor commitments ( c.f. \cite{blanchet2020proverif}, pp.~42-51).
 As pointed out before, the \gls{prins} protocol makes use of symmetric encryption, hashes, and signatures.
 Thus, \textsc{ProVerif} does support modeling all necessary cryptographic operations.
-Similar to \textsc{Tamarin}, it also supports proof by induction and channel properties, albeit in a less granular fashion -- channels can be declared as public Dolev-Yao channels or private (secure) ones.
+Similar to \textsc{Tamarin}, it also supports proof by induction and channel properties, albeit in a less granular fashion -- channels can be declared as public Dolev-Yao channels or private ones not accessible by the adversary.
 
 Additionally, \textsc{ProVerif} supports basic temporal constructs in the form of \textbf{phases} and \textbf{synchronization}.
 When using protocol phases, each has its own security properties and process communication across different phases is forbidden.
 If processes have not fully terminated when transitioning from one phase to another, they are discarded. (see \cite{blanchet2020proverif}, pp.~41-42).
-Synchronization on the other hand allows for modeling a mandatory order of commands across processes at certain points.
+Synchronization on the other hand allows for modeling a mandatory order of commands across processes.
 If one process has not executed certain commands prior a point of synchronization yet, it waits (potentially indefinitely) until these are executed.
 \textbf{Tables} can be used to model persistent storage of any of the participants that is not accessible by the adversary.
 
 Since the problem of verifying security properties of a protocol with an unlimited message space and number of sessions is fundamentally undecidable, \textsc{ProVerif} may not always terminate.
-Furthermore, the fact that the tool employs certain approximations when translating protocols from the applied pi calculus into Horn clauses -- mainly ignoring the number of repetitions of actions (c.f. \cite{blanchet2020proverif}, p.~118) -- can lead to the detection of false attacks that would not be feasible in real-world scenarios.
+Furthermore, the fact that the tool employs certain approximations when translating protocols from the applied pi calculus into Horn clauses --mainly ignoring the number of repetitions of actions (c.f. \cite{blanchet2020proverif}, p.~118)-- can lead to the detection of false attacks that would not be feasible in real-world scenarios.

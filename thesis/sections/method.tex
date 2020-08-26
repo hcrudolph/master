@@ -7,14 +7,14 @@ As part of this, a brief introduction to first-order logic is provided, which se
 It is further described what kind of security properties can be verified with this apporach and what known limitations exist.
 Subsequently, two popular tools for automated model checking of security protocols, \textsc{Tamarin} and \textsc{ProVerif}, are analysed in more detail.
 In order to determine the software capable of addressing the requirements of the protocol under test in an optimal way, a comparison is performed in terms of supported security properties and cryptographic primitives.
-Aside from the pure security requirements to be verified and a particular tool's feature set --which on their own may not conclusively answer this question-- additional aspects such as the supported channel characteristics and supporting modeling constructs are taken into account as well.
+Aside from the pure security requirements to be verified and a particular tool's cryptographic feature set, additional aspects such as the channel characteristics and supporting modeling constructs are taken into account as well.
 The decision to use a particular software tool also determines the model that needs to be created in the following step.
 While there are attempts to bridge the gap between the aforementioned tools by translating one type of formal model into the other (see \cite{kremer2016automated}), this thesis is intentionally focused on \textsc{Tamarin} and \textsc{ProVerif} in there pure form, without relying on third-party extensions.
 
 Chapter~\ref{chap:modeling} contains a comprehensive description of transforming the existing \gls{prins} specification into a abstract model as well as abstractions and assumptions made during this process.
 Section~\ref{sec:model} provides a detailed account of modeling all protocol participants in a way that is suitable to be verified by the tool chosen in the previous step.
 During this process, the objective is to answer research question~(1) conclusively.
-Since \gls{3gpp} documents are not written in a strictly formal manner but rather in prose, the protocol specification may prove not to be perfectly complete -- a point of critique \cite{basin2018model} highlight with respect to the 5G \gls{aka} protocol.
+Since \gls{3gpp} documents are not written in a strictly formal manner but rather in prose, the protocol specification may prove not to be perfectly complete -- a point of critique Basin, Cremers, and Meadows highlight with respect to the 5G \gls{aka} protocol (see~\cite{basin2018model}).
 In these cases, explicit abstractions and assumptions about the intended protocol behavior or requirement shall be made to allow for the completion of the computer-aided verification.
 Any such findings contribute to answering research question~(2) and are documented in section~\ref{sec:issues}.
 As a result, suggestions for the improvement of the \gls{3gpp} specifications are captured in section~\ref{sec:gaps}.
@@ -23,9 +23,8 @@ Chapter~\ref{chap:verification} discusses the process of computer-aided verifica
 Section~\ref{sec:verification} analyses the issues encountered during execution of the model checking tool as well as the information obtained as a result.
 Two kinds of findings are expected at this stage:
 Firstly, potential problems while running the software aid the validation of the model created previously.
-For example, if the tool does not terminate this may be an indication for the protocol being too loosely defined and more detailed modeling may be required.
-Secondly, if an actual flaw in the model is discovered it should be possible to explicitly point out the root cause.
-Since symbolic model checkers by design are able to provide a counter example to a property under test in the form of a particular trace that violates it.
+For example, if the tool does not terminate this may be an indication of the protocol being defined too loosely and a refinement of the model may be required.
+Secondly, if an actual flaw in the model is discovered it should be possible to explicitly point out the root cause, since tools for symbolic model checking by design are able to provide a counter example to a property in the form of a particular trace that violates it.
 Section~\ref{sec:gaps} puts these findings into context and outlines the practical security implications on the \gls{prins} protocol, if any.
 Where required, recommendations for improving the protocol's specification are provided.
 
