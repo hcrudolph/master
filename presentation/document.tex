@@ -1,0 +1,201 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usetheme{Ilmenau}
+\setbeamercovered{transparent}
+\setbeamertemplate{navigation symbols}{} %remove navigation symbols
+
+% Title Page Information
+\title{Formal Verification of\\ The 5G Inter-Operator Signaling Protocol}
+\subtitle{Master Thesis}
+\author{Hans Christian Rudolph}
+\institute{Hochschule Wismar}
+\date{11. September 2020}
+\logo{\includegraphics[height=0.5cm]{wings-logo.png}}
+
+\begin{document}
+
+% Title Page
+\frame{\titlepage}
+
+% Table of Contents
+\begin{frame}
+    \frametitle{Agenda}
+    \tableofcontents
+\end{frame}
+
+% Problemstellung \& Kontext
+\section{Problemstellung \& Kontext}
+
+\begin{frame}
+    \frametitle{Problemstellung \& Kontext}
+    \framesubtitle{5G Inter-Operator Signalisierung}
+
+    \begin{itemize}
+        \item<1-> 3GPP definiert neue Protokollsammlung für 5G Signalisierung
+        \vspace*{2mm}
+        \item<1-> Eigens spezifiziertes PRINS Protokoll verspricht
+        \begin{itemize}
+            \item<1-> Variables Sicherheitslevel basierend auf ,,Protection Policies''
+            \item<1-> Nachrichtenänderungen durch autorisierte Vermittler (IPX)
+            \item<1-> Nachvollziehbarkeit und Überprüfbarkeit jener Änderungen
+        \end{itemize}
+    \end{itemize}
+    \vspace*{3mm}
+    \begin{enumerate}
+        \item<2-> Ist PRINS Verifikation mit existiernden Werkzeugen möglich?
+        \item<3-> Zeigt die Modellierung Lücken in der Spezifikation auf?
+        \item<4-> Kann die formale Verifikation logische Fehler identifizieren?
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Problemstellung \& Kontext}
+    \framesubtitle{PRotocol for INterconnect Security (PRINS)}
+
+    \begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{n32-interface-short.pdf}
+    \end{figure}
+
+    \begin{itemize}
+        \item<2-> \textbf{Security Edge Protection Proxy} zentale Sicherheitsfunktion
+        \item<3-> \textbf{N32-c} Kontrollkanal: Sitzungssteuerung, Fehlersignalisierung
+        \item<3-> \textbf{N32-f} Datenkanal: Übertragung von Nutzerdaten
+        \item<4-> \textbf{Data-type Encryption Policy}: Vertraulichkeitsanforderungen
+        \item<4-> \textbf{Modification Policy}: legitime Nachrichtenänderungen
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Problemstellung \& Kontext}
+    \framesubtitle{Formale Verifikation von Sicherheitsprotokollen}
+
+    \begin{itemize}
+        \item<1-> Grundlage formaler Verifikation ist temporale Logik
+        \vspace*{2mm}
+        \item<2-> Überprüfung eines Protokollmodells gegen logische Formeln
+        \vspace*{2mm}
+        \item<3-> \textbf{Model Checker} überprüfen Protokollzustände auf Erreichbarkeit, modale Zusammenhänge, etc.
+        \vspace*{2mm}
+        \item<4-> Symbolische Analyse kann allein logische Fehler identifizieren, keine kryptografischen Schwächen
+        \vspace*{2mm}
+        \item<5-> \textbf{Tamarin} und \textbf{ProVerif} sind populäre Programme zur symbolischen Modellprüfung
+    \end{itemize}
+\end{frame}
+
+% PRINS Modellierung
+\section{PRINS Modellierung}
+
+\begin{frame}
+    \frametitle{PRINS Modellierung}
+    \framesubtitle{Überblick}
+
+    \begin{itemize}
+        \item<1-> ProVerif bietet mehrere nützliche Sprachkonzepte für PRINS (Synchronisation, private Tabellen, Ununterscheidbarkeit)
+        \vspace*{2mm}
+        \item<2-> Vier Protokollteilnehmer: SEPP A, SEPP B, IPX A, IPX B
+        \vspace*{2mm}
+        \item<3-> Angreifer implizit simuliert sowie ausgewählte Protokoll- verletzungen durch maliziöse IPX Provider nachgestellt
+        \vspace*{2mm}
+        \item<4-> Modellierte Prozesse:
+        \begin{itemize}
+            \item<4-> N32-c Sitzungsaufbau und Fehlersignalisierung
+            \item<4-> N32-f Nachrichtenversand und -empfang
+            \item<4-> IPX Nachrichtenänderungen
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{PRINS Modellierung}
+    \framesubtitle{Abstraktionen \& Defizite}
+
+    \begin{itemize}
+        \item<1-> Nachrichtenrouting und IPX-Provider Interna
+        \vspace*{2mm}
+        \item<2-> Protection Policies als statische, eindimensionale Bitstrings
+        \vspace*{2mm}
+        \item<3-> Transport Layer Security (TLS) als sicherer Kanal
+        \begin{itemize}
+            \item[$\rightarrow$]<3-> Authentifizierung erfolgreich qua expliziter Annahme
+            \item[$\rightarrow$]<3-> Generierung von Schlüsselmaterial mittels privater Funktion
+        \end{itemize}
+        \vspace*{2mm}
+        \item<4-> Fehlende Invalidierung von Sitzungskontexten
+        \begin{itemize}
+            \item[$\rightarrow$]<4-> Unbegrenzte Validität sobald N32-c Sitzungsaufbau erfolgt
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+% PRINS Verifikation
+\section{PRINS Verifikation}
+
+\begin{frame}
+    \frametitle{PRINS Verifikation}
+    \framesubtitle{Abfrageresultate}
+
+    \begin{itemize}
+        \item<1-> Sitzungsaufbau (Context ID, Keys) erfolgreich verifiziert
+        \vspace*{2mm}
+        \item<2-> Vertraulichkeitsanforderungen erfolgreich verifiziert
+        \vspace*{2mm}
+        \item<3-> Maliziöse IPX Änderungen teilweise erkannt
+        \begin{itemize}
+            \item[+]<3-> Ablehnen unbekannter IPX Provider
+            \item[+]<3-> Ablehnen unbekannter Nachrichtenänderungen
+            \item[--]<4-> Entfernen hinzugefügter Nachrichtenänderungen
+            \item[--]<4-> Wiederholen vergangener Nachrichtenänderungen
+        \end{itemize}
+        \vspace*{2mm}
+        \item<5-> Integrität und Authentizität von N32-f Nachrichten sowie IPX-Patches nicht erfolgreich verifiziert
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{PRINS Verifikation}
+    \framesubtitle{Herausforderungen}
+
+    \begin{itemize}
+        \item<1-> Eingeschränkte Möglichkeiten zur Identifikation von Fehlern
+        \vspace*{2mm}
+        \item<2-> Potenziell ausbleibende Terminierung von ProVerif
+        \vspace*{2mm}
+        \item<3-> Komplexes Rendering von Angriffssequenzen
+        \vspace*{2mm}
+        \item<4-> Fehlende Optimierung für Multiprozessorsysteme
+    \end{itemize}
+\end{frame}
+
+% Fazit
+\section{Fazit \& Ausblick}
+
+\begin{frame}
+    \frametitle{Fazit}
+
+    \begin{itemize}
+        \item[+]<1-> Individuelle Erreichbarkeit aller PRINS Protokollzustände
+        \vspace*{2mm}
+        \item[+]<1-> Erfolreiche Verifikation aller Vertraulichkeitsanforderungen
+    \end{itemize}
+    \vspace*{5mm}
+    \begin{itemize}
+        \item[--]<2-> ProVerif limitiert durch Graphviz Rendering-Algorithmus
+        \vspace*{2mm}
+        \item[--]<2-> Keine Möglichkeit Korrektheit des Modells zu überprüfen
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Ausblick}
+
+    \begin{itemize}
+        \item Verfeinern der Verifikation (Lösungsstrategien und Abfragen)
+        \vspace*{2mm}
+        \item Weitere Analyse der textbasierten Ausgabe
+        \vspace*{2mm}
+        \item Verbessern des Rendering-Algorithmus für gerichtete Graphen
+    \end{itemize}
+\end{frame}
+
+\end{document}
